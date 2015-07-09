@@ -12,6 +12,8 @@
 class CPPCORESHARED_EXPORT Helper
 {
 public:
+	///Returns a random number in the given range
+	static double randomNumber(double min, double max);
 	///Returns a random string.
 	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 	///Returns the elapsed time as a human-readable string.
