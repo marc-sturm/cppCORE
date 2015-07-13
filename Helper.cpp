@@ -6,12 +6,6 @@
 #include <QCoreApplication>
 #include <QDateTime>
 
-double Helper::randomNumber(double min, double max)
-{
-	double r = (double)rand() / (double)RAND_MAX;
-	return min + r * (max - min);
-}
-
 QString Helper::randomString(int length, const QString& chars)
 {
 	//initialize random number generator
