@@ -12,10 +12,12 @@
 class CPPCORESHARED_EXPORT Helper
 {
 public:
+	///Returns a random number in the given range
+	static double randomNumber(double min, double max);
 	///Returns a random string.
 	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 	///Returns the elapsed time as a human-readable string.
-	static QString elapsedTime(QTime elapsed);
+	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened. Make sure the file is deleted when it is not needed anymore, e.g. by assigning the returned pointer to a QScopedPointer<QFile> variable.
 	static QFile* openFileForReading(QString file_name, bool stdin_if_empty=false);

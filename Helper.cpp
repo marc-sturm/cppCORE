@@ -6,6 +6,12 @@
 #include <QCoreApplication>
 #include <QDateTime>
 
+double Helper::randomNumber(double min, double max)
+{
+	double r = (double)rand() / (double)RAND_MAX;
+	return min + r * (max - min);
+}
+
 QString Helper::randomString(int length, const QString& chars)
 {
 	//initialize random number generator
@@ -29,17 +35,21 @@ QString Helper::randomString(int length, const QString& chars)
 	return output;
 }
 
-QString Helper::elapsedTime(QTime elapsed)
+QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
 {
 	//calculate minutes and seconds
 	double s = elapsed.elapsed()/1000.0;
-	double m = floor(s/60.0);
-	s -= 60.0 * m;
+	double m = 0;
+	if (!only_seconds)
+	{
+		m = floor(s/60.0);
+		s -= 60.0 * m;
+	}
 
 	//create strings
-	QString sec = QString::number(s, 'f', 3) + "s";
-	QString min = "";
-	if (m>0.0) min = QString::number(m, 'f', 0) + "m ";
+	QByteArray sec = QByteArray::number(s, 'f', 3) + "s";
+	QByteArray min = "";
+	if (m>0.0) min = QByteArray::number(m, 'f', 0) + "m ";
 
 	return min + sec;
 }
