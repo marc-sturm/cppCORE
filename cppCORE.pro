@@ -1,3 +1,6 @@
+#c++11 and c++14 support
+CONFIG += c++14
+
 #base settings
 QT       -= gui
 TEMPLATE = lib
