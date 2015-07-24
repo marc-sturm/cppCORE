@@ -180,7 +180,7 @@ int Helper::levenshtein(const QString& s1, const QString& s2)
 
 QString Helper::userName()
 {
-#ifdef WIN32
+#ifdef __MINGW32__
 	return qgetenv("USERNAME");
 #else
 	return qgetenv("USER");
