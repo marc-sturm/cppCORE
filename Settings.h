@@ -14,27 +14,27 @@ class CPPCORESHARED_EXPORT Settings
     ///read access for integer settings
     static int integer(QString key, int default_value = -1);
     ///write access for integer settings
-	static void setInteger(QString key, int valueWithFallback);
+	static void setInteger(QString key, int value);
 
     ///read access for string settings
     static QString string(QString key, QString default_value = "");
     ///write access for string settings
-	static void setString(QString key, QString valueWithFallback);
+	static void setString(QString key, QString value);
 
     ///read access for string settings
     static QStringList stringList(QString key, QStringList default_value = QStringList());
     ///write access for string settings
-	static void setStringList(QString key, QStringList valueWithFallback);
+	static void setStringList(QString key, QStringList value);
 
     ///read access for integer settings
     static bool boolean(QString key, bool default_value = false);
     ///write access for integer settings
-	static void setBoolean(QString key, bool valueWithFallback);
+	static void setBoolean(QString key, bool value);
 
 	///read access for map settings
     static QMap<QString,QVariant> map(QString key, QMap<QString,QVariant> default_value = QMap<QString,QVariant>());
 	///write access for map settings
-	static void setMap(QString key, QMap<QString,QVariant> valueWithFallback);
+	static void setMap(QString key, QMap<QString,QVariant> value);
 
     ///Returns the path associated with this key. The path always contains a directroy separator. If the path is not defined, the home folder is returned.
 	static QString path(QString key, QString default_value = QCoreApplication::applicationDirPath());
