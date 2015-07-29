@@ -15,16 +15,10 @@ double Helper::randomNumber(double min, double max)
 QString Helper::randomString(int length, const QString& chars)
 {
 	//initialize random number generator
-	//initialized only once - otherwise two calls in the same second produce to the same random string
-	static bool is_initialized = false;
-	if (!is_initialized)
-	{
-		int seconds = time(NULL);
-		int milliseconds = QTime::currentTime().msec();
-		int process_id = QCoreApplication::applicationPid();
-		srand(seconds + milliseconds + process_id);
-		is_initialized = true;
-	}
+	int seconds = time(NULL);
+	int milliseconds = QTime::currentTime().msec();
+	int process_id = QCoreApplication::applicationPid();
+	srand(seconds + milliseconds + process_id);
 
 	//create random string
 	QString output;
