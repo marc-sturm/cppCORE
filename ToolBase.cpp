@@ -632,6 +632,7 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(CommandLineParsingException& e)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << "Command line parsing exception: " << e.message() << endl;
 		stream << "Call this tool with the argument '--help' for help." << endl;
 		exit(1);
@@ -639,12 +640,14 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(ToolFailedException& e)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << e.message() << endl;
 		exit(1);
 	}
 	catch(ProgrammingException& e)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << "Programming exception: " << e.message() << endl;
 		stream << "Location             : " << e.file() << ":" << e.line() << endl;
 		stream << "This should not happen, please report the error to the developers!" << endl;
@@ -653,6 +656,7 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(Exception& e)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << "Exception: " << e.message() << endl;
 		stream << "Location : " << e.file() << ":" << e.line() << endl;
 		exit(1);
@@ -660,12 +664,14 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(std::exception& e)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << "Exception: " << e.what() << endl;
 		exit(1);
 	}
 	catch(...)
 	{
 		QTextStream stream(stderr);
+		stream << QCoreApplication::applicationName() << " " << version() << endl;
 		stream << "Unknown exception!" << endl;
 		exit(1);
 	}

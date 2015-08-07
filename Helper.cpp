@@ -18,7 +18,7 @@ QString Helper::randomString(int length, const QString& chars)
 	int seconds = time(NULL);
 	int milliseconds = QTime::currentTime().msec();
 	int process_id = QCoreApplication::applicationPid();
-	srand(seconds + milliseconds + process_id);
+	srand(seconds + milliseconds + process_id + rand());
 
 	//create random string
 	QString output;
