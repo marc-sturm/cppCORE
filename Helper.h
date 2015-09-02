@@ -29,6 +29,11 @@ public:
 	///Stores a string list as a text file. To each line '\n' is appended as newline character.
 	static void storeTextFile(QString file_name, const QStringList& lines, bool stdout_if_file_empty=false, bool append=false);
 
+	///Returns the contents of a file as a string. Throws an error if the file cannot be opened.
+	static QString fileText(QString filename);
+	///Creates a text file if it does not exist. Throws an error if the file cannot be opened for writing.
+	static void touchFile(QString filename);
+
 	///Returns a temporary file name. Make sure you delete the file when it is no longer needed to avoid name clashes!
 	static QString tempFileName(QString extension, int length=16);
 

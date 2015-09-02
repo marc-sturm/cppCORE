@@ -93,6 +93,26 @@ void Helper::storeTextFile(QString file_name, const QStringList& lines, bool std
 	}
 }
 
+QString Helper::fileText(QString filename)
+{
+	QFile file(filename);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		THROW(FileAccessException, "Could not open file for reading: '" + filename + "'!");
+	}
+
+	QTextStream stream(&file); // we need a text stream to support UTF8 characters
+	return stream.readAll();
+}
+
+void Helper::touchFile(QString filename)
+{
+	if (!QFile(filename).open(QFile::ReadWrite))
+	{
+		THROW(FileAccessException, "Could not open file for writing: '" + filename + "'!");
+	}
+}
+
 QString Helper::tempFileName(QString extension, int length)
 {
 	QString name = Helper::randomString(length);
