@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QStringList>
 #include <QDebug>
+#include <QSharedPointer>
 
 ///Auxilary helper functions class.
 class CPPCORESHARED_EXPORT Helper
@@ -19,15 +20,19 @@ public:
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
 
-	///Returns an opened file pointer, or throws an error if it cannot be opened. Make sure the file is deleted when it is not needed anymore, e.g. by assigning the returned pointer to a QScopedPointer<QFile> variable.
-	static QFile* openFileForReading(QString file_name, bool stdin_if_empty=false);
-	///Returns an opened file pointer, or throws an error if it cannot be opened. Make sure the file is deleted when it is not needed anymore, e.g. by assigning the returned pointer to a QScopedPointer<QFile> variable.
-	static QFile* openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false);
+	///Returns an opened file pointer, or throws an error if it cannot be opened.
+	static QSharedPointer<QFile> openFileForReading(QString file_name, bool stdin_if_empty=false);
+	///Returns an opened file pointer, or throws an error if it cannot be opened.
+	static QSharedPointer<QFile> openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false);
 
 	///Loads a text file. If @p trim_lines is given, the lines are trimmed. If @p skip_header_char is given, header lines starting with that character are skipped. If @p skip_empty_lines is given, empty lines are skipped.
+	static QStringList loadTextFile(QSharedPointer<QFile> file, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
+	///Convenience overload for loadTextFile.
 	static QStringList loadTextFile(QString file_name, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
 	///Stores a string list as a text file. To each line '\n' is appended as newline character.
-	static void storeTextFile(QString file_name, const QStringList& lines, bool stdout_if_file_empty=false, bool append=false);
+	static void storeTextFile(QSharedPointer<QFile> file, const QStringList& lines);
+	///Convenience overload for storeTextFile.
+	static void storeTextFile(QString file_name, const QStringList& lines);
 
 	///Returns a temporary file name. Make sure you delete the file when it is no longer needed to avoid name clashes!
 	static QString tempFileName(QString extension, int length=16);

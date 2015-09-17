@@ -51,16 +51,15 @@ QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
 
 QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
-	QFile file(file_name);
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
-	}
+	return loadTextFile(openFileForReading(file_name), trim_lines, skip_header_char, skip_empty_lines);
+}
 
+QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
+{
 	QStringList output;
-	while (!file.atEnd())
+	while (!file->atEnd())
 	{
-		QByteArray line = file.readLine();
+		QByteArray line = file->readLine();
 
 		//remove newline or trim
 		if (trim_lines)
@@ -84,13 +83,17 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 	return output;
 }
 
-void Helper::storeTextFile(QString file_name, const QStringList& lines, bool stdout_if_file_empty, bool append)
+void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
-	QScopedPointer<QFile> file(openFileForWriting(file_name, stdout_if_file_empty, append));
 	foreach(const QString& line, lines)
 	{
 		file->write(line.toLatin1() + "\n");
 	}
+}
+
+void Helper::storeTextFile(QString file_name, const QStringList& lines)
+{
+	storeTextFile(openFileForWriting(file_name), lines);
 }
 
 QString Helper::tempFileName(QString extension, int length)
@@ -191,32 +194,30 @@ QString Helper::dateTime(QString format)
 	return QDateTime::currentDateTime().toString(format);
 }
 
-QFile* Helper::openFileForReading(QString file_name, bool stdin_if_empty)
+QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_if_empty)
 {
-	QFile* file = new QFile(file_name);
+	QSharedPointer<QFile> file(new QFile(file_name));
 	if (stdin_if_empty && file_name=="")
 	{
-		file->open(stdin, QFile::ReadOnly);
+		file->open(stdin, QFile::ReadOnly | QIODevice::Text);
 	}
-	else if (!file->open(QFile::ReadOnly))
+	else if (!file->open(QFile::ReadOnly | QIODevice::Text))
 	{
-		delete file;
 		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
 	}
 
 	return file;
 }
 
-QFile* Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append)
+QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append)
 {
-	QFile* file = new QFile(file_name);
+	QSharedPointer<QFile> file(new QFile(file_name));
 	if (stdout_if_file_empty && file_name=="")
 	{
-		file->open(stdout, QFile::WriteOnly);
+		file->open(stdout, QFile::WriteOnly | QIODevice::Text);
 	}
-	else if (!file->open(QFile::WriteOnly|(append? QFile::Append : QFile::Truncate)))
+	else if (!file->open(QFile::WriteOnly | QIODevice::Text |(append? QFile::Append : QFile::Truncate)))
 	{
-		delete file;
 		THROW(FileAccessException, "Could not open file for writing: '" + file_name + "'!");
 	}
 

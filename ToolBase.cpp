@@ -419,7 +419,7 @@ void ToolBase::storeTDXml() const
 	QString filename = QCoreApplication::applicationFilePath() + ".tdx";
 
 	//write to stream
-	QScopedPointer<QFile> out_file(Helper::openFileForWriting(filename));
+	QSharedPointer<QFile> out_file = Helper::openFileForWriting(filename);
 	QTextStream stream(out_file.data());
 	stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
 	stream << "<TDX version=\"1\">" << endl;
