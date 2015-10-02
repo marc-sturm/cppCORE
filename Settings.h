@@ -51,6 +51,11 @@ class CPPCORESHARED_EXPORT Settings
 	///Returns the settings file name
 	static QString fileName();
 
+	///Copy backup file
+	static void createBackup(QString suffix = ".bak");
+	///Create backup file
+	static void restoreBackup(QString suffix = ".bak");
+
   protected:
 	///Default constructor "declared away"
     Settings();

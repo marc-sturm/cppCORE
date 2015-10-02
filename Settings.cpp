@@ -1,6 +1,7 @@
 #include "Settings.h"
 #include <QDir>
 #include <QDebug>
+#include "Log.h"
 
 QSettings& Settings::settings()
 {
@@ -151,6 +152,32 @@ QStringList Settings::allKeys()
 QString Settings::fileName()
 {
 	return settings().fileName();
+}
+
+void Settings::createBackup(QString suffix)
+{
+	QSettings backup(fileName() + suffix, QSettings::IniFormat);
+
+	backup.clear();
+	QStringList keys = allKeys();
+	foreach (QString key, keys)
+	{
+		backup.setValue(key, settings().value(key));
+	}
+}
+
+void Settings::restoreBackup(QString suffix)
+{
+	QSettings backup(fileName() + suffix, QSettings::IniFormat);
+
+	clear();
+	QStringList keys = backup.allKeys();
+	foreach (QString key, keys)
+	{
+		settings().setValue(key, backup.value(key));
+	}
+
+	Log::info("Restored INI file: " + fileName() + suffix);
 }
 
 QVariant Settings::valueWithFallback(const QString& key, const QVariant& defaultValue)
