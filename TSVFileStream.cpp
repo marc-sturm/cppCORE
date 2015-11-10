@@ -1,4 +1,5 @@
 #include "TSVFileStream.h"
+#include "Helper.h"
 #include <QStringList>
 
 TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
@@ -102,9 +103,7 @@ QVector<int> TSVFileStream::checkColumns(QString columns, bool numeric)
 	{
 		foreach(QString part, parts)
 		{
-			bool ok = true;
-			int col = part.toInt(&ok);
-			if (!ok) THROW(CommandLineParsingException, "Could not convert column number '" + part + "' to 1-based integer!");
+			int col = Helper::toInt(part, "column number");
 			if (col<1 || col>columns_)
 			{
 				THROW(CommandLineParsingException, "1-based column number '" + part + "' out of range (max is " + QString::number(columns_) + ")!");

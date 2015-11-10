@@ -1,5 +1,4 @@
 #include "Helper.h"
-#include "Exceptions.h"
 #include "cmath"
 #include "time.h"
 #include <QDir>

@@ -2,6 +2,7 @@
 #define HELPER_H
 
 #include "cppCORE_global.h"
+#include "Exceptions.h"
 #include <QTime>
 #include <QString>
 #include <QFile>
@@ -19,6 +20,25 @@ public:
 	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
+
+	///Converts a QString/QByteArray to an integer. Throws an error if the conversion fails.
+	template <typename T>
+	static int toInt(const T& str, const QString& name = "string", const QString& line = "")
+	{
+		bool ok = false;
+		int result = str.trimmed().toInt(&ok);
+		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to integer" + (line.isEmpty() ? "" : "  - line: " + line));
+		return result;
+	}
+	///Converts a QString/QByteArray to a double. Throws an error if the conversion fails.
+	template <typename T>
+	static double toDouble(const T& str, const QString& name = "string", const QString& line = "")
+	{
+		bool ok = false;
+		double result = str.trimmed().toDouble(&ok);
+		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to double" + (line.isEmpty() ? "" : "  - line: " + line));
+		return result;
+	}
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForReading(QString file_name, bool stdin_if_empty=false);
@@ -47,7 +67,7 @@ public:
 	///Find folders recursively.
 	static void findFolders(const QString& directory, const QString& pattern, QStringList& output, bool first_call=true);
 
-	///Returns the Levenshtein-distance of two strings
+	///Returns the Levenshtein-distance of two strings.
 	static int levenshtein(const QString& s1, const QString& s2);
 
 	///Gets the user name of the current user from the environment variables.
