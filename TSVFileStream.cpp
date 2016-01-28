@@ -72,6 +72,11 @@ QList<QByteArray> TSVFileStream::readLine()
 	//handle first content line
 	if (!next_line_.isNull())
 	{
+		if (next_line_=="")
+		{
+			next_line_ = QByteArray();
+			return QList<QByteArray>();
+		}
 		QList<QByteArray> parts = next_line_.split(separator_);
 		if (parts.count()!=columns_)
 		{
@@ -86,6 +91,10 @@ QList<QByteArray> TSVFileStream::readLine()
 	while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 	++line_;
 
+	if (line=="")
+	{
+		return QList<QByteArray>();
+	}
 	QList<QByteArray> parts = line.split(separator_);
 	if (parts.count()!=columns_)
 	{

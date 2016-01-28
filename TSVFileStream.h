@@ -25,7 +25,7 @@ public:
 		return file_.atEnd() && next_line_.isNull();
 	}
 
-	///Returns the current line.
+	///Returns the current line, split to columns. Note: Empty lines are returned as an empty array.
 	QList<QByteArray> readLine();
 
 	///Returns the split header line. If no header is present, a list with empty string is returned.
