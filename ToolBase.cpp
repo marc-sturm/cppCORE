@@ -410,7 +410,7 @@ void ToolBase::printHelp() const
 	stream << "Special parameters:" << endl;
 	stream << QString("  --help").leftJustified(offset, ' ') << "Shows this help and exits." << endl;
 	stream << QString("  --version").leftJustified(offset, ' ') << "Prints version and exits." << endl;
-	stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Defition Xml file. The file name is the application name appended with '.tdx'." << endl;
+	stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Definition Xml file. The file name is the application name with the suffix '.tdx'." << endl;
 	stream << "" << endl;
 }
 
