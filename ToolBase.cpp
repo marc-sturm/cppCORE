@@ -25,6 +25,16 @@ void ToolBase::setDescription(QString description)
 	description_ = description;
 }
 
+void ToolBase::setExtendedDescription(QStringList description)
+{
+	description_extended_ = description;
+}
+
+void ToolBase::changeLog(int y, int m, int d, QString text)
+{
+	changelog_.append(ChangeLogEntry(y, m, d, text));
+}
+
 void ToolBase::addFlag(QString name, QString desc)
 {
     ParameterData data(name, FLAG, desc, true, false);
@@ -156,6 +166,11 @@ bool ToolBase::parseCommandLine()
 	if(args.contains("--version"))
 	{
 		printVersion();
+		return false;
+	}
+	if(args.contains("--changelog"))
+	{
+		printChangelog();
 		return false;
 	}
 	if(args.contains("--tdx"))
@@ -337,6 +352,18 @@ void ToolBase::printVersion() const
 	stream << endl;
 }
 
+void ToolBase::printChangelog() const
+{
+	QTextStream stream(stdout);
+	stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << endl;
+	stream << endl;
+
+	foreach(const ChangeLogEntry& e, changelog_)
+	{
+		stream << e.date.toString("yyyy-MM-dd") << " " << e.text.trimmed() << endl;
+	}
+}
+
 void ToolBase::printHelp() const
 {
 	QTextStream stream(stdout);
@@ -347,12 +374,21 @@ void ToolBase::printHelp() const
     {
         max_name = std::max(max_name, data.name.length() + typeToArgString(data.type).length());
 	}
-	int offset = std::max(13, max_name + 5);
+	int offset = std::max(15, max_name + 5);
 
 	//print general info
 	stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << endl;
 	stream << "" << endl;
 	stream << description_ << endl;
+	QStringList ext = description_extended_;
+	if (!ext.isEmpty())
+	{
+		stream << "" << endl;
+		foreach(QString e, ext)
+		{
+			stream <<  e << endl;
+		}
+	}
 
 	// print mandatory parameters
     bool first_mandatory = true;
@@ -410,6 +446,7 @@ void ToolBase::printHelp() const
 	stream << "Special parameters:" << endl;
 	stream << QString("  --help").leftJustified(offset, ' ') << "Shows this help and exits." << endl;
 	stream << QString("  --version").leftJustified(offset, ' ') << "Prints version and exits." << endl;
+	stream << QString("  --changelog").leftJustified(offset, ' ') << "Prints changeloge and exits." << endl;
 	stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Definition Xml file. The file name is the application name with the suffix '.tdx'." << endl;
 	stream << "" << endl;
 }
@@ -425,6 +462,16 @@ void ToolBase::storeTDXml() const
 	stream << "<TDX version=\"1\">" << endl;
 	stream << "  <Tool name=\"" << QCoreApplication::applicationName() << "\" version=\"" << QCoreApplication::applicationVersion() << "\">" << endl;
 	stream << "    <Description>" << description_ << "</Description>" << endl;
+	QStringList ext = description_extended_;
+	if (!ext.isEmpty())
+	{
+		stream << "    <ExtendedDescription>" << endl;
+		foreach(QString e, ext)
+		{
+			stream <<  e << endl;
+		}
+		stream << "    </ExtendedDescription>" << endl;
+	}
 
     foreach(const ParameterData& data, parameters_)
     {
@@ -479,6 +526,8 @@ void ToolBase::executeInternal()
 {
 	setup();
 
+	sortChangeLog();
+
 	//execute main method only if no special parameters were set
 	if (parseCommandLine())
 	{
@@ -520,7 +569,12 @@ int ToolBase::checkParameterExists(QString name, ParameterType type) const
         THROW(ProgrammingException, QCoreApplication::applicationName() + " parameter '" + name + "' is expected to have type '" + typeToString(type) + "', but has type '" + typeToString(parameters_[index].type) + "'!");
 	}
 
-    return index;
+	return index;
+}
+
+void ToolBase::sortChangeLog()
+{
+	std::sort(changelog_.begin(), changelog_.end(), [](ChangeLogEntry& a, ChangeLogEntry& b){ return a.date>b.date; } );
 }
 
 QString ToolBase::typeToString(ToolBase::ParameterType type) const
@@ -677,4 +731,11 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	}
 
 	return false;
+}
+
+
+ToolBase::ChangeLogEntry::ChangeLogEntry(int y, int m, int d, QString t)
+	: date(y, m, d)
+	, text(t)
+{
 }

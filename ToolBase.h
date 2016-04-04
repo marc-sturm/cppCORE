@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QVector>
 #include <QVariant>
+#include <QDate>
 #include <limits>
 
 ///Base class for command-line tools that handles parameter parsing and uncaught exceptions
@@ -17,8 +18,12 @@ class CPPCORESHARED_EXPORT ToolBase
 public:
 	///Constructor
 	ToolBase(int& argc, char *argv[]);
-	///Initializes the tool. If @p version is unset, the cppNGS library version is taken
+	///Sets the descripton.
 	void setDescription(QString description);
+	///Sets the extended descripton.
+	void setExtendedDescription(QStringList description);
+	///adds a changelog line.
+	void changeLog(int y, int m, int d, QString text);
 	///Setup method. In this method the init() method is called and parameters are added.
 	virtual void setup() = 0;
 	///Main method that contains the actual tool code.
@@ -51,6 +56,7 @@ public:
 	QStringList getInfileList(QString name) const;
 
 	void printVersion() const;
+	void printChangelog() const;
 	void printHelp() const;
 	void storeTDXml() const;
 	//@}
@@ -93,13 +99,27 @@ private:
 		QVariant value;
 	};
 
+	///ChangeLog entry
+	struct ChangeLogEntry
+	{
+		///Convenience constructor
+		ChangeLogEntry(int y, int m, int d, QString t);
+
+		QDate date;
+		QString text;
+	};
+
 	QString description_;
+	QStringList description_extended_;
+	QList<ChangeLogEntry> changelog_;
     QVector<ParameterData> parameters_;
 
     int parameterIndex(QString name) const;
     void addParameter(const ParameterData& data);
     int checkParameterExists(QString name, ParameterType type) const;
 
+	///Sort ChangeLog by date
+	void sortChangeLog();
 	///Parses the command line arguments and returns if the execution of the tool can go on (after special parameters like --version the execution is stopped).
 	bool parseCommandLine();
 	QString typeToString(ParameterType type) const;
