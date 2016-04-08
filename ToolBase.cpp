@@ -574,7 +574,7 @@ int ToolBase::checkParameterExists(QString name, ParameterType type) const
 
 void ToolBase::sortChangeLog()
 {
-	std::sort(changelog_.begin(), changelog_.end(), [](ChangeLogEntry& a, ChangeLogEntry& b){ return a.date>b.date; } );
+	std::sort(changelog_.begin(), changelog_.end(), [](const ChangeLogEntry& a, const ChangeLogEntry& b){ return a.date>b.date; } );
 }
 
 QString ToolBase::typeToString(ToolBase::ParameterType type) const
