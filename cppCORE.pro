@@ -28,7 +28,8 @@ SOURCES += \
     LinePlot.cpp \
     WorkerBase.cpp \
     ToolBase.cpp \
-    TSVFileStream.cpp
+    TSVFileStream.cpp \
+    ScatterPlot.cpp
 
 HEADERS += ToolBase.h \
     Exceptions.h \
@@ -39,4 +40,5 @@ HEADERS += ToolBase.h \
     FileWatcher.h \
     LinePlot.h \
     WorkerBase.h \
-    TSVFileStream.h
+    TSVFileStream.h \
+    ScatterPlot.h
