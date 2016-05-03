@@ -10,14 +10,16 @@ class CPPCORESHARED_EXPORT ScatterPlot
 {
 public:
 	ScatterPlot();
-
 	void setValues(const QList< QPair<double,double> >& values);
-
+	void convertChromToX();
 	void setXLabel(QString xlabel);
+	void setXRange(double xmin, double xmax);
 	void setYLabel(QString ylabel);
 	void setYRange(double ymin, double ymax);
-	void setXRange(double xmin, double xmax);
-
+	void setYLogScale(bool yscale_log)
+	{
+		yscale_log_ = yscale_log;
+	}
 	void store(QString filename);
 
 protected:
@@ -33,6 +35,7 @@ protected:
 	//variables to store the meta data
 	bool yrange_set_;
 	bool xrange_set_;
+	bool yscale_log_;
 };
 
 #endif // SCATTERPLOT_H

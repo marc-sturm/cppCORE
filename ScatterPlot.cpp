@@ -62,6 +62,7 @@ void ScatterPlot::store(QString filename)
 	script.append("plt.figure(figsize=(6, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
 	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
+	if(yscale_log_)	script.append("plt.set_yscale('log')");
 	if(!yrange_set_)
 	{
 		double min = std::numeric_limits<double>::max();
@@ -94,7 +95,7 @@ void ScatterPlot::store(QString filename)
 	}
 	if(BasicStatistics::isValidFloat(xmin_) && BasicStatistics::isValidFloat(xmax_))
 	{
-		script.append("plt.ylim(" + QString::number(xmin_) + "," + QString::number(xmax_) + ")");
+		script.append("plt.xlim(" + QString::number(xmin_) + "," + QString::number(xmax_) + ")");
 	}
 	QString xvaluestring = "";
 	QString yvaluestring = "";
@@ -112,6 +113,7 @@ void ScatterPlot::store(QString filename)
 	}
 	script.append("plt.scatter(" + xvaluestring + yvaluestring + "3)");
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
+
 	Helper::storeTextFile(scriptfile, script);
 
 	//execute scipt
