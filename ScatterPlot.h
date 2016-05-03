@@ -4,6 +4,7 @@
 #include "cppCORE_global.h"
 #include <QString>
 #include <QList>
+#include <QPair>
 
 ///Creates a line plot PNG image (needs Python in the path - and matplotlib extension).
 class CPPCORESHARED_EXPORT ScatterPlot
