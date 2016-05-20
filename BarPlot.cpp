@@ -29,16 +29,7 @@ void BarPlot::addColorLegend(QString color, QString desc)
 
 void BarPlot::store(QString filename)
 {
-	//check if python is installed
-	QString python_exe = QStandardPaths::findExecutable("python");
-	if (python_exe=="")
-	{
-		Log::warn("Python executable not found in PATH - skipping plot generation!");
-		return;
-	}
-
 	//create python script
-	QString scriptfile = Helper::tempFileName(".py");
 	QStringList script;
 	script.append("import matplotlib as mpl");
 	script.append("mpl.use('Agg')");
@@ -113,17 +104,28 @@ void BarPlot::store(QString filename)
 	//file handling
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=300)");
 
-	Helper::storeTextFile(scriptfile, script);
-
-	//execute scipt
-	QProcess process;
-	process.setProcessChannelMode(QProcess::MergedChannels);
-	process.start(python_exe, QStringList() << scriptfile);
-	if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+	//check if python is installed
+	QString python_exe = QStandardPaths::findExecutable("python");
+	if (python_exe!="")
 	{
-		THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
-	}
+		QString scriptfile = Helper::tempFileName(".py");
+		Helper::storeTextFile(scriptfile, script);
 
-	//remove temporary file
-	QFile::remove(scriptfile);
+		//execute scipt
+		QProcess process;
+		process.setProcessChannelMode(QProcess::MergedChannels);
+		process.start(python_exe, QStringList() << scriptfile);
+		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+		{
+			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+		}
+
+		//remove temporary file
+		QFile::remove(scriptfile);
+	}
+	else
+	{
+		Log::warn("Python executable not found in PATH - skipping plot generation!");
+		qDebug() << script.join("\n");
+	}
 }

@@ -17,15 +17,21 @@ public:
 	void setXRange(double xmin, double xmax);
 	void setYLabel(QString ylabel);
 	void setYRange(double ymin, double ymax);
+	void noXTicks()
+	{
+		noxticks_ = true;
+	}
 	void setYLogScale(bool yscale_log)
 	{
 		yscale_log_ = yscale_log;
 	}
+	void addVLine(double x);
 	void store(QString filename);
 
 protected:
 	//variables to store the plot data
 	QList< QPair<double,double> > points_;
+	QList< double > vlines_;
 	QString xlabel_;
 	QString ylabel_;
 	double ymin_;
@@ -37,6 +43,7 @@ protected:
 	bool yrange_set_;
 	bool xrange_set_;
 	bool yscale_log_;
+	bool noxticks_;
 };
 
 #endif // SCATTERPLOT_H

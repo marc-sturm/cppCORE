@@ -43,18 +43,14 @@ void ScatterPlot::setYRange(double ymin, double ymax)
 	yrange_set_ = true;
 }
 
+void ScatterPlot::addVLine(double x)
+{
+	vlines_.append(x);
+}
+
 void ScatterPlot::store(QString filename)
 {
-	//check if python is installed
-	QString python_exe = QStandardPaths::findExecutable("python");
-	if (python_exe=="")
-	{
-		Log::warn("Python executable not found in PATH - skipping plot generation!");
-		return;
-	}
-
 	//create python script
-	QString scriptfile = Helper::tempFileName(".py");
 	QStringList script;
 	script.append("import matplotlib as mpl");
 	script.append("mpl.use('Agg')");
@@ -62,7 +58,7 @@ void ScatterPlot::store(QString filename)
 	script.append("plt.figure(figsize=(6, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
 	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
-	if(yscale_log_)	script.append("plt.set_yscale('log')");
+	if(yscale_log_)	script.append("plt.yscale('log')");
 	if(!yrange_set_)
 	{
 		double min = std::numeric_limits<double>::max();
@@ -97,6 +93,7 @@ void ScatterPlot::store(QString filename)
 	{
 		script.append("plt.xlim(" + QString::number(xmin_) + "," + QString::number(xmax_) + ")");
 	}
+	if(noxticks_)	script.append("plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')");
 	QString xvaluestring = "";
 	QString yvaluestring = "";
 	if (points_.count()>0)
@@ -112,19 +109,34 @@ void ScatterPlot::store(QString filename)
 		yvaluestring += "],";
 	}
 	script.append("plt.scatter(" + xvaluestring + yvaluestring + "3)");
+	foreach(double x, vlines_)
+	{
+		script.append("plt.plot(("+QString::number(x)+","+QString::number(x)+"),("+QString::number(ymin_)+","+QString::number(ymax_)+"),'k--')");
+	}
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
 
-	Helper::storeTextFile(scriptfile, script);
-
-	//execute scipt
-	QProcess process;
-	process.setProcessChannelMode(QProcess::MergedChannels);
-	process.start(python_exe, QStringList() << scriptfile);
-	if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+	//check if python is installed
+	QString python_exe = QStandardPaths::findExecutable("python");
+	if (python_exe!="")
 	{
-		THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
-	}
+		QString scriptfile = Helper::tempFileName(".py");
+		Helper::storeTextFile(scriptfile, script);
 
-	//remove temporary file
-	QFile::remove(scriptfile);
+		//execute scipt
+		QProcess process;
+		process.setProcessChannelMode(QProcess::MergedChannels);
+		process.start(python_exe, QStringList() << scriptfile);
+		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+		{
+			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+		}
+
+		//remove temporary file
+		QFile::remove(scriptfile);
+	}
+	else
+	{
+		Log::warn("Python executable not found in PATH - skipping plot generation!");
+		qDebug() << script.join("\n");
+	}
 }
