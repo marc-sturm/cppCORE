@@ -9,7 +9,7 @@
 #include <QStandardPaths>
 
 ScatterPlot::ScatterPlot()
-	: yrange_set_(false), xrange_set_(false)
+	: yrange_set_(false), xrange_set_(false), yscale_log_(false), noxticks_(false)
 {
 }
 

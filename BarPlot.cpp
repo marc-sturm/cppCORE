@@ -16,11 +16,23 @@ void BarPlot::setValues(const QList<int>& values, const QList<QString>& labels, 
 {
 	for(int i=0;i<values.count();++i)
 	{
+		bars_.append(double(values[i]));
+		labels_.append(labels[i]);
+		colors_.append(colors);
+	}
+}
+
+
+void BarPlot::setValues(const QList<double>& values, const QList<QString>& labels, const QList<QString>& colors)
+{
+	for(int i=0;i<values.count();++i)
+	{
 		bars_.append(values[i]);
 		labels_.append(labels[i]);
 		colors_.append(colors);
 	}
 }
+
 
 void BarPlot::addColorLegend(QString color, QString desc)
 {

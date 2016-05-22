@@ -12,6 +12,7 @@ public:
 	BarPlot();
 
 	void setValues(const QList<int>& values, const QList<QString>& labels, const QList<QString>& colors = QList<QString>());
+	void setValues(const QList<double>& values, const QList<QString>& labels, const QList<QString>& colors = QList<QString>());
 	void setXLabel(const QString& x_label)
 	{
 		xlabel_ = x_label;
@@ -24,12 +25,12 @@ public:
 	{
 		dpi_ = dpi;
 	}
-	void setXRange(int min, int max)
+	void setXRange(double min, double max)
 	{
 		xmin_ = min;
 		xmax_ = max;
 	}
-	void setYRange(int min, int max)
+	void setYRange(double min, double max)
 	{
 		ymin_ = min;
 		ymax_ = max;
@@ -39,16 +40,16 @@ public:
 
 protected:
 	//variables to store the plot data
-	QList<int> bars_;
+	QList<double> bars_;
 	QList<QString> labels_;
 	QList<QString> colors_;
 	QHash<QString,QString> color_legend_;
 	QString xlabel_;
 	QString ylabel_;
-	int ymin_;
-	int ymax_;
-	int xmin_;
-	int xmax_;
+	double ymin_;
+	double ymax_;
+	double xmin_;
+	double xmax_;
 	int dpi_;
 };
 
