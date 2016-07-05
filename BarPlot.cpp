@@ -47,7 +47,7 @@ void BarPlot::store(QString filename)
 	script.append("mpl.use('Agg')");
 	script.append("import matplotlib.pyplot as plt");
 	script.append("import matplotlib.patches as mpatches");
-	script.append("plt.figure(figsize=(10, 4), dpi=300)");
+	script.append("plt.figure(figsize=(10, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
 	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
 
@@ -114,7 +114,7 @@ void BarPlot::store(QString filename)
 	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10)");
 
 	//file handling
-	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=300)");
+	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
 
 	//check if python is installed
 	QString python_exe = QStandardPaths::findExecutable("python");
@@ -129,6 +129,7 @@ void BarPlot::store(QString filename)
 		process.start(python_exe, QStringList() << scriptfile);
 		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
 		{
+//			qDebug() << script.join("\n");
 			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
 		}
 
@@ -137,7 +138,7 @@ void BarPlot::store(QString filename)
 	}
 	else
 	{
+//		qDebug() << script.join("\n");
 		Log::warn("Python executable not found in PATH - skipping plot generation!");
-		qDebug() << script.join("\n");
 	}
 }

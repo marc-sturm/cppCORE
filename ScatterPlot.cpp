@@ -94,20 +94,20 @@ void ScatterPlot::store(QString filename)
 		script.append("plt.xlim(" + QString::number(xmin_) + "," + QString::number(xmax_) + ")");
 	}
 	if(noxticks_)	script.append("plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')");
-	QString xvaluestring = "";
-	QString yvaluestring = "";
+	QString xvaluestring = "[";
+	QString yvaluestring = "[";
 	if (points_.count()>0)
 	{
-		xvaluestring += "[" + QString::number(points_[0].first);
-		yvaluestring += "[" + QString::number(points_[0].second);
+		xvaluestring += QString::number(points_[0].first);
+		yvaluestring += QString::number(points_[0].second);
 		for (int i=1; i<points_.count(); ++i)
 		{
 			xvaluestring += ","+QString::number(points_[i].first);
 			yvaluestring += ","+QString::number(points_[i].second);
 		}
-		xvaluestring += "],";
-		yvaluestring += "],";
 	}
+	xvaluestring += "],";
+	yvaluestring += "],";
 	script.append("plt.scatter(" + xvaluestring + yvaluestring + "3)");
 	foreach(double x, vlines_)
 	{
@@ -128,6 +128,7 @@ void ScatterPlot::store(QString filename)
 		process.start(python_exe, QStringList() << scriptfile);
 		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
 		{
+//			qDebug() << script.join("\n");
 			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
 		}
 
@@ -136,7 +137,7 @@ void ScatterPlot::store(QString filename)
 	}
 	else
 	{
+//		qDebug() << script.join("\n");
 		Log::warn("Python executable not found in PATH - skipping plot generation!");
-		qDebug() << script.join("\n");
 	}
 }
