@@ -214,6 +214,29 @@ QString Helper::dateTime(QString format)
 	return QDateTime::currentDateTime().toString(format);
 }
 
+bool Helper::isWritable(QString filename)
+{
+	if (QFile::exists(filename))
+	{
+		QFileInfo file_info(filename);
+		if (!file_info.isFile() || !file_info.isWritable())
+		{
+			return false;
+		}
+	}
+	else
+	{
+		QString dir = QFileInfo(filename).absolutePath();
+		QFileInfo dir_info(dir);
+		if (!dir_info.isDir()  || !dir_info.isWritable())
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_if_empty)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));

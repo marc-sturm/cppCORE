@@ -278,22 +278,9 @@ bool ToolBase::parseCommandLine()
 
 			if (args[i]!="" && data.options["check_writable"].toBool())
 			{
-				if (QFile::exists(args[i]))
+				if (!Helper::isWritable(args[i]))
 				{
-					QFileInfo file_info(args[i]);
-					if (!file_info.isFile() || !file_info.isWritable())
-					{
-						THROW(CommandLineParsingException, "Output file '" + args[i] +"' given for parameter '" + par + "' is not writable.");
-					}
-				}
-				else
-				{
-					QString dir = QFileInfo(args[i]).absolutePath();
-					QFileInfo dir_info(dir);
-					if (!dir_info.isDir()  || !dir_info.isWritable())
-					{
-						THROW(CommandLineParsingException, "Output file directory '" + dir + "' given for parameter '" + par + "' is not writable.");
-					}
+					THROW(CommandLineParsingException, "Output file '" + args[i] +"' given for parameter '" + par + "' is not writable.");
 				}
 			}
 

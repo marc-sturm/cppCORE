@@ -76,6 +76,9 @@ public:
 	///Returns the current date and time in the given format. If the format is a empty string, the ISO format "yyyy-MM-ddTHH:mm:ss" is returned.
 	static QString dateTime(QString format = "dd.MM.yyyy hh:mm:ss");
 
+	///Checks if a file is writable (or if the folder is writable in case the file does not exist)
+	static bool isWritable(QString filename);
+
 protected:
 	///Constructor declared away.
 	Helper();
