@@ -5,13 +5,14 @@
 #include <QString>
 #include <QList>
 #include <QPair>
+#include <QHash>
 
 ///Creates a line plot PNG image (needs Python in the path - and matplotlib extension).
 class CPPCORESHARED_EXPORT ScatterPlot
 {
 public:
 	ScatterPlot();
-	void setValues(const QList< QPair<double,double> >& values);
+	void setValues(const QList< QPair<double,double> >& values, const QList< QString >& colors = QList< QString >());
 	void convertChromToX();
 	void setXLabel(QString xlabel);
 	void setXRange(double xmin, double xmax);
@@ -26,12 +27,15 @@ public:
 		yscale_log_ = yscale_log;
 	}
 	void addVLine(double x);
+	void addColorLegend(QString color,QString desc);
 	void store(QString filename);
 
 protected:
 	//variables to store the plot data
 	QList< QPair<double,double> > points_;
 	QList< double > vlines_;
+	QList< QString > colors_;
+	QHash<QString,QString> color_legend_;
 	QString xlabel_;
 	QString ylabel_;
 	double ymin_;

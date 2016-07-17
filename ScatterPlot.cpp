@@ -13,10 +13,12 @@ ScatterPlot::ScatterPlot()
 {
 }
 
-void ScatterPlot::setValues(const QList< QPair<double,double> >& values)
+void ScatterPlot::setValues(const QList< QPair<double,double> >& values, const QList< QString >& colors)
 {
 	points_.clear();
 	points_.append(values);
+	colors_.clear();
+	colors_.append(colors);
 }
 
 void ScatterPlot::setXLabel(QString xlabel)
@@ -43,6 +45,11 @@ void ScatterPlot::setYRange(double ymin, double ymax)
 	yrange_set_ = true;
 }
 
+void ScatterPlot::addColorLegend(QString color, QString desc)
+{
+	color_legend_.insert(color, desc);
+}
+
 void ScatterPlot::addVLine(double x)
 {
 	vlines_.append(x);
@@ -55,6 +62,7 @@ void ScatterPlot::store(QString filename)
 	script.append("import matplotlib as mpl");
 	script.append("mpl.use('Agg')");
 	script.append("import matplotlib.pyplot as plt");
+	script.append("import matplotlib.patches as mpatches");
 	script.append("plt.figure(figsize=(6, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
 	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
@@ -96,23 +104,41 @@ void ScatterPlot::store(QString filename)
 	if(noxticks_)	script.append("plt.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')");
 	QString xvaluestring = "[";
 	QString yvaluestring = "[";
+	QString cvaluestring = "[";
 	if (points_.count()>0)
 	{
 		xvaluestring += QString::number(points_[0].first);
 		yvaluestring += QString::number(points_[0].second);
+		if(colors_.count() > 0)	cvaluestring += colors_[0];
+		else	cvaluestring += "k";
 		for (int i=1; i<points_.count(); ++i)
 		{
 			xvaluestring += ","+QString::number(points_[i].first);
 			yvaluestring += ","+QString::number(points_[i].second);
+			if(colors_.count() > 0)	cvaluestring += "," + colors_[i];
+			else	cvaluestring += ", k";
 		}
 	}
-	xvaluestring += "],";
-	yvaluestring += "],";
-	script.append("plt.scatter(" + xvaluestring + yvaluestring + "3)");
+	xvaluestring += "]";
+	yvaluestring += "]";
+	cvaluestring += "]";
+	script.append("plt.scatter(" + xvaluestring + "," + yvaluestring + ",3,"+ cvaluestring + ",edgecolors='face')");
 	foreach(double x, vlines_)
 	{
 		script.append("plt.plot(("+QString::number(x)+","+QString::number(x)+"),("+QString::number(ymin_)+","+QString::number(ymax_)+"),'k--')");
 	}
+
+	//legend
+	QString c = "";
+	QString d = "";
+	foreach(const QString& desc, color_legend_)
+	{
+		QString col = color_legend_.key(desc);
+		c += "mpatches.Patch(color='" + col + "'),";
+		d += "'" + desc + "',";
+	}
+	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10)");
+
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
 
 	//check if python is installed
