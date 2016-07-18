@@ -109,14 +109,14 @@ void ScatterPlot::store(QString filename)
 	{
 		xvaluestring += QString::number(points_[0].first);
 		yvaluestring += QString::number(points_[0].second);
-		if(colors_.count() > 0)	cvaluestring += colors_[0];
-		else	cvaluestring += "k";
+		if(colors_.count() > 0)	cvaluestring += "'"+colors_[0]+"'";
+		else	cvaluestring += "'k'";
 		for (int i=1; i<points_.count(); ++i)
 		{
 			xvaluestring += ","+QString::number(points_[i].first);
 			yvaluestring += ","+QString::number(points_[i].second);
-			if(colors_.count() > 0)	cvaluestring += "," + colors_[i];
-			else	cvaluestring += ", k";
+			if(colors_.count() > 0)	cvaluestring += ",'" + colors_[i] + "'";
+			else	cvaluestring += ", 'k'";
 		}
 	}
 	xvaluestring += "]";
@@ -129,15 +129,18 @@ void ScatterPlot::store(QString filename)
 	}
 
 	//legend
-	QString c = "";
-	QString d = "";
-	foreach(const QString& desc, color_legend_)
+	if(color_legend_.count()>0)
 	{
-		QString col = color_legend_.key(desc);
-		c += "mpatches.Patch(color='" + col + "'),";
-		d += "'" + desc + "',";
+		QString c = "";
+		QString d = "";
+		foreach(const QString& desc, color_legend_)
+		{
+			QString col = color_legend_.key(desc);
+			c += "mpatches.Patch(color='" + col + "'),";
+			d += "'" + desc + "',";
+		}
+		script.append("plt.legend((" + c + "),(" + d + "),fontsize=10)");
 	}
-	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10)");
 
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
 
