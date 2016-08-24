@@ -97,10 +97,11 @@ void BarPlot::store(QString filename)
 		colorstring += "]";
 	}
 
-	script.append("barlist=plt.bar(" + xvaluestring + "," + yvaluestring + ",align='center'" + (colorstring.isEmpty() ?  "" : ",color=" + colorstring ) + ")");
+	script.append("barlist=plt.bar(" + xvaluestring + "," + yvaluestring + ",align='center'" + (colorstring.isEmpty() ?  "" : ",color=" + colorstring ) + ", edgecolor='none')");
 	script.append("plt.xticks(" + xvaluestring + (labelstring.isEmpty() ? "" : "," + labelstring) + ", size='xx-small',rotation=90,horizontalalignment='center')");
 	script.append("plt.yticks(size=10)");
-	script.append("plt.tick_params(axis='x',which='both',length=0)");
+	script.append("plt.tick_params(axis='x',which='both',length=0,bottom='off',top='off')");
+	script.append("plt.tick_params(axis='y',which='both',left='off',right='off')");
 
 	//legend
 	QString c = "";
@@ -111,7 +112,7 @@ void BarPlot::store(QString filename)
 		c += "mpatches.Patch(color='" + col + "'),";
 		d += "'" + desc + "',";
 	}
-	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10)");
+	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10, bbox_to_anchor=(1.025,1), loc=2, borderaxespad=0.,frameon=0)");
 
 	//file handling
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
@@ -129,7 +130,7 @@ void BarPlot::store(QString filename)
 		process.start(python_exe, QStringList() << scriptfile);
 		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
 		{
-//			qDebug() << script.join("\n");
+			qDebug() << script.join("\n");
 			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
 		}
 
@@ -138,7 +139,6 @@ void BarPlot::store(QString filename)
 	}
 	else
 	{
-//		qDebug() << script.join("\n");
 		Log::warn("Python executable not found in PATH - skipping plot generation!");
 	}
 }
