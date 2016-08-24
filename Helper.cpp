@@ -128,48 +128,53 @@ QString Helper::tempFileName(QString extension, int length)
 	return QDir::toNativeSeparators(QDir::tempPath() + "/" + name);
 }
 
-void Helper::findFiles(const QString& directory, const QString& pattern, QStringList& output, bool first_call)
+QStringList Helper::findFiles(const QString& directory, const QString& pattern, bool recursive)
 {
-	QDir dir(directory);
-	if (first_call)
-	{
-		output.clear();
-		if(!dir.exists()) THROW(FileAccessException, "Directory does not exist: " + directory);
-	}
+	QStringList output;
 
-	QFileInfoList file_infos = dir.entryInfoList(QStringList() << pattern, QDir::AllDirs|QDir::Files|QDir::NoDotAndDotDot);
+	QDir dir(directory);
+	if(!dir.exists()) THROW(FileAccessException, "Directory does not exist: " + directory);
+
+	QFileInfoList file_infos = dir.entryInfoList(QStringList() << pattern, QDir::Files);
 	foreach(const QFileInfo& entry, file_infos)
 	{
-		if(entry.isFile())
+		output.append(directory + "/" + entry.fileName());
+	}
+
+	if (recursive)
+	{
+		file_infos = dir.entryInfoList(QDir::AllDirs|QDir::NoDotAndDotDot);
+		foreach(const QFileInfo& entry, file_infos)
 		{
-			output.append(directory + "/" + entry.fileName());
-		}
-		else if(entry.isDir())
-		{
-			findFiles(directory + "/" + entry.fileName(), pattern, output, false);
+			output << findFiles(directory + "/" + entry.fileName(), pattern, true);
 		}
 	}
+
+	return output;
 }
 
-void Helper::findFolders(const QString& directory, const QString& pattern, QStringList& output, bool first_call)
+QStringList Helper::findFolders(const QString& directory, const QString& pattern, bool recursive)
 {
+	QStringList output;
+
 	QDir dir(directory);
-	if (first_call)
-	{
-		output.clear();
-		if(!dir.exists()) THROW(FileAccessException, "Directory does not exist: " + directory);
-	}
+	if(!dir.exists()) THROW(FileAccessException, "Directory does not exist: " + directory);
 
 	QFileInfoList file_infos = dir.entryInfoList(QStringList() << pattern, QDir::Dirs|QDir::NoDotAndDotDot);
 	foreach(const QFileInfo& entry, file_infos)
 	{
 		output.append(directory + "/" + entry.fileName());
 	}
-	file_infos = dir.entryInfoList(QDir::AllDirs|QDir::NoDotAndDotDot);
-	foreach(const QFileInfo& entry, file_infos)
+	if (recursive)
 	{
-		findFolders(directory + "/" + entry.fileName(), pattern, output, false);
+		file_infos = dir.entryInfoList(QDir::AllDirs|QDir::NoDotAndDotDot);
+		foreach(const QFileInfo& entry, file_infos)
+		{
+			output << findFolders(directory + "/" + entry.fileName(), pattern, true);
+		}
 	}
+
+	return output;
 }
 
 int Helper::levenshtein(const QString& s1, const QString& s2)

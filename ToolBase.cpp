@@ -137,7 +137,9 @@ QString ToolBase::getOutfile(QString name) const
 QStringList ToolBase::getInfileList(QString name) const
 {
     int index = checkParameterExists(name, INFILELIST);
-    return parameters_[index].value.toStringList();
+	QStringList output = parameters_[index].value.toStringList();
+	if (output.count()==1 && output[0]=="") output.clear();
+	return output;
 }
 
 bool ToolBase::parseCommandLine()

@@ -62,10 +62,10 @@ public:
 	///Returns a temporary file name. Make sure you delete the file when it is no longer needed to avoid name clashes!
 	static QString tempFileName(QString extension, int length=16);
 
-	///Find files recursively.
-	static void findFiles(const QString& directory, const QString& pattern, QStringList& output, bool first_call=true);
-	///Find folders recursively.
-	static void findFolders(const QString& directory, const QString& pattern, QStringList& output, bool first_call=true);
+	///Find files (recursively).
+	static QStringList findFiles(const QString& directory, const QString& pattern, bool recursive);
+	///Find folders (recursively).
+	static QStringList findFolders(const QString& directory, const QString& pattern, bool recursive);
 
 	///Returns the Levenshtein-distance of two strings.
 	static int levenshtein(const QString& s1, const QString& s2);
