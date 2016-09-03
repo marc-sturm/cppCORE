@@ -30,7 +30,8 @@ SOURCES += \
     ToolBase.cpp \
     TSVFileStream.cpp \
     ScatterPlot.cpp \
-    BarPlot.cpp
+    BarPlot.cpp \
+	Histogram.cpp
 
 HEADERS += ToolBase.h \
     Exceptions.h \
@@ -43,4 +44,6 @@ HEADERS += ToolBase.h \
     WorkerBase.h \
     TSVFileStream.h \
     ScatterPlot.h \
-    BarPlot.h
+    BarPlot.h \
+	Histogram.h
+	
