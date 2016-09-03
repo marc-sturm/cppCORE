@@ -95,7 +95,7 @@ double Histogram::binValue(int index) const
 {
 	if (index<0 || index>=(int)bins_.size())
 	{
-		THROW(StatisticsException,"Index out of range!");
+        THROW(StatisticsException,"Index " + QString::number(index) + " out of range (0-" + QString::number(bins_.size()-1) + ")!");
 	}
 
 	double value = bins_[index];
@@ -110,7 +110,7 @@ double Histogram::startOfBin(int index) const
 {
 	if (index<0 || index>=(int)bins_.size())
 	{
-		THROW(StatisticsException,"Index out of range!");
+        THROW(StatisticsException,"Index " + QString::number(index) + " out of range (0-" + QString::number(bins_.size()-1) + ")!");
 	}
 
     return bin_size_*index + min_;

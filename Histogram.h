@@ -3,6 +3,7 @@
 
 #include "cppCORE_global.h"
 #include <QVector>
+#include <QTextStream>
 
 ///Histogram representation
 class CPPCORESHARED_EXPORT Histogram
