@@ -23,7 +23,7 @@ QString Helper::randomString(int length, const QString& chars)
 	QString output;
 	for (int i=0; i<length; ++i)
 	{
-		output.append(chars[rand() % (chars.length()-1)]);
+        output.append(chars[rand() % chars.length()]);
 	}
 	return output;
 }
