@@ -1,5 +1,5 @@
-#ifndef HISTOGRAM_H
-#define HISTOGRAM_H
+#ifndef BARPLOT_H
+#define BARPLOT_H
 
 #include "cppCORE_global.h"
 #include <QString>
@@ -53,4 +53,4 @@ protected:
 	int dpi_;
 };
 
-#endif // HISTOGRAM_H
+#endif

@@ -11,7 +11,7 @@ class CPPCORESHARED_EXPORT LinePlot
 public:
 	LinePlot();
 
-	void addLine(const QVector<double>& values, QString label);
+	void addLine(const QVector<double>& values, QString label = "");
 	void setXValues(const QVector<double>& xvalues);
 
 	void setXLabel(QString xlabel);
