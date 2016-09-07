@@ -7,12 +7,13 @@
 
 double BasicStatistics::mean(const QVector<double>& data)
 {
-	if (data.count()==0)
+	const int n = data.count();
+	if (n==0)
 	{
 		THROW(StatisticsException, "Cannot calculate mean on empty data array.");
 	}
 
-	return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+	return std::accumulate(data.begin(), data.end(), 0.0) / n;
 }
 
 double BasicStatistics::stdev(const QVector<double>& data)
@@ -22,36 +23,35 @@ double BasicStatistics::stdev(const QVector<double>& data)
 
 double BasicStatistics::stdev(const QVector<double>& data, double mean)
 {
-	if (data.count()==0)
+	const int n = data.count();
+	if (n==0)
 	{
 		THROW(StatisticsException, "Cannot calculate standard deviation on empty data array.");
 	}
 
 	double output = 0.0;
-
-	for (int i=0; i<data.size(); ++i)
+	for (int i=0; i<n; ++i)
 	{
 		output += pow(data[i]-mean, 2);
 	}
-
-	return sqrt(output/data.size());
+	return sqrt(output/n);
 }
 
-double BasicStatistics::median(const QVector<double>& data)
+double BasicStatistics::median(const QVector<double>& data, bool check_sorted)
 {
-	if (!isSorted(data))
+	if (check_sorted && !isSorted(data))
 	{
 		THROW(StatisticsException, "Cannot calculate median on unsorted data array.");
 	}
-	if (data.count()==0)
+	const int n = data.count();
+	if (n==0)
 	{
-		THROW(StatisticsException, "Cannot calculate median of data array with zero length!");
+		THROW(StatisticsException, "Cannot calculate median on empty data array!");
 	}
 
-	int n = data.count();
 	if (n%2==0)
 	{
-		return 0.5 * (data[n/2-1] + data[n/2]);
+		return 0.5 * (data[n/2] + data[n/2-1]);
 	}
 	else
 	{
@@ -68,7 +68,37 @@ double BasicStatistics::mad(const QVector<double>& data, double median)
 		devs.append(fabs(value-median));
 	}
 	std::sort(devs.begin(), devs.end());
-	return BasicStatistics::median(devs);
+	return BasicStatistics::median(devs, false);
+}
+
+double BasicStatistics::q1(const QVector<double>& data, bool check_sorted)
+{
+	if (check_sorted && !isSorted(data))
+	{
+		THROW(StatisticsException, "Cannot calculate q1 on unsorted data array.");
+	}
+	const int n = data.count();
+	if (n==0)
+	{
+		THROW(StatisticsException, "Cannot calculate q1 on empty data array!");
+	}
+
+	return data[n/4];
+}
+
+double BasicStatistics::q3(const QVector<double>& data, bool check_sorted)
+{
+	if (check_sorted && !isSorted(data))
+	{
+		THROW(StatisticsException, "Cannot calculate q3 on unsorted data array.");
+	}
+	const int n = data.count();
+	if (n==0)
+	{
+		THROW(StatisticsException, "Cannot calculate q3 on empty data array!");
+	}
+
+	return data[3*n/4];
 }
 
 double BasicStatistics::correlation(const QVector<double>& x, const QVector<double>& y)
@@ -82,8 +112,8 @@ double BasicStatistics::correlation(const QVector<double>& x, const QVector<doub
 		THROW(StatisticsException, "Cannot calculate correlation of data arrays with zero length!");
 	}
 
-	double x_mean = mean(x);
-	double y_mean = mean(y);
+	const double x_mean = mean(x);
+	const double y_mean = mean(y);
 
 	double sum = 0.0;
 	for(int i=0; i<x.size(); ++i)

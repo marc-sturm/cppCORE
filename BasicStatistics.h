@@ -15,10 +15,14 @@ public:
 	static double stdev(const QVector<double>& data);
 	///Calculates the standard deviation of the data, using a given mean.
 	static double stdev(const QVector<double>& data, double mean);
-	///Calculates the median of the data. The input data must be sorted!
-	static double median(const QVector<double>& data);
+	///Calculates the median from sorted data.
+	static double median(const QVector<double>& data, bool check_sorted=false);
 	///Calculates the median average deviation (multiply by 1.428 to get a robust estimator of the stdev).
 	static double mad(const QVector<double>& data, double median);
+	///Calculates the first quartile from sorted data.
+	static double q1(const QVector<double>& data, bool check_sorted=false);
+	///Calculates the third quartile from sorted data.
+	static double q3(const QVector<double>& data, bool check_sorted=false);
 	///Calculates the correlation of two data arrays.
 	static double correlation(const QVector<double>& x, const QVector<double>& y);
 
