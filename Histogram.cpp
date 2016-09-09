@@ -174,7 +174,7 @@ QVector<double> Histogram::yCoords(bool as_percentage)
 		QVector<double> tmp(bins_);
 		for (int i=0; i<tmp.count(); ++i)
 		{
-			tmp[i] /= bin_sum_;
+			tmp[i] = 100.0 * tmp[i] / bin_sum_;
 		}
 		return tmp;
 	}
