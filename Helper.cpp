@@ -67,7 +67,7 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 		}
 		else
 		{
-			line.chop(1);
+			while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 		}
 
 		//skip empty lines
