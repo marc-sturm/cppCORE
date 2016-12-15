@@ -242,6 +242,35 @@ bool Helper::isWritable(QString filename)
 	return true;
 }
 
+QString Helper::canonicalPath(QString filename)
+{
+	//Linux > Windows separator
+	filename = filename.replace("/", "\\");
+
+	//double > single separator
+	filename = filename.replace("\\\\", "\\");
+
+	//remove "." and folder before it
+	QStringList parts = filename.split("\\");
+	while (parts.contains("."))
+	{
+		int index = parts.indexOf(".");
+		if (index==0) break;
+		parts.removeAt(index);
+	}
+
+	//remove ".." and folder before it
+	while (parts.contains(".."))
+	{
+		int index = parts.indexOf("..");
+		if (index<=1) break;
+		parts.removeAt(index);
+		parts.removeAt(index-1);
+	}
+
+	return parts.join("\\");
+}
+
 QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_if_empty)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));
