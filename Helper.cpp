@@ -247,8 +247,8 @@ QString Helper::canonicalPath(QString filename)
 	//Linux > Windows separator
 	filename = filename.replace("/", "\\");
 
-	//double > single separator
-	filename = filename.replace("\\\\", "\\");
+	//double > single separator (except for first character in case of UNC path)
+	filename = filename.at(0) + filename.mid(1, filename.length()-1).replace("\\\\", "\\");
 
 	//remove "." and folder before it
 	QStringList parts = filename.split("\\");
