@@ -26,15 +26,15 @@ public:
 	}
 
 	///Returns the current line, split to columns. Note: Empty lines are returned as an empty array.
-	QList<QByteArray> readLine();
+	QByteArrayList readLine();
 
 	///Returns the split header line. If no header is present, a list with empty string is returned.
-	const QList<QByteArray>& header() const
+	const QByteArrayList& header() const
 	{
 		return header_;
 	}
 	///Returns the comment lines.
-	const QVector<QByteArray>& comments() const
+	const QByteArrayList& comments() const
 	{
 		return comments_;
 	}
@@ -59,8 +59,8 @@ protected:
 	char comment_;
 	QFile file_;
 	QByteArray next_line_;
-	QVector<QByteArray> comments_;
-	QList<QByteArray> header_;
+	QByteArrayList comments_;
+	QByteArrayList header_;
 	int columns_;
 	int line_;
 

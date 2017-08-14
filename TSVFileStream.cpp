@@ -67,7 +67,7 @@ TSVFileStream::~TSVFileStream()
 	file_.close();
 }
 
-QList<QByteArray> TSVFileStream::readLine()
+QByteArrayList TSVFileStream::readLine()
 {
 	//handle first content line
 	if (!next_line_.isNull())
@@ -75,9 +75,9 @@ QList<QByteArray> TSVFileStream::readLine()
 		if (next_line_=="")
 		{
 			next_line_ = QByteArray();
-			return QList<QByteArray>();
+			return QByteArrayList();
 		}
-		QList<QByteArray> parts = next_line_.split(separator_);
+		QByteArrayList parts = next_line_.split(separator_);
 		if (parts.count()!=columns_)
 		{
 			THROW(FileParseException, "Expected " + QString::number(columns_) + " columns, but got " + QString::number(parts.count()) + " columns in line 1 of file " + filename_);
@@ -93,9 +93,9 @@ QList<QByteArray> TSVFileStream::readLine()
 
 	if (line=="")
 	{
-		return QList<QByteArray>();
+		return QByteArrayList();
 	}
-	QList<QByteArray> parts = line.split(separator_);
+	QByteArrayList parts = line.split(separator_);
 	if (parts.count()!=columns_)
 	{
 		THROW(FileParseException, "Expected " + QString::number(columns_) + " columns, but got " + QString::number(parts.count()) + " columns in line " + QString::number(line_) + " of file " + filename_);
