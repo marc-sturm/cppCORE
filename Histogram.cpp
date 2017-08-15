@@ -5,6 +5,11 @@
 #include "Exceptions.h"
 #include "Histogram.h"
 #include "BasicStatistics.h"
+#include "Helper.h"
+#include "Log.h"
+#include <QStringList>
+#include <QProcess>
+#include <QStandardPaths>
 
 Histogram::Histogram(double min, double max, double bin_size)
 	: min_(min)
@@ -181,5 +186,77 @@ QVector<double> Histogram::yCoords(bool as_percentage)
 	else
 	{
 		return bins_;
+	}
+}
+
+void Histogram::setXLabel(QString xlabel)
+{
+	xlabel_ = xlabel;
+}
+
+void Histogram::setYLabel(QString ylabel)
+{
+	ylabel_ = ylabel;
+}
+
+void Histogram::store(QString filename)
+{
+	//create python script
+	QStringList script;
+	script.append("import matplotlib.pyplot as plt");
+	script.append("plt.figure(figsize=(10, 4), dpi=100)");
+	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
+	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
+
+	script.append("plt.tick_params(axis='x', which='both', bottom='off', top='off')");
+	script.append("plt.tick_params(axis='y', which='both', left='off', right='off')");
+	script.append("plt.ylim(" + QString::number(minValue()) + "," + QString::number(maxValue()+0.2*maxValue()) + ")");
+	script.append("plt.xlim(" + QString::number(min()) + "," + QString::number(max()) + ")");
+
+	//data
+	QString yvaluestring = "";
+	QString xvaluestring = "";
+	QVector<double> x = xCoords();
+	QVector<double> y = yCoords();
+	for (int i=0; i<x.size(); ++i)
+	{
+		for(int j=0; j<y[i];++j)
+		{
+			yvaluestring += "," + QString::number(x[i]);
+		}
+
+		xvaluestring += "," + QString::number(x[i]+0.5*binSize());
+	}
+	xvaluestring = "[" + xvaluestring.remove(0,1) + "]";
+	yvaluestring = "[" + yvaluestring.remove(0,1) + "]";
+
+	script.append("plt.hist(" + yvaluestring + ", bins=" + xvaluestring + ", rwidth = 0.8, edgecolor='none')");
+
+	//file handling
+	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
+
+	//check if python is installed
+	QString python_exe = QStandardPaths::findExecutable("python");
+	if (python_exe!="")
+	{
+		QString scriptfile = Helper::tempFileName(".py");
+		Helper::storeTextFile(scriptfile, script);
+
+		//execute scipt
+		QProcess process;
+		process.setProcessChannelMode(QProcess::MergedChannels);
+		process.start(python_exe, QStringList() << scriptfile);
+		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+		{
+			qDebug() << script.join("\n");
+			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+		}
+
+		//remove temporary file
+		QFile::remove(scriptfile);
+	}
+	else
+	{
+		Log::warn("Python executable not found in PATH - skipping plot generation!");
 	}
 }
