@@ -52,11 +52,6 @@ public:
 	/// Returns an array of Y-coordinates (values).
 	QVector<double> yCoords(bool as_percentage=false);
 
-	/// store
-	void store(QString filname);
-	void setYLabel(QString ylabel);
-	void setXLabel(QString xlabel);
-
 protected:
 	/// lower bound position
 	double min_;
@@ -66,8 +61,6 @@ protected:
 	double bin_size_;
 	/// sum of all bins (used for percentage mode)
 	int bin_sum_;
-	QString xlabel_;
-	QString ylabel_;
 
 	/// vector of bins
 	QVector<double> bins_;
