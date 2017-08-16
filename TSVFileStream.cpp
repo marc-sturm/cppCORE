@@ -7,7 +7,6 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	, separator_(separator)
 	, comment_(comment)
 	, file_(filename)
-	, columns_(-1)
 	, line_(0)
 {
 	//open
@@ -40,7 +39,6 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 		else if (next_line_.startsWith(comment))
 		{
 			header_ = next_line_.mid(1).split(separator);
-			columns_ = header_.count();
 		}
 
 		next_line_ = file_.readLine();
@@ -52,10 +50,9 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	if (file_.atEnd() && next_line_=="") next_line_ = QByteArray();
 
 	//determine number of columns if no header is present
-	if (columns_==-1)
+	if (header_.isEmpty())
 	{
-		columns_ = next_line_.split(separator).count();
-		for(int i=0; i<columns_; ++i)
+		for(int i=0; i<next_line_.split(separator).count(); ++i)
 		{
 			header_.append("");
 		}
@@ -78,9 +75,9 @@ QByteArrayList TSVFileStream::readLine()
 			return QByteArrayList();
 		}
 		QByteArrayList parts = next_line_.split(separator_);
-		if (parts.count()!=columns_)
+		if (parts.count()!=columns())
 		{
-			THROW(FileParseException, "Expected " + QString::number(columns_) + " columns, but got " + QString::number(parts.count()) + " columns in line 1 of file " + filename_);
+			THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line 1 of file " + filename_);
 		}
 		next_line_ = QByteArray();
 		return parts;
@@ -96,47 +93,72 @@ QByteArrayList TSVFileStream::readLine()
 		return QByteArrayList();
 	}
 	QByteArrayList parts = line.split(separator_);
-	if (parts.count()!=columns_)
+	if (parts.count()!=columns())
 	{
-		THROW(FileParseException, "Expected " + QString::number(columns_) + " columns, but got " + QString::number(parts.count()) + " columns in line " + QString::number(line_) + " of file " + filename_);
+		THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line " + QString::number(line_) + " of file " + filename_);
 	}
 	return parts;
 }
 
-QVector<int> TSVFileStream::checkColumns(QString columns, bool numeric)
+int TSVFileStream::colIndex(QByteArray name, bool error_when_missing)
 {
-	QVector<int> cols;
+	//find matching indices
+	QVector<int> hits;
+	for (int i=0; i<columns(); ++i)
+	{
+		if (header_[i]==name)
+		{
+			hits.append(i);
+		}
+	}
 
-	QStringList parts = columns.split(",");
+	//error handling
+	if (hits.count()!=1)
+	{
+		if (error_when_missing)
+		{
+			if (hits.count()==0)
+			{
+				THROW(CommandLineParsingException, "Could not find column name '" + name + "' in column headers!");
+			}
+			if (hits.count()>1)
+			{
+				THROW(CommandLineParsingException, "Found column name '" + name + "' more than once in column headers!");
+			}
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	return hits[0];
+}
+
+QVector<int> TSVFileStream::checkColumns(QString col_names, bool numeric)
+{
+	QVector<int> col_indices;
+
+	QByteArrayList parts = col_names.toLatin1().split(',');
 	if (numeric)
 	{
-		foreach(QString part, parts)
+		foreach(const QByteArray& part, parts)
 		{
 			int col = Helper::toInt(part, "column number");
-			if (col<1 || col>columns_)
+			if (col<1 || col>columns())
 			{
-				THROW(CommandLineParsingException, "1-based column number '" + part + "' out of range (max is " + QString::number(columns_) + ")!");
+				THROW(CommandLineParsingException, "1-based column number '" + part + "' out of range (max is " + QString::number(columns()) + ")!");
 			}
-			cols.append(col-1);
+			col_indices.append(col-1);
 		}
 	}
 	else
 	{
-		foreach(QString part, parts)
+		foreach(const QByteArray& part, parts)
 		{
-			QVector<int> hits;
-			for (int i=0; i<header_.count(); ++i)
-			{
-				if (part==header_[i])
-				{
-					hits.append(i);
-				}
-			}
-			if (hits.count()==0) THROW(CommandLineParsingException, "Could not find column name '" + part + "' in column headers!");
-			if (hits.count()>1) THROW(CommandLineParsingException, "Found column name '" + part + "' more than once in column headers!");
-			cols.append(hits[0]);
+			col_indices.append(colIndex(part, true));
 		}
 	}
 
-	return cols;
+	return col_indices;
 }

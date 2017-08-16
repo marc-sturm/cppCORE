@@ -33,6 +33,9 @@ public:
 	{
 		return header_;
 	}
+	///Returns the header column index of the column 'name', or -1 when the column is missing.
+	int colIndex(QByteArray name, bool error_when_missing);
+
 	///Returns the comment lines.
 	const QByteArrayList& comments() const
 	{
@@ -41,7 +44,7 @@ public:
 	///Returns the number of columns in the file.
 	int columns() const
 	{
-		return columns_;
+		return header_.count();
 	}
 
 	///Returns the 0-based index of the last read line.
@@ -51,7 +54,7 @@ public:
 	}
 
 	///Checks and converts a comma-separated list of columns (names or 1-based indices) to 0-based numeric indices.
-	QVector<int> checkColumns(QString columns, bool numeric);
+	QVector<int> checkColumns(QString col_names, bool numeric);
 
 protected:
 	QString filename_;
