@@ -149,13 +149,6 @@ bool BasicStatistics::isValidFloat(QByteArray value)
 	return ok && isValidFloat(numeric_value);
 }
 
-double BasicStatistics::bound(double value, double lower_bound, double upper_bound)
-{
-	if (value<lower_bound) return lower_bound;
-	if (value>upper_bound) return upper_bound;
-	return value;
-}
-
 bool BasicStatistics::isSorted(const QVector<double>& data)
 {
 	for (int i=1; i<data.count(); ++i)

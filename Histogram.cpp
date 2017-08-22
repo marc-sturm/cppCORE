@@ -4,7 +4,6 @@
 
 #include "Exceptions.h"
 #include "Histogram.h"
-#include "BasicStatistics.h"
 #include "Helper.h"
 #include "Log.h"
 #include <QStringList>
@@ -28,16 +27,6 @@ Histogram::Histogram(double min, double max, double bin_size)
 	}
 
 	bins_.resize(ceil((max_-min_)/bin_size_));
-}
-
-double Histogram::min() const
-{
-	return min_;
-}
-
-double Histogram::max() const
-{
-	return max_;
 }
 
 double Histogram::maxValue(bool as_percentage) const
@@ -70,21 +59,6 @@ double Histogram::minValue(bool as_percentage) const
 	return min;
 }
 
-double Histogram::binSize() const
-{
-	return bin_size_;
-}
-
-int Histogram::binCount() const
-{
-	return bins_.size();
-}
-
-int Histogram::binSum()
-{
-	return bin_sum_;
-}
-
 double Histogram::binValue(int index, bool as_percentage) const
 {
 	if (index<0 || index>=(int)bins_.size())
@@ -110,9 +84,9 @@ double Histogram::startOfBin(int index) const
     return bin_size_*index + min_;
 }
 
-double Histogram::binValue(double val, bool as_percentage) const
+double Histogram::binValue(double val, bool as_percentage, bool ignore_bounds_errors) const
 {
-	double value = bins_[binIndex(val)];
+	double value = bins_[binIndex(val, ignore_bounds_errors)];
 	if(as_percentage)
 	{
 		return 100.0 * value / (double)bin_sum_;
@@ -120,38 +94,16 @@ double Histogram::binValue(double val, bool as_percentage) const
 	return value;
 }
 
-void Histogram::inc(double val, bool ignore_bounds_errors)
+int Histogram::binIndex(double val, bool ignore_bounds_errors) const
 {
-	if (ignore_bounds_errors)
-	{
-		val = BasicStatistics::bound(val, min_, max_);
-	}
-
-	bins_[binIndex(val)]+=1;
-	bin_sum_ += 1;
-}
-
-void Histogram::inc(const QVector<double>& data, bool ignore_bounds_errors)
-{
-	for (int i=0; i<data.size(); ++i)
-	{
-		inc(data[i], ignore_bounds_errors);
-	}
-}
-
-
-int Histogram::binIndex(double val) const
-{
-	if (val < min_ || val > max_)
+	if (!ignore_bounds_errors && (val < min_ || val > max_))
 	{
 		THROW(StatisticsException, "Requested position '" + QString::number(val) + "' not in range (" + QString::number(min_) + "-" + QString::number(max_) + ")!");
 	}
 
 	int index = floor ( (val-min_) / (max_-min_) * bins_.size());
-	index = std::max(0, index);
-	index = std::min(index, (int)(bins_.size()-1));
 
-	return index;
+	return BasicStatistics::bound(index, 0, bins_.size()-1);
 }
 
 
@@ -165,11 +117,6 @@ void Histogram::print(QTextStream& stream, QString indentation, int position_pre
         if (!ascending) std::swap(start, end);
         stream << indentation << QString::number(start, 'f', position_precision) << "-" << QString::number(end, 'f', position_precision) << ": " << QString::number(binValue(index), 'f', data_precision) << "\n";
 	}
-}
-
-QVector<double> Histogram::xCoords()
-{
-	return BasicStatistics::range(binCount(), startOfBin(0) + 0.5 * binSize(), binSize());
 }
 
 QVector<double> Histogram::yCoords(bool as_percentage)
@@ -189,20 +136,12 @@ QVector<double> Histogram::yCoords(bool as_percentage)
 	}
 }
 
-void Histogram::setXLabel(QString xlabel)
-{
-	xlabel_ = xlabel;
-}
-
-void Histogram::setYLabel(QString ylabel)
-{
-	ylabel_ = ylabel;
-}
-
 void Histogram::store(QString filename)
 {
 	//create python script
 	QStringList script;
+	script.append("import matplotlib as mpl");
+	script.append("mpl.use('Agg')");
 	script.append("import matplotlib.pyplot as plt");
 	script.append("plt.figure(figsize=(10, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");

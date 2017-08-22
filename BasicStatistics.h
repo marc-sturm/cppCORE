@@ -31,7 +31,14 @@ public:
 	///Returns if a string is a representations of a valid float.
 	static bool isValidFloat(QByteArray value);
 	///Returns the value bounded to the given range.
-	static double bound(double value, double lower_bound, double upper_bound);
+	template <typename T>
+	static T bound(T value, T lower_bound, T upper_bound)
+	{
+		if (value<lower_bound) return lower_bound;
+		if (value>upper_bound) return upper_bound;
+		return value;
+	}
+
 	///Returns if the data is sorted.
 	static bool isSorted(const QVector<double>& data);
 	///Returns the sign of an integer, or 0 for 0.
