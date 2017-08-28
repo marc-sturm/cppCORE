@@ -217,6 +217,8 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 
 	//create python script
 	QStringList script;
+	script.append("import matplotlib as mpl");
+	script.append("mpl.use('Agg')");
 	script.append("import matplotlib.pyplot as plt");
 	script.append("plt.figure(figsize=(10, 4), dpi=100)");
 	if(ylabel!="") script.append("plt.ylabel('" + ylabel + "')");
