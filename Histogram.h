@@ -85,7 +85,10 @@ public:
 	QVector<double> yCoords(bool as_percentage=false);
 
 	/// store
-	void store(QString filname);
+	void store(QString filename);
+	/// stores a combined histogram of different histograms
+	static void storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel);
+
 	void setYLabel(QString ylabel)
 	{
 		ylabel_ = ylabel;
@@ -94,6 +97,21 @@ public:
 	void setXLabel(QString xlabel)
 	{
 		xlabel_ = xlabel;
+	}
+
+	void setLabel(QString label)
+	{
+		label_ = label;
+	}
+
+	void setColor(QString color)
+	{
+		color_ = color;
+	}
+
+	void setAlpha(double alpha)
+	{
+		alpha_ = alpha;
 	}
 
 protected:
@@ -107,6 +125,9 @@ protected:
 	int bin_sum_;
 	QString xlabel_;
 	QString ylabel_;
+	QString label_;
+	QString color_;
+	double alpha_;
 
 	/// vector of bins
 	QVector<double> bins_;
