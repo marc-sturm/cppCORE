@@ -50,7 +50,23 @@ public:
 	static QPair<double, double> getMinMax(const QVector<double>& data);
 
 	///Returns an even-spaced range of values.
-	static QVector<double> range(int size, double start_value, double increment);
+	template <typename T>
+	static QVector<T> range(int size, T start_value, T increment)
+	{
+		T next_val = start_value;
+
+		QVector<T> output;
+		output.reserve(size);
+		while(output.count()<size)
+		{
+			output << next_val;
+			next_val += increment;
+		}
+		return output;
+	}
+
+
+
 };
 
 #endif

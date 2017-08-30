@@ -225,18 +225,3 @@ QPair<double, double> BasicStatistics::getMinMax(const QVector<double>& data)
 
 	return qMakePair(min, max);
 }
-
-QVector<double> BasicStatistics::range(int size, double start_value, double increment)
-{
-	double next_val = start_value;
-
-	QVector<double> output;
-	while(output.count()<size)
-	{
-		output << next_val;
-		next_val += increment;
-	}
-	return output;
-}
-
-
