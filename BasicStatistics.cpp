@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <numeric>
-#include <math.h>
+#include <cmath>
 #include <limits>
 #include "BasicStatistics.h"
 #include "Exceptions.h"
