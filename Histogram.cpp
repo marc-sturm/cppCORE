@@ -15,6 +15,7 @@ Histogram::Histogram(double min, double max, double bin_size)
 	, max_(max)
 	, bin_size_(bin_size)
 	, bin_sum_(0)
+	, alpha_(std::numeric_limits<double>::quiet_NaN())
 {
 	if (bin_size_<=0)
 	{
@@ -185,10 +186,11 @@ void Histogram::store(QString filename)
 		QProcess process;
 		process.setProcessChannelMode(QProcess::MergedChannels);
 		process.start(python_exe, QStringList() << scriptfile);
-		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+		bool success = process.waitForFinished(-1);
+		QByteArray output = process.readAll();
+		if (!success || output.contains("rror"))
 		{
-			qDebug() << script.join("\n");
-			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 		}
 
 		//remove temporary file
@@ -247,7 +249,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		xvaluestring = "[" + xvaluestring + "]";	//remove first ','
 		yvaluestring = "[" + yvaluestring.remove(0,1) + "]";
 
-		script.append("plt.hist(" + yvaluestring + ", bins=" + xvaluestring + ", rwidth = 0.8, " + (h.color_.count()>0 ? "color=" + h.color_ + ", " : "") + (std::isnan(h.alpha_) ? "alpha=" + QString::number(h.alpha_) + "," : "") + " edgecolor='none', label = '" + h.label_ + "')");
+		script.append("plt.hist(" + yvaluestring + ", bins=" + xvaluestring + ", rwidth = 0.8, " + (h.color_.count()>0 ? "color=" + h.color_ + ", " : "") + (BasicStatistics::isValidFloat(h.alpha_) ? "alpha=" + QString::number(h.alpha_) + "," : "") + " edgecolor='none', label = '" + h.label_ + "')");
 	}
 	script.append("plt.legend(loc='upper right',fontsize=10)");
 
@@ -265,10 +267,11 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		QProcess process;
 		process.setProcessChannelMode(QProcess::MergedChannels);
 		process.start(python_exe, QStringList() << scriptfile);
-		if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+		bool success = process.waitForFinished(-1);
+		QByteArray output = process.readAll();
+		if (!success || output.contains("rror"))
 		{
-			qDebug() << script.join("\n");
-			THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 		}
 
 		//remove temporary file

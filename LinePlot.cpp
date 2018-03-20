@@ -131,9 +131,11 @@ void LinePlot::store(QString filename)
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.start(python_exe, QStringList() << scriptfile);
-	if (!process.waitForFinished(-1) || process.readAll().contains("rror"))
+	bool success = process.waitForFinished(-1);
+	QByteArray output = process.readAll();
+	if (!success || output.contains("rror"))
 	{
-		THROW(ProgrammingException, "Could not execute python script! Error message is: " + process.errorString());
+		THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 	}
 
 	//remove temporary file
