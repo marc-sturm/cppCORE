@@ -170,7 +170,7 @@ QPair<double, double> BasicStatistics::linearRegression(const QVector<double>& x
 	int count_valid = 0;
 	double sum_x = 0.0;
 	double sum_y = 0.0;
-	for (int i=0; i<x.size(); i++)
+	for (int i=0; i<x.size(); ++i)
 	{
 		if (isValidFloat(x[i]) && isValidFloat(y[i]))
 		{
@@ -186,7 +186,7 @@ QPair<double, double> BasicStatistics::linearRegression(const QVector<double>& x
 	// initializing b
 	double slope = 0.0;
 	double st2 = 0.0;
-	for (int i=0; i<x.size(); i++)
+	for (int i=0; i<x.size(); ++i)
 	{
 		if (isValidFloat(x[i]) && isValidFloat(y[i]))
 		{

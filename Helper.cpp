@@ -5,19 +5,24 @@
 #include <QCoreApplication>
 #include <QDateTime>
 
+void Helper::randomInit()
+{
+	int seconds = time(NULL);
+	int milliseconds = QTime::currentTime().msec();
+	int process_id = QCoreApplication::applicationPid();
+	srand(seconds + milliseconds + process_id + rand());
+}
+
 double Helper::randomNumber(double min, double max)
 {
 	double r = (double)rand() / (double)RAND_MAX;
 	return min + r * (max - min);
 }
 
-QString Helper::randomString(int length, const QString& chars)
+QString Helper::randomString(int length, const QString& chars, bool init)
 {
 	//initialize random number generator
-	int seconds = time(NULL);
-	int milliseconds = QTime::currentTime().msec();
-	int process_id = QCoreApplication::applicationPid();
-	srand(seconds + milliseconds + process_id + rand());
+	if (init) randomInit();
 
 	//create random string
 	QString output;
@@ -184,11 +189,11 @@ int Helper::levenshtein(const QString& s1, const QString& s2)
 	QVector<int> col(len2+1);
 	QVector<int> prevCol(len2+1);
 
-	for (int i = 0; i < prevCol.size(); i++)
+	for (int i=0; i<prevCol.size(); ++i)
 	{
 		prevCol[i] = i;
 	}
-	for (int i = 0; i < len1; i++)
+	for (int i=0; i<len1; ++i)
 	{
 		col[0] = i+1;
 		for (int j = 0; j < len2; j++)

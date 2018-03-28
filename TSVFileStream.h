@@ -68,9 +68,9 @@ protected:
 	int line_;
 
     //declared away methods
-    TSVFileStream(const TSVFileStream& );
-    TSVFileStream& operator=(const TSVFileStream&);
-    TSVFileStream();
+	TSVFileStream(const TSVFileStream& ) = delete;
+	TSVFileStream& operator=(const TSVFileStream&) = delete;
+	TSVFileStream() = delete;
 };
 
 

@@ -58,7 +58,7 @@ class CPPCORESHARED_EXPORT Settings
 
   protected:
 	///Default constructor "declared away"
-    Settings();
+	Settings() = delete;
 	///Retreives a value from default INI file "[appname].ini" or from fallback INI file "settings.ini"
 	static QVariant valueWithFallback(const QString& key, const QVariant& defaultValue = QVariant());
 
