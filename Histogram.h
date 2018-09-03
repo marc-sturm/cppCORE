@@ -52,7 +52,7 @@ public:
 		return bins_.size();
 	}
 	/// Returns the sum of all bins (i.e. the number of data points added)
-	int binSum()
+	long long binSum()
 	{
 		return bin_sum_;
 	}
@@ -122,7 +122,7 @@ protected:
 	/// bin size
 	double bin_size_;
 	/// sum of all bins (used for percentage mode)
-	int bin_sum_;
+	long long bin_sum_;
 	QString xlabel_;
 	QString ylabel_;
 	QString label_;
