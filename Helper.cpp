@@ -61,9 +61,10 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
 	QStringList output;
-	while (!file->atEnd())
+	QTextStream stream(file.data());
+	while (!stream.atEnd())
 	{
-		QByteArray line = file->readLine();
+		QString line = stream.readLine();
 
 		//remove newline or trim
 		if (trim_lines)
@@ -79,7 +80,7 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 		if (skip_empty_lines && line.count()==0) continue;
 
 		//skip header lines
-		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char.toLatin1()) continue;
+		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char) continue;
 
 		output.append(line);
 	}
@@ -89,9 +90,10 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 
 void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
+	QTextStream stream(file.data());
 	foreach(const QString& line, lines)
 	{
-		file->write(line.toLatin1() + "\n");
+		stream << line << "\n";
 	}
 }
 
