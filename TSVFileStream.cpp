@@ -11,7 +11,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 {
 	//open
 	bool open_status = true;
-	if (filename=="")
+	if (filename.isEmpty())
 	{
 		open_status = file_.open(stdin, QFile::ReadOnly | QFile::Text);
 	}
@@ -47,7 +47,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	}
 
 	//no first line
-	if (file_.atEnd() && next_line_=="") next_line_ = QByteArray();
+	if (file_.atEnd() && next_line_.isEmpty()) next_line_ = QByteArray();
 
 	//determine number of columns if no header is present
 	if (header_.isEmpty())
@@ -69,7 +69,7 @@ QByteArrayList TSVFileStream::readLine()
 	//handle first content line
 	if (!next_line_.isNull())
 	{
-		if (next_line_=="")
+		if (next_line_.isEmpty())
 		{
 			next_line_ = QByteArray();
 			return QByteArrayList();
@@ -88,7 +88,7 @@ QByteArrayList TSVFileStream::readLine()
 	while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 	++line_;
 
-	if (line=="")
+	if (line.isEmpty())
 	{
 		return QByteArrayList();
 	}
