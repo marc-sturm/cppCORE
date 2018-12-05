@@ -31,7 +31,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	{
 		if (next_line_.startsWith(double_quote))
 		{
-			if (next_line_!=double_quote)
+			if (next_line_.trimmed()!=double_quote)
 			{
 				comments_.append(next_line_);
 			}
@@ -135,14 +135,13 @@ int TSVFileStream::colIndex(QByteArray name, bool error_when_missing)
 	return hits[0];
 }
 
-QVector<int> TSVFileStream::checkColumns(QString col_names, bool numeric)
+QVector<int> TSVFileStream::checkColumns(const QByteArrayList& col_names, bool numeric)
 {
 	QVector<int> col_indices;
 
-	QByteArrayList parts = col_names.toLatin1().split(',');
 	if (numeric)
 	{
-		foreach(const QByteArray& part, parts)
+		foreach(const QByteArray& part, col_names)
 		{
 			int col = Helper::toInt(part, "column number");
 			if (col<1 || col>columns())
@@ -154,7 +153,7 @@ QVector<int> TSVFileStream::checkColumns(QString col_names, bool numeric)
 	}
 	else
 	{
-		foreach(const QByteArray& part, parts)
+		foreach(const QByteArray& part, col_names)
 		{
 			col_indices.append(colIndex(part, true));
 		}
