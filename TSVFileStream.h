@@ -54,7 +54,7 @@ public:
 	}
 
 	///Checks and converts a comma-separated list of columns (names or 1-based indices) to 0-based numeric indices.
-	QVector<int> checkColumns(QString col_names, bool numeric);
+	QVector<int> checkColumns(const QByteArrayList& col_names, bool numeric);
 
 protected:
 	QString filename_;
@@ -68,9 +68,9 @@ protected:
 	int line_;
 
     //declared away methods
-    TSVFileStream(const TSVFileStream& );
-    TSVFileStream& operator=(const TSVFileStream&);
-    TSVFileStream();
+	TSVFileStream(const TSVFileStream& ) = delete;
+	TSVFileStream& operator=(const TSVFileStream&) = delete;
+	TSVFileStream() = delete;
 };
 
 

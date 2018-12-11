@@ -126,9 +126,9 @@ private:
 	QString typeToArgString(ParameterType type) const;
 
 	/// Default constructor "declared away"
-	ToolBase();
+	ToolBase() = delete;
 	/// Copy constructor "declared away"
-	ToolBase(const ToolBase&);
+	ToolBase(const ToolBase&) = delete;
 
 	///Reimplemented nofify method to handle exceptions
 	bool notify(QObject* receiver, QEvent* event);

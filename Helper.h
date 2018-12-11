@@ -14,10 +14,12 @@
 class CPPCORESHARED_EXPORT Helper
 {
 public:
+	///Updates random number generator using a seed caclualted from the current time and process ID.
+	static void randomInit();
 	///Returns a random number in the given range
 	static double randomNumber(double min, double max);
 	///Returns a random string.
-	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", bool init=true);
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
 
@@ -92,7 +94,7 @@ public:
 
 protected:
 	///Constructor declared away.
-	Helper();
+	Helper() = delete;
 };
 
 #endif // HELPER_H

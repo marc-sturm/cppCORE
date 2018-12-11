@@ -65,8 +65,18 @@ public:
 		return output;
 	}
 
+	///Precalculates factorials.
+	static void precalculateFactorials();
+
+	///Returns the factorial of 'n', or 'nan' if an overflow happened.
+	static double factorial(int n);
+
+	///Returns the probability to see 'n' or more matches in 'count' observation when the probability to see a single match is 'p' (via binomial distribution)
+	static double matchProbability(double p, int n, int count);
 
 
+protected:
+	static QVector<double> factorial_cache;
 };
 
 #endif

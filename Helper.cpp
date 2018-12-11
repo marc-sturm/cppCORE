@@ -5,19 +5,24 @@
 #include <QCoreApplication>
 #include <QDateTime>
 
+void Helper::randomInit()
+{
+	int seconds = time(NULL);
+	int milliseconds = QTime::currentTime().msec();
+	int process_id = QCoreApplication::applicationPid();
+	srand(seconds + milliseconds + process_id + rand());
+}
+
 double Helper::randomNumber(double min, double max)
 {
 	double r = (double)rand() / (double)RAND_MAX;
 	return min + r * (max - min);
 }
 
-QString Helper::randomString(int length, const QString& chars)
+QString Helper::randomString(int length, const QString& chars, bool init)
 {
 	//initialize random number generator
-	int seconds = time(NULL);
-	int milliseconds = QTime::currentTime().msec();
-	int process_id = QCoreApplication::applicationPid();
-	srand(seconds + milliseconds + process_id + rand());
+	if (init) randomInit();
 
 	//create random string
 	QString output;
@@ -56,9 +61,10 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
 	QStringList output;
-	while (!file->atEnd())
+	QTextStream stream(file.data());
+	while (!stream.atEnd())
 	{
-		QByteArray line = file->readLine();
+		QString line = stream.readLine();
 
 		//remove newline or trim
 		if (trim_lines)
@@ -74,7 +80,7 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 		if (skip_empty_lines && line.count()==0) continue;
 
 		//skip header lines
-		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char.toLatin1()) continue;
+		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char) continue;
 
 		output.append(line);
 	}
@@ -84,9 +90,10 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 
 void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
+	QTextStream stream(file.data());
 	foreach(const QString& line, lines)
 	{
-		file->write(line.toLatin1() + "\n");
+		stream << line << "\n";
 	}
 }
 
@@ -184,11 +191,11 @@ int Helper::levenshtein(const QString& s1, const QString& s2)
 	QVector<int> col(len2+1);
 	QVector<int> prevCol(len2+1);
 
-	for (int i = 0; i < prevCol.size(); i++)
+	for (int i=0; i<prevCol.size(); ++i)
 	{
 		prevCol[i] = i;
 	}
-	for (int i = 0; i < len1; i++)
+	for (int i=0; i<len1; ++i)
 	{
 		col[0] = i+1;
 		for (int j = 0; j < len2; j++)

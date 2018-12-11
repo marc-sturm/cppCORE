@@ -50,7 +50,7 @@ protected:
 	///Default constructor not public
 	Log();
 	///Copy constructor "declared away"
-	Log(const Log&);
+	Log(const Log&) = delete;
 	///Returns the logger singleton instance.
 	static Log& inst();
 	///Internal message handler that does the actual logging.

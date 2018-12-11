@@ -11,7 +11,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 {
 	//open
 	bool open_status = true;
-	if (filename=="")
+	if (filename.isEmpty())
 	{
 		open_status = file_.open(stdin, QFile::ReadOnly | QFile::Text);
 	}
@@ -31,7 +31,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	{
 		if (next_line_.startsWith(double_quote))
 		{
-			if (next_line_!=double_quote)
+			if (next_line_.trimmed()!=double_quote)
 			{
 				comments_.append(next_line_);
 			}
@@ -47,7 +47,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	}
 
 	//no first line
-	if (file_.atEnd() && next_line_=="") next_line_ = QByteArray();
+	if (file_.atEnd() && next_line_.isEmpty()) next_line_ = QByteArray();
 
 	//determine number of columns if no header is present
 	if (header_.isEmpty())
@@ -69,7 +69,7 @@ QByteArrayList TSVFileStream::readLine()
 	//handle first content line
 	if (!next_line_.isNull())
 	{
-		if (next_line_=="")
+		if (next_line_.isEmpty())
 		{
 			next_line_ = QByteArray();
 			return QByteArrayList();
@@ -88,7 +88,7 @@ QByteArrayList TSVFileStream::readLine()
 	while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 	++line_;
 
-	if (line=="")
+	if (line.isEmpty())
 	{
 		return QByteArrayList();
 	}
@@ -135,14 +135,13 @@ int TSVFileStream::colIndex(QByteArray name, bool error_when_missing)
 	return hits[0];
 }
 
-QVector<int> TSVFileStream::checkColumns(QString col_names, bool numeric)
+QVector<int> TSVFileStream::checkColumns(const QByteArrayList& col_names, bool numeric)
 {
 	QVector<int> col_indices;
 
-	QByteArrayList parts = col_names.toLatin1().split(',');
 	if (numeric)
 	{
-		foreach(const QByteArray& part, parts)
+		foreach(const QByteArray& part, col_names)
 		{
 			int col = Helper::toInt(part, "column number");
 			if (col<1 || col>columns())
@@ -154,7 +153,7 @@ QVector<int> TSVFileStream::checkColumns(QString col_names, bool numeric)
 	}
 	else
 	{
-		foreach(const QByteArray& part, parts)
+		foreach(const QByteArray& part, col_names)
 		{
 			col_indices.append(colIndex(part, true));
 		}

@@ -5,6 +5,8 @@
 #include "BasicStatistics.h"
 #include "Exceptions.h"
 
+QVector<double> BasicStatistics::factorial_cache = QVector<double>();
+
 double BasicStatistics::mean(const QVector<double>& data)
 {
 	const int n = data.count();
@@ -170,7 +172,7 @@ QPair<double, double> BasicStatistics::linearRegression(const QVector<double>& x
 	int count_valid = 0;
 	double sum_x = 0.0;
 	double sum_y = 0.0;
-	for (int i=0; i<x.size(); i++)
+	for (int i=0; i<x.size(); ++i)
 	{
 		if (isValidFloat(x[i]) && isValidFloat(y[i]))
 		{
@@ -186,7 +188,7 @@ QPair<double, double> BasicStatistics::linearRegression(const QVector<double>& x
 	// initializing b
 	double slope = 0.0;
 	double st2 = 0.0;
-	for (int i=0; i<x.size(); i++)
+	for (int i=0; i<x.size(); ++i)
 	{
 		if (isValidFloat(x[i]) && isValidFloat(y[i]))
 		{
@@ -224,4 +226,64 @@ QPair<double, double> BasicStatistics::getMinMax(const QVector<double>& data)
 	}
 
 	return qMakePair(min, max);
+}
+
+void BasicStatistics::precalculateFactorials()
+{
+	if (!factorial_cache.isEmpty()) return;
+
+	//calculate factorials until double overflow happens
+	int i = 0;
+	double value = 1.0;
+	while(isValidFloat(value))
+	{
+		factorial_cache.append(value);
+		++i;
+		value *= i;
+	}
+}
+
+double BasicStatistics::factorial(int n)
+{
+	//outside of valid ragen => exception
+	if (n<0 || factorial_cache.count()==0)
+	{
+		THROW(ProgrammingException, "Cannot calculate factorial of " + QByteArray::number(n) + "! Cache not initialized?");
+	}
+
+	//not in cache (i.e. double overflow) => NAN
+	if (factorial_cache.count()<n+1)
+	{
+		return std::numeric_limits<double>::quiet_NaN();
+	}
+
+	return factorial_cache[n];
+}
+
+double BasicStatistics::matchProbability(double p, int n, int count)
+{
+	//handle double overflow of factorial (approximately at 160)
+	int mismatches = count - n;
+	while(!BasicStatistics::isValidFloat(BasicStatistics::factorial(count)))
+	{
+		n /= 2;
+		mismatches /=2;
+		count = n + mismatches;
+	}
+
+	//calculate probability
+	double output = 0.0;
+	for (int i=n; i<=count; ++i)
+	{
+		double q = std::pow(1.0-p, count-i) * std::pow(p, i) * BasicStatistics::factorial(count) / BasicStatistics::factorial(i) / BasicStatistics::factorial(count-i);
+		output += q;
+	}
+
+	//check that result is valid
+	if (!BasicStatistics::isValidFloat(output))
+	{
+		THROW(ProgrammingException, "Calculated probabilty for " + QString::number(n) + " matches and " + QString::number(mismatches) + " mismatches is not a valid float!");
+	}
+
+	return output;
 }
