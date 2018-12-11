@@ -82,6 +82,14 @@ public:
 	///Retruns the canonical (relative or absolute) file path for Windows.
 	static QString canonicalPath(QString filename);
 
+	///Removes all elements from a container that match the given predicate.
+	template<typename T, typename TPredicate>
+	static void removeIf(T& container, TPredicate predicate)
+	{
+		typename T::iterator it = std::remove_if(container.begin(), container.end(), predicate);
+		container.erase(it, container.end());
+	}
+
 protected:
 	///Constructor declared away.
 	Helper();
