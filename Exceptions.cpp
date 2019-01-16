@@ -65,3 +65,8 @@ StatisticsException::StatisticsException(QString message, QString file, int line
 	: Exception(message, file, line)
 {
 }
+
+AbortByUserException::AbortByUserException(QString message, QString file, int line)
+	: Exception(message, file, line)
+{
+}

@@ -92,6 +92,14 @@ public:
 	StatisticsException(QString message, QString file, int line);
 };
 
+///Exception that indicates that the user aborted a dialog or action.
+class CPPCORESHARED_EXPORT AbortByUserException
+		: public Exception
+{
+public:
+	AbortByUserException(QString message, QString file, int line);
+};
+
 #define THROW(name, message) \
 throw name(message, __FILE__, __LINE__);
 
