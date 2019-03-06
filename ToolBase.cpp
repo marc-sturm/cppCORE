@@ -6,9 +6,6 @@
 #include "Exceptions.h"
 #include "Helper.h"
 
-#define XSTR(x) #x
-#define STR(x) XSTR(x)
-
 ToolBase::ToolBase(int& argc, char *argv[])
 	: QCoreApplication(argc, argv)
 {
@@ -17,7 +14,21 @@ ToolBase::ToolBase(int& argc, char *argv[])
 
 QString ToolBase::version()
 {
-	return QString(STR(CPPCORE_VERSION));
+	return QString(CPPCORE_VERSION);
+}
+
+qulonglong ToolBase::encryptionKey(QString context)
+{
+	//get compiled-in key
+	QString crypt_key = QString(CRYPT_KEY).trimmed();
+	if (crypt_key=="") THROW(ProgrammingException, "Cannot decrypt string in context '" + context + "' because CRYPT_KEY is not set!");
+
+	//convert key to integer - a valid example key would be e.g. "0x0c2ad4a4acb9f023"
+	bool ok = true;
+	qulonglong crypt_key_int = crypt_key.toULongLong(&ok, 16);
+	if (!crypt_key.startsWith("0x") || !ok) THROW(ProgrammingException, "Cannot decrypt string in context '" + context + "' because CRYPT_KEY cannot be interpreted as a hex number!");
+
+	return crypt_key_int;
 }
 
 void ToolBase::setDescription(QString description)

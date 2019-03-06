@@ -32,6 +32,8 @@ public:
 	int execute();
 	///Returns the application version
 	static QString version();
+	///Returns the encryption key as an integer. Throws a ProgrammingException if it is not present/valid.
+	static qulonglong encryptionKey(QString context);
 
 	/**
 	  @name Parameter handling methods

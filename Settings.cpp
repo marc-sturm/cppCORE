@@ -1,7 +1,9 @@
 #include "Settings.h"
 #include <QDir>
 #include <QDebug>
+#include "SimpleCrypt.h"
 #include "Log.h"
+#include "ToolBase.h"
 
 QSettings& Settings::settings()
 {
@@ -42,12 +44,25 @@ void Settings::setInteger(QString key, int value)
 
 QString Settings::string(QString key, QString default_value)
 {
-  QString value = valueWithFallback(key, default_value).toString();
-  if (value==default_value)
-  {
-    setString(key, default_value);
-  }
-  return value;
+	QString value = valueWithFallback(key, default_value).toString();
+	if (value==default_value)
+	{
+		setString(key, default_value);
+	}
+
+	//decrypt if encrypted
+	QString crypt_prefix = "encrypted:";
+	if (value.startsWith(crypt_prefix))
+	{
+		//remove prefix
+		value = value.mid(crypt_prefix.count()).trimmed();
+
+		//decrypt
+		qulonglong crypt_key = ToolBase::encryptionKey("setting entry '" + key + "'");
+		value = SimpleCrypt(crypt_key).decryptToString(value);
+	}
+
+	return value;
 }
 
 void Settings::setString(QString key, QString value)

@@ -16,7 +16,7 @@ class CPPCORESHARED_EXPORT Settings
     ///write access for integer settings
 	static void setInteger(QString key, int value);
 
-    ///read access for string settings
+	///read access for string settings. If the string starts with 'encrypted:' it is decrypted before returning the key.
     static QString string(QString key, QString default_value = "");
     ///write access for string settings
 	static void setString(QString key, QString value);

@@ -9,8 +9,12 @@ DEFINES += CPPCORE_LIBRARY
 DESTDIR = ../../bin/
 
 #compose version string
-SVN_VER= $$system(cd .. && git describe --tags)
+SVN_VER= \\\"$$system(cd .. && git describe --tags)\\\"
 DEFINES += "CPPCORE_VERSION=$$SVN_VER"
+
+#get decryption key
+CRYPT_KEY= \\\"$$cat("CRYPT_KEY.txt", blob)\\\"
+DEFINES += "CRYPT_KEY=$$CRYPT_KEY"
 
 #enable O3 optimization
 QMAKE_CXXFLAGS_RELEASE -= -O
@@ -31,7 +35,8 @@ SOURCES += \
     TSVFileStream.cpp \
     ScatterPlot.cpp \
     BarPlot.cpp \
-	Histogram.cpp
+	Histogram.cpp \
+    SimpleCrypt.cpp
 
 HEADERS += ToolBase.h \
     Exceptions.h \
@@ -45,5 +50,6 @@ HEADERS += ToolBase.h \
     TSVFileStream.h \
     ScatterPlot.h \
     BarPlot.h \
-	Histogram.h
+	Histogram.h \
+    SimpleCrypt.h
 	
