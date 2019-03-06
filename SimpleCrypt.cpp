@@ -1,4 +1,4 @@
-#include "simplecrypt.h"
+#include "SimpleCrypt.h"
 #include <QByteArray>
 #include <QtDebug>
 #include <QtGlobal>
