@@ -17,7 +17,7 @@ public:
 	static double stdev(const QVector<double>& data, double mean);
 	///Calculates the median from sorted data.
 	static double median(const QVector<double>& data, bool check_sorted=false);
-	///Calculates the median average deviation (multiply by 1.428 to get a robust estimator of the stdev).
+	///Calculates the median average deviation (multiply by 1.482 to get a robust estimator of the stdev).
 	static double mad(const QVector<double>& data, double median);
 	///Calculates the first quartile from sorted data.
 	static double q1(const QVector<double>& data, bool check_sorted=false);
