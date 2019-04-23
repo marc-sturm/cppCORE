@@ -38,18 +38,21 @@ QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
 	//calculate minutes and seconds
 	double s = elapsed.elapsed()/1000.0;
 	double m = 0;
+	double h = 0;
 	if (!only_seconds)
 	{
 		m = floor(s/60.0);
 		s -= 60.0 * m;
+		h = floor(m/60.0);
+		m -= 60.0 * h;
 	}
 
 	//create strings
 	QByteArray sec = QByteArray::number(s, 'f', 3) + "s";
-	QByteArray min = "";
-	if (m>0.0) min = QByteArray::number(m, 'f', 0) + "m ";
+	QByteArray min = m==0.0 ? "" : QByteArray::number(m, 'f', 0) + "m ";
+	QByteArray hours = h==0.0 ? "" : QByteArray::number(h, 'f', 0) + "h ";
 
-	return min + sec;
+	return hours + min + sec;
 }
 
 
