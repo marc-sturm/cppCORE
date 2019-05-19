@@ -94,8 +94,9 @@ QStringList Helper::loadTextFile(QSharedPointer<QFile> file, bool trim_lines, QC
 void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
 	QTextStream stream(file.data());
-	foreach(const QString& line, lines)
+	foreach(QString line, lines)
 	{
+		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 		stream << line << "\n";
 	}
 }
