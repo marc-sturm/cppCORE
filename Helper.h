@@ -51,7 +51,7 @@ public:
 	static QStringList loadTextFile(QSharedPointer<QFile> file, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
 	///Convenience overload for loadTextFile.
 	static QStringList loadTextFile(QString file_name, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
-	///Stores a string list as a text file. To each line '\n' is appended as newline character.
+	///Stores a string list as a text file. '\r' and '\n' are trimmed from the end of each line and '\n' is appended as newline character.
 	static void storeTextFile(QSharedPointer<QFile> file, const QStringList& lines);
 	///Convenience overload for storeTextFile.
 	static void storeTextFile(QString file_name, const QStringList& lines);
