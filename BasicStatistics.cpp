@@ -128,7 +128,7 @@ double BasicStatistics::correlation(const QVector<double>& x, const QVector<doub
 
 bool BasicStatistics::isValidFloat(double value)
 {
-	if (value != value)
+	if (std::isnan(value))
 	{
 		return false;
 	}
