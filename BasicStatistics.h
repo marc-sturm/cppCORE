@@ -74,6 +74,10 @@ public:
 	///Returns the probability to see 'n' or more matches in 'count' observation when the probability to see a single match is 'p' (via binomial distribution)
 	static double matchProbability(double p, int n, int count);
 
+	static rangeOverlaps(int start1, int end1, int start2, int end2)
+	{
+		return (start1>=start2 && start1<=end2) || (start2>=start1 && start2<=end1);
+	}
 
 protected:
 	static QVector<double> factorial_cache;
