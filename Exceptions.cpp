@@ -70,3 +70,8 @@ AbortByUserException::AbortByUserException(QString message, QString file, int li
 	: Exception(message, file, line)
 {
 }
+
+NotImplementedException::NotImplementedException(QString message, QString file, int line)
+	: Exception(message, file, line)
+{
+}

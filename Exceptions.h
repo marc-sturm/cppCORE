@@ -100,6 +100,13 @@ public:
 	AbortByUserException(QString message, QString file, int line);
 };
 
+///Exception that indicates that certain functionality is not implemented.
+class CPPCORESHARED_EXPORT NotImplementedException
+		: public Exception
+{
+public:
+	NotImplementedException(QString message, QString file, int line);
+};
 #define THROW(name, message) \
 throw name(message, __FILE__, __LINE__);
 
