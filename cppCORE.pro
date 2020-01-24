@@ -36,7 +36,8 @@ SOURCES += \
     ScatterPlot.cpp \
     BarPlot.cpp \
 	Histogram.cpp \
-    SimpleCrypt.cpp
+    SimpleCrypt.cpp \
+    TsvFile.cpp
 
 HEADERS += ToolBase.h \
     Exceptions.h \
@@ -51,5 +52,6 @@ HEADERS += ToolBase.h \
     ScatterPlot.h \
     BarPlot.h \
 	Histogram.h \
-    SimpleCrypt.h
+    SimpleCrypt.h \
+    TsvFile.h
 	
