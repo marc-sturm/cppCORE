@@ -59,6 +59,7 @@ void ScatterPlot::store(QString filename)
 {
 	//create python script
 	QStringList script;
+	script.append("from numpy import nan");
 	script.append("import matplotlib as mpl");
 	script.append("mpl.use('Agg')");
 	script.append("import matplotlib.pyplot as plt");
