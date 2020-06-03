@@ -1,22 +1,40 @@
 #include "Settings.h"
 #include <QDir>
-#include <QDebug>
+#include <QStandardPaths>
 #include "SimpleCrypt.h"
 #include "Log.h"
 #include "ToolBase.h"
+#include "Exceptions.h"
 
-QSettings& Settings::settings()
+QSettings&Settings::settingsApplicationUser()
 {
 	static QSettings* settings = 0;
 	if(settings==0)
 	{
-		QString filename = QCoreApplication::applicationDirPath() + QDir::separator() + QCoreApplication::applicationName().replace(".exe","") + ".ini";
+		QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
+		if(default_paths.isEmpty()) THROW(Exception, "No local application data path was found!");
+		QString path = default_paths[0];
+		if (!QDir().mkpath(path)) THROW(Exception, "Could not create application data path '" + path + "'!");
+
+		//set log file
+		QString filename = path + QDir::separator() + QCoreApplication::applicationName() + "_local.ini";
 		settings = new QSettings(filename, QSettings::IniFormat);
 	}
 	return *settings;
 }
 
-QSettings& Settings::settingsFallback()
+const QSettings& Settings::settingsApplication()
+{
+	static QSettings* settings = 0;
+	if(settings==0)
+	{
+		QString filename = QCoreApplication::applicationDirPath() + QDir::separator() + QCoreApplication::applicationName() + ".ini";
+		settings = new QSettings(filename, QSettings::IniFormat);
+	}
+	return *settings;
+}
+
+const QSettings& Settings::settingsGeneral()
 {
 	static QSettings* settings = 0;
 	if(settings==0)
@@ -27,28 +45,21 @@ QSettings& Settings::settingsFallback()
 	return *settings;
 }
 
-int Settings::integer(QString key, int default_value)
+int Settings::integer(QString key)
 {
-  int value = valueWithFallback(key, default_value).toInt();
-  if (value==default_value)
-  {
-    setInteger(key, default_value);
-  }
-  return value;
+	return valueWithFallback(key).toInt();
 }
 
 void Settings::setInteger(QString key, int value)
 {
-  settings().setValue(key, value);
+	settingsApplicationUser().setValue(key, value);
 }
 
-QString Settings::string(QString key, QString default_value)
+QString Settings::string(QString key, bool optional)
 {
-	QString value = valueWithFallback(key, default_value).toString();
-	if (value==default_value)
-	{
-		setString(key, default_value);
-	}
+	if (optional && !contains(key)) return "";
+
+	QString value = valueWithFallback(key).toString();
 
 	//decrypt if encrypted
 	QString crypt_prefix = "encrypted:";
@@ -67,142 +78,118 @@ QString Settings::string(QString key, QString default_value)
 
 void Settings::setString(QString key, QString value)
 {
-  settings().setValue(key, value);
+	settingsApplicationUser().setValue(key, value);
 }
 
 
-QStringList Settings::stringList(QString key, QStringList default_value)
+QStringList Settings::stringList(QString key, bool optional)
 {
-  QStringList value = valueWithFallback(key, default_value).toStringList();
-  if (value==default_value)
-  {
-    setStringList(key, default_value);
-  }
-  return value;
+	if (optional && !contains(key)) return QStringList();
+
+	return valueWithFallback(key).toStringList();
 }
 
 void Settings::setStringList(QString key, QStringList value)
 {
-  settings().setValue(key, value);
+	settingsApplicationUser().setValue(key, value);
 }
 
 
-bool Settings::boolean(QString key, bool default_value)
+bool Settings::boolean(QString key)
 {
-  bool value = valueWithFallback(key, default_value).toBool();
-  if (value==default_value)
-  {
-    setBoolean(key, default_value);
-  }
-  return value;
+	return valueWithFallback(key).toBool();
 }
 
 void Settings::setBoolean(QString key, bool value)
 {
-  settings().setValue(key, value);
+	settingsApplicationUser().setValue(key, value);
 }
 
-QMap<QString, QVariant> Settings::map(QString key, QMap<QString, QVariant> default_value)
+QMap<QString, QVariant> Settings::map(QString key, bool optional)
 {
-  QMap<QString, QVariant> value = valueWithFallback(key, default_value).toMap();
-  if (value==default_value)
-  {
-    setMap(key, default_value);
-  }
-  return value;
+	if (optional && !contains(key)) QMap<QString, QVariant>();
+
+	return valueWithFallback(key).toMap();
 }
 
 void Settings::setMap(QString key, QMap<QString, QVariant> value)
 {
-  settings().setValue(key, value);
+	settingsApplicationUser().setValue(key, value);
 }
 
-QString Settings::path(QString key, QString default_value)
+QString Settings::path(QString key, bool optional)
 {
-  QString path = string(key, default_value);
+	if (optional && !contains(key)) return "";
 
-  if (path==default_value || !QDir(path).exists())
-  {
-    setPath(key, default_value);
-    return default_value;
-  }
+	QString path = string(key);
 
-  if (!path.endsWith("/"))
-  {
-    path += "/";
-  }
+	if (!path.endsWith(QDir::separator()))
+	{
+		path += QDir::separator();
+	}
 
-  return QDir::toNativeSeparators(path);
+	return QDir::toNativeSeparators(path);
 }
 
 void Settings::setPath(QString key, QString path)
 {
-  QFileInfo info(path);
-  if (info.isFile())
-  {
-    path = info.absolutePath();
-  }
+	QFileInfo info(path);
+	if (info.isFile())
+	{
+		path = info.absolutePath();
+	}
 
-  if (QDir(path).exists())
-  {
-    setString(key, QDir::toNativeSeparators(path));
-  }
+	if (QDir(path).exists())
+	{
+		setString(key, QDir::toNativeSeparators(path));
+	}
 }
 
 void Settings::clear()
 {
-    settings().clear();
+	settingsApplicationUser().clear();
 }
 
 void Settings::remove(QString key)
 {
-	settings().remove(key);
+	settingsApplicationUser().remove(key);
 }
 
 QStringList Settings::allKeys()
 {
-	return settings().allKeys();
-}
+	QStringList output;
 
-QString Settings::fileName()
-{
-	return settings().fileName();
-}
+	output << settingsApplicationUser().allKeys();
+	output << settingsApplication().allKeys();
+	output << settingsGeneral().allKeys();
 
-void Settings::createBackup(QString suffix)
-{
-	QSettings backup(fileName() + suffix, QSettings::IniFormat);
-
-	backup.clear();
-	QStringList keys = allKeys();
-	foreach (QString key, keys)
-	{
-		backup.setValue(key, settings().value(key));
-	}
-}
-
-void Settings::restoreBackup(QString suffix)
-{
-	QSettings backup(fileName() + suffix, QSettings::IniFormat);
-
-	clear();
-	QStringList keys = backup.allKeys();
-	foreach (QString key, keys)
-	{
-		settings().setValue(key, backup.value(key));
-	}
-
-	Log::info("Restored INI file: " + fileName() + suffix);
-}
-
-QVariant Settings::valueWithFallback(const QString& key, const QVariant& defaultValue)
-{
-	QVariant output = settings().value(key, defaultValue);
-
-	if (output==defaultValue)
-	{
-		output = settingsFallback().value(key, defaultValue);
-	}
+	std::sort(output.begin(), output.end());
+	output.removeDuplicates();
 
 	return output;
+}
+
+bool Settings::contains(QString key)
+{
+	return settingsApplicationUser().contains(key) || settingsApplication().contains(key) || settingsGeneral().contains(key);
+}
+
+QVariant Settings::valueWithFallback(QString key)
+{
+	if (settingsApplicationUser().contains(key))
+	{
+		return settingsApplicationUser().value(key);
+	}
+
+	if (settingsApplication().contains(key))
+	{
+		return settingsApplication().value(key);
+	}
+
+	if (settingsGeneral().contains(key))
+	{
+		return settingsGeneral().value(key);
+	}
+
+	THROW(ProgrammingException, "Requested key '" + key + "' not found in settings!");
 }

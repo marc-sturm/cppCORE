@@ -4,7 +4,8 @@
 #include <QTextStream>
 #include <QCoreApplication>
 #include <QFile>
-
+#include <QStandardPaths>
+#include <QDir>
 
 Log::Log()
 	: log_cmd_(true)
@@ -12,6 +13,14 @@ Log::Log()
 	, log_file_name_(QCoreApplication::applicationFilePath().replace(".exe", "") + ".log")
 	, enabled_(PERFORMANCE|INFO|WARNING|ERROR)
 {
+	//determine and create data path
+	QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
+	if(default_paths.isEmpty()) THROW(Exception, "No local application data path was found!");
+	QString path = default_paths[0];
+	if (!QDir().mkpath(path)) THROW(Exception, "Could not create application data path '" + path + "'!");
+
+	//set log file
+	log_file_name_ = path + QDir::separator() + QCoreApplication::applicationName() + ".log";
 }
 
 Log& Log::inst()
