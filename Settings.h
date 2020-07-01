@@ -58,6 +58,7 @@ class CPPCORESHARED_EXPORT Settings
 	///Retreives a value from the settings, with fallback in this order: settingsApplicationUser(), settingsApplication(), settingsGeneral().
 	static QVariant valueWithFallback(QString key);
 
+	static bool settingsApplicationUserExists();
 	///returns the user-specific settings file "[appname].ini" in the local application data folder (read-write)
 	static QSettings& settingsApplicationUser();
 	///returns the application-specific settings file "[appname].ini" in the application folder (read only)

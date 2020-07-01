@@ -6,7 +6,19 @@
 #include "ToolBase.h"
 #include "Exceptions.h"
 
-QSettings&Settings::settingsApplicationUser()
+
+bool Settings::settingsApplicationUserExists()
+{
+	QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
+	if(default_paths.isEmpty()) return false;
+
+	QString filename = default_paths[0] + QDir::separator() + QCoreApplication::applicationName() + "_local.ini";
+	if (!QFile::exists(filename)) return false;
+
+	return true;
+}
+
+QSettings& Settings::settingsApplicationUser()
 {
 	static QSettings* settings = 0;
 	if(settings==0)
@@ -159,7 +171,10 @@ QStringList Settings::allKeys()
 {
 	QStringList output;
 
-	output << settingsApplicationUser().allKeys();
+	if (settingsApplicationUserExists())
+	{
+		output << settingsApplicationUser().allKeys();
+	}
 	output << settingsApplication().allKeys();
 	output << settingsGeneral().allKeys();
 
@@ -171,12 +186,12 @@ QStringList Settings::allKeys()
 
 bool Settings::contains(QString key)
 {
-	return settingsApplicationUser().contains(key) || settingsApplication().contains(key) || settingsGeneral().contains(key);
+	return (settingsApplicationUserExists() && settingsApplicationUser().contains(key)) || settingsApplication().contains(key) || settingsGeneral().contains(key);
 }
 
 QVariant Settings::valueWithFallback(QString key)
 {
-	if (settingsApplicationUser().contains(key))
+	if (settingsApplicationUserExists() && settingsApplicationUser().contains(key))
 	{
 		return settingsApplicationUser().value(key);
 	}
