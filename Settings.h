@@ -26,8 +26,8 @@ class CPPCORESHARED_EXPORT Settings
 	///Write access for string list settings.
 	static void setStringList(QString key, QStringList value);
 
-	///Read access for boolean settings.
-	static bool boolean(QString key);
+	///Read access for boolean settings. If optional and not present, 'false' is retured.
+	static bool boolean(QString key, bool optional=false);
 	///Write access for boolean settings.
 	static void setBoolean(QString key, bool value);
 

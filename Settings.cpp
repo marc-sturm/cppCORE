@@ -107,8 +107,10 @@ void Settings::setStringList(QString key, QStringList value)
 }
 
 
-bool Settings::boolean(QString key)
+bool Settings::boolean(QString key, bool optional)
 {
+	if (optional && !contains(key)) return false;
+
 	return valueWithFallback(key).toBool();
 }
 
