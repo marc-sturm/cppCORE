@@ -3,6 +3,7 @@
 
 #include "cppCORE_global.h"
 #include <QStringList>
+#include <QTextStream>
 
 ///TSV file representation (row-wise)
 class CPPCORESHARED_EXPORT TsvFile
@@ -10,20 +11,24 @@ class CPPCORESHARED_EXPORT TsvFile
 public:
 	TsvFile();
 
-	//comments
 	void addComment(const QString& comment);
 	const QStringList& comments() const;
 
-	//header
 	void addHeader(const QString& header);
 	const QStringList& headers() const;
 
-	//rows
 	void addRow(const QStringList& row);
 	const QStringList& row(int i) const;
 	int rowCount() const;
 
-	//misc
+	//Creates a columns representation (slow).
+	QStringList extractColumn(int c);
+
+	//Loads a TSV file with '#' as start of header line and '##' as start of comment lines.
+	void load(QString filename);
+	//Stores the TSV file to a file.
+	void store(QString filename) const;
+	//Concerts the TSV file to string.
 	QString toString() const;
 
 private:
@@ -31,6 +36,8 @@ private:
 	QStringList headers_;
 	QList<QStringList> rows_;
 
+	//Stream writer helper
+	void toStream(QTextStream& steam) const;
 };
 
 #endif // TSVFILE_H

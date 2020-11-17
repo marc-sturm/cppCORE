@@ -1,5 +1,6 @@
 #include "TsvFile.h"
 #include "Exceptions.h"
+#include "Helper.h"
 
 TsvFile::TsvFile()
 {
@@ -84,24 +85,100 @@ int TsvFile::rowCount() const
 	return rows_.count();
 }
 
+QStringList TsvFile::extractColumn(int c)
+{
+	if (c<0 || c>=headers_.count())
+	{
+		THROW(ProgrammingException, "TsvFile: table has " + QString::number(headers_.count()) + " columns, but column with index " + QString::number(c) + " was requested.");
+	}
+
+	QStringList output;
+	foreach(const QStringList& row, rows_)
+	{
+		output << row[c];
+	}
+	return output;
+}
+
+void TsvFile::load(QString filename)
+{
+	auto file = Helper::openFileForReading(filename);
+
+	QTextStream stream(file.data());
+	while (!stream.atEnd())
+	{
+		QString line = stream.readLine();
+
+		//remove line ends
+		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
+
+		//skip empty lines
+		if (line.count()==0) continue;
+
+		//header lines
+		if (line[0]=='#')
+		{
+			if (line.count()>1 && line[1]=='#') //comment
+			{
+				addComment(line);
+			}
+			else //header
+			{
+				QStringList parts = line.mid(1).split('\t');
+				foreach(QString part, parts)
+				{
+					addHeader(part);
+				}
+			}
+			continue;
+		}
+
+		//content lines
+		addRow(line.split('\t'));
+	}
+}
+
+void TsvFile::store(QString filename) const
+{
+	auto file = Helper::openFileForWriting(filename);
+	QTextStream stream(file.data());
+	toStream(stream);
+}
+
 QString TsvFile::toString() const
 {
-	QStringList output;
+	QString output;
+	QTextStream stream(&output);
+	toStream(stream);
 
+	return output;
+}
+
+void TsvFile::toStream(QTextStream& stream) const
+{
 	//comment
-	foreach(QString comment, comments_)
+	foreach(const QString& comment, comments_)
 	{
-		output << comment.trimmed();
+		stream << comment << '\n';
 	}
 
 	//header
-	output << "#" + headers_.join("\t");
+	stream << '#';
+	for(int i=0; i<headers_.count(); ++i)
+	{
+		if (i!=0) stream << '\t';
+		stream << headers_[i];
+	}
+	stream << '\n';
 
 	//rows
-	foreach(QStringList row, rows_)
+	foreach(const QStringList& row, rows_)
 	{
-		output << row.join("\t");
+		for(int i=0; i<row.count(); ++i)
+		{
+			if (i!=0) stream << '\t';
+			stream << row[i];
+		}
+		stream << '\n';
 	}
-
-	return output.join("\n");
 }
