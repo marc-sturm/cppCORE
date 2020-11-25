@@ -3,6 +3,7 @@ CONFIG += c++11
 
 #base settings
 QT       -= gui
+QT += network
 TEMPLATE = lib
 TARGET = cppCORE
 DEFINES += CPPCORE_LIBRARY
@@ -24,6 +25,7 @@ QMAKE_CXXFLAGS_RELEASE *= -O3
 
 SOURCES += \
     Exceptions.cpp \
+    HttpRequestHandler.cpp \
     Settings.cpp \
     Log.cpp \
     Helper.cpp \
@@ -41,6 +43,7 @@ SOURCES += \
 
 HEADERS += ToolBase.h \
     Exceptions.h \
+    HttpRequestHandler.h \
     Settings.h \
     Log.h \
     Helper.h \
