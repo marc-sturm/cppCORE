@@ -42,7 +42,10 @@ HttpRequestHandler::HttpRequestHandler(ProxyType proxy_type, QObject* parent)
 	}
 
 	connect(&nmgr_, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), this, SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError>&)));
-	parent->connect(&nmgr_, SIGNAL(proxyAuthenticationRequired(const QNetworkProxy& , QAuthenticator*)), parent, SLOT(handleProxyAuthentification(const QNetworkProxy& , QAuthenticator*)));
+	if (parent != nullptr)
+	{
+		parent->connect(&nmgr_, SIGNAL(proxyAuthenticationRequired(const QNetworkProxy& , QAuthenticator*)), parent, SLOT(handleProxyAuthentification(const QNetworkProxy& , QAuthenticator*)));
+	}
 }
 
 const HttpHeaders& HttpRequestHandler::headers() const
