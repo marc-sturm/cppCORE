@@ -58,6 +58,48 @@ void HttpRequestHandler::setHeader(const QByteArray& key, const QByteArray& valu
 	headers_.insert(key, value);
 }
 
+qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_headers)
+{
+	//request
+	QNetworkRequest request;
+	request.setUrl(url);
+	for(auto it=headers_.begin(); it!=headers_.end(); ++it)
+	{
+		request.setRawHeader(it.key(), it.value());
+	}
+	for(auto it=add_headers.begin(); it!=add_headers.end(); ++it)
+	{
+		request.setRawHeader(it.key(), it.value());
+	}
+
+	//the entire file is not needed, only the headers will be processed
+	request.setRawHeader("Range", "bytes=0-1");
+	//query
+	QNetworkReply* reply = nmgr_.head(request);
+
+	//make the loop process the reply immediately
+	QEventLoop loop;
+	connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+	loop.exec();
+
+	qint64 output = 0.0;
+	if (reply->hasRawHeader("Content-Range"))
+	{
+		QList<QByteArray> header_parts = reply->rawHeader("Content-Range").split('/');
+		if (header_parts.size() > 1)
+		{
+			output = header_parts[1].toULongLong();
+		}
+	}
+
+	if (reply->error()!=QNetworkReply::NoError)
+	{
+		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+	}
+	reply->deleteLater();
+	return output;
+}
+
 QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 {
 	//request
@@ -72,21 +114,39 @@ QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 		request.setRawHeader(it.key(), it.value());
 	}
 
-	//query
-	QNetworkReply* reply = nmgr_.get(request);
-
-	//make the loop process the reply immediately
-	QEventLoop loop;
-	connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-	loop.exec();
-
-	//output
-	QString output = reply->readAll();
-	if (reply->error()!=QNetworkReply::NoError)
+	QString output {};
+	int retry_attempts = 5;
+	bool needs_retry = false;
+	for (int i = 0; i < retry_attempts; i++)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+		//query
+		QNetworkReply* reply = nmgr_.get(request);
+
+		//make the loop process the reply immediately
+		QEventLoop loop;
+		connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+		loop.exec();
+
+		//output
+		output = reply->readAll();
+		if (reply->error()!=QNetworkReply::NoError)
+		{
+			if (i == retry_attempts - 1)
+			{
+				THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+			}
+			else
+			{
+				needs_retry = true;
+			}
+		}
+
+		reply->deleteLater();
+		if (needs_retry)
+		{
+			break;
+		}
 	}
-	reply->deleteLater();
 	return output;
 }
 
