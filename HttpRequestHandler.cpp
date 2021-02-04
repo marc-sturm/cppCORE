@@ -113,6 +113,8 @@ QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 	{
 		request.setRawHeader(it.key(), it.value());
 	}
+	request.setRawHeader("User-Agent", "Qt NetworkAccess 1.3");
+	request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
 	QString output {};
 	int retry_attempts = 5;
@@ -128,6 +130,7 @@ QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 		loop.exec();
 
 		//output
+		reply->setReadBufferSize(0);
 		output = reply->readAll();
 		if (reply->error()!=QNetworkReply::NoError)
 		{
@@ -142,7 +145,7 @@ QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 		}
 
 		reply->deleteLater();
-		if (needs_retry)
+		if (!needs_retry)
 		{
 			break;
 		}
