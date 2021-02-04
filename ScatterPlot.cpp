@@ -3,6 +3,7 @@
 #include "Helper.h"
 #include "Log.h"
 #include "BasicStatistics.h"
+#include "Settings.h"
 #include <QStringList>
 #include <limits>
 #include <QProcess>
@@ -149,6 +150,7 @@ void ScatterPlot::store(QString filename)
 
 	//check if python is installed
 	QString python_exe = QStandardPaths::findExecutable("python");
+	if (python_exe=="") python_exe = Settings::string("python_exe", true);
 	if (python_exe!="")
 	{
 		QString scriptfile = Helper::tempFileName(".py");
