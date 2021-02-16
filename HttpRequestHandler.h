@@ -1,6 +1,7 @@
 #ifndef HTTPREQUESTHANDLER_H
 #define HTTPREQUESTHANDLER_H
 
+#include "cppCORE_global.h"
 #include <QObject>
 #include <QString>
 #include <QSslError>
@@ -10,7 +11,7 @@
 using HttpHeaders = QMap<QByteArray, QByteArray>;
 
 ///Helper class for HTTP(S) communication with webserver
-class HttpRequestHandler
+class CPPCORESHARED_EXPORT HttpRequestHandler
 		: public QObject
 {
 	Q_OBJECT
