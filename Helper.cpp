@@ -213,11 +213,7 @@ int Helper::levenshtein(const QString& s1, const QString& s2)
 
 QString Helper::userName()
 {
-#ifdef _WIN32
-	return qgetenv("USERNAME");
-#else
-	return qgetenv("USER");
-#endif
+	return qgetenv(isWindows() ? "USERNAME" : "USER");
 }
 
 QString Helper::dateTime(QString format)
@@ -281,6 +277,15 @@ QString Helper::canonicalPath(QString filename)
 	}
 
 	return parts.join("\\");
+}
+
+bool Helper::isWindows()
+{
+	#ifdef _WIN32
+		return true;
+	#else
+		return false;
+	#endif
 }
 
 QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_if_empty)
