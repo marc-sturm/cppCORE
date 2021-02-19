@@ -92,6 +92,8 @@ public:
 		container.erase(it, container.end());
 	}
 
+	static bool isWindows();
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;
