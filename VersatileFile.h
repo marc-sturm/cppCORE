@@ -19,6 +19,7 @@ public:
 	bool atEnd();
 	bool exists();
 	bool isLocalFile(QString src);
+	void close();
 
 private:
 	QString source_;

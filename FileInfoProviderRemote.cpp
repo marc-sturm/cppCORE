@@ -101,7 +101,6 @@ bool FileInfoProviderRemote::exists()
 {
 	bool output = false;
 	QJsonObject file_info = getFileInfo(file_);
-	qDebug() << "EXISTS = " << file_info;
 	if (file_info.contains("exists"))
 	{
 		output = file_info.value("exists").toBool();

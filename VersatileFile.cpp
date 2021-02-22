@@ -6,15 +6,13 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 {
 	if (isLocalFile(name))
 	{
-		QSharedPointer<QFile> file(new QFile(name));
-
-		file_ = file;
+		file_ = QSharedPointer<QFile>(new QFile(name));
 
 		if (stdin_if_empty && name=="")
 		{
-			file->open(stdin, QFile::ReadOnly | QIODevice::Text);
+			file_->open(stdin, QFile::ReadOnly | QIODevice::Text);
 		}
-		else if (!file->open(QFile::ReadOnly | QIODevice::Text))
+		else if (!file_->open(QFile::ReadOnly | QIODevice::Text))
 		{
 			THROW(FileAccessException, "Could not open file for reading: '" + name + "'!");
 		}
@@ -27,7 +25,6 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
 		buffer_->open(QBuffer::ReadOnly | QBuffer::Text);
 	}
-
 }
 
 VersatileFile::~VersatileFile()
@@ -41,6 +38,21 @@ bool VersatileFile::isLocalFile(QString src)
 		return false;
 	}
 	return true;
+}
+
+void VersatileFile::close()
+{
+	if (isLocalFile(source_))
+	{
+		file_->close();
+	}
+	else
+	{
+		if (!buffer_->isOpen())
+		{
+			buffer_->close();
+		}
+	}
 }
 
 bool VersatileFile::atEnd()
