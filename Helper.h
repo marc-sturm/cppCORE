@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QDebug>
 #include <QSharedPointer>
+#include "VersatileFile.h"
 
 ///Auxilary helper functions class.
 class CPPCORESHARED_EXPORT Helper
@@ -44,6 +45,9 @@ public:
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForReading(QString file_name, bool stdin_if_empty=false);
+	///Returns an opened versatile file pointer, or throws an error if it cannot be opened.
+	static QSharedPointer<VersatileFile> openVersatileFileForReading(QString file_name, bool stdin_if_empty);
+
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false);
 

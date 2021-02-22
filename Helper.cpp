@@ -303,6 +303,12 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 	return file;
 }
 
+QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
+{
+	QSharedPointer<VersatileFile> file(new VersatileFile(file_name, stdin_if_empty));
+	return file;
+}
+
 QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));
