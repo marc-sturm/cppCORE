@@ -2,9 +2,14 @@
 #include "HttpRequestHandler.h"
 
 VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
-		: source_(name)
+	:is_local_file_(true)
 {
-	if (isLocalFile(name))
+	if (name.toLower().startsWith("http"))
+	{
+		is_local_file_ = false;
+	}
+
+	if (is_local_file_)
 	{
 		file_ = QSharedPointer<QFile>(new QFile(name));
 
@@ -14,7 +19,7 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 		}
 		else if (!file_->open(QFile::ReadOnly | QIODevice::Text))
 		{
-			THROW(FileAccessException, "Could not open file for reading: '" + name + "'!");
+			THROW(FileAccessException, "Could not open local file for reading: '" + name + "'!");
 		}
 	}
 	else
@@ -23,7 +28,10 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 		reply_data_ = reply.toLocal8Bit();
 
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
-		buffer_->open(QBuffer::ReadOnly | QBuffer::Text);
+		if (!buffer_->open(QBuffer::ReadOnly | QBuffer::Text))
+		{
+			THROW(FileAccessException, "Could not open remote file for reading: '" + name + "'!");
+		}
 	}
 }
 
@@ -31,49 +39,81 @@ VersatileFile::~VersatileFile()
 {
 }
 
-bool VersatileFile::isLocalFile(QString src)
-{
-	if (src.toLower().startsWith("http"))
-	{
-		return false;
-	}
-	return true;
-}
-
 void VersatileFile::close()
 {
-	if (isLocalFile(source_))
+	if (is_local_file_)
 	{
 		file_->close();
 	}
 	else
 	{
-		if (!buffer_->isOpen())
-		{
-			buffer_->close();
-		}
+		buffer_->close();
 	}
 }
 
-bool VersatileFile::atEnd()
+bool VersatileFile::isSequential() const
 {
-	if (isLocalFile(source_))
+	if (is_local_file_)
+	{
+		return file_->isSequential();
+	}
+	else
+	{
+		return buffer_->isSequential();
+	}
+}
+
+qint64 VersatileFile::pos() const
+{
+	if (is_local_file_)
+	{
+		return file_->pos();
+	}
+	else
+	{
+		return buffer_->pos();
+	}
+}
+
+bool VersatileFile::seek(qint64 offset)
+{
+	if (is_local_file_)
+	{
+		return file_->seek(offset);
+	}
+	else
+	{
+		return buffer_->seek(offset);
+	}
+}
+
+qint64 VersatileFile::size() const
+{
+	if (is_local_file_)
+	{
+		return file_->size();
+	}
+	else
+	{
+		return buffer_->size();
+	}
+}
+
+bool VersatileFile::atEnd() const
+{
+	if (is_local_file_)
 	{
 		return file_->atEnd();
 	}
 	else
 	{
-		if (!buffer_->isOpen())
-		{
-			buffer_->open(QBuffer::ReadOnly);
-		}
 		return buffer_->atEnd();
 	}
 }
 
 bool VersatileFile::exists()
 {
-	if (isLocalFile(source_))
+	if (is_local_file_)
 	{
 		return file_->exists();
 	}
@@ -85,17 +125,13 @@ bool VersatileFile::exists()
 
 QByteArray VersatileFile::readLine(qint64 maxlen)
 {
-	if (isLocalFile(source_))
+	if (is_local_file_)
 	{
-		return file_->readLine();
+		return file_->readLine(maxlen);
 	}
 	else
-	{
-		if (!buffer_->isOpen())
-		{
-			buffer_->open(QBuffer::ReadOnly);
-		}
-		return buffer_->readLine();
+	{		
+		return buffer_->readLine(maxlen);
 
 	}
 	return QByteArray();
@@ -103,7 +139,7 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 
 QByteArray VersatileFile::readAll()
 {
-	if (isLocalFile(source_))
+	if (is_local_file_)
 	{
 		return file_->readAll();
 	}
@@ -111,4 +147,19 @@ QByteArray VersatileFile::readAll()
 	{
 		return buffer_->readAll();
 	}
+}
+
+qint64 VersatileFile::readData(char* data, qint64 maxlen)
+{
+	return 0;
+}
+
+qint64 VersatileFile::writeData(const char* data, qint64 len)
+{
+	return 0;
+}
+
+qint64 VersatileFile::readLineData(char* data, qint64 maxlen)
+{
+	return 0;
 }

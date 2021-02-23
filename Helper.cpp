@@ -299,7 +299,6 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 	{
 		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
 	}
-
 	return file;
 }
 
