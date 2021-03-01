@@ -6,7 +6,6 @@
 #include <QJsonObject>
 #include "cppCORE_global.h"
 #include "FileInfoProvider.h"
-#include "ApiRequestHandler.h"
 #include "Settings.h"
 
 class CPPCORESHARED_EXPORT FileInfoProviderRemote : virtual public FileInfoProvider

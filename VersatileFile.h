@@ -35,10 +35,11 @@ protected:
 	qint64 readLineData(char *data, qint64 maxlen) override;
 
 private:
-	bool is_local_file_;
 	QByteArray reply_data_;
-	QSharedPointer<QBuffer> buffer_;
 	QSharedPointer<QFile> file_;
+	QSharedPointer<QBuffer> buffer_;
+	QSharedPointer<QIODevice> device_;
+	void checkIfOpen() const;
 };
 
 #endif // VERSATILEFILE_H

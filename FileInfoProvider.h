@@ -2,6 +2,7 @@
 #define FILEINFOPROVIDER_H
 
 #include "cppCORE_global.h"
+#include "Exceptions.h"
 #include <QFileInfo>
 
 class CPPCORESHARED_EXPORT FileInfoProvider

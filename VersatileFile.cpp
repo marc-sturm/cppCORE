@@ -1,18 +1,11 @@
 #include "VersatileFile.h"
 #include "HttpRequestHandler.h"
 
-VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
-	:is_local_file_(true)
+VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)	
 {
-	if (name.toLower().startsWith("http"))
-	{
-		is_local_file_ = false;
-	}
-
-	if (is_local_file_)
-	{
+	if (!name.toLower().startsWith("http"))
+	{		
 		file_ = QSharedPointer<QFile>(new QFile(name));
-
 		if (stdin_if_empty && name=="")
 		{
 			file_->open(stdin, QFile::ReadOnly | QIODevice::Text);
@@ -21,132 +14,80 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 		{
 			THROW(FileAccessException, "Could not open local file for reading: '" + name + "'!");
 		}
+
+		device_ = file_;
 	}
 	else
 	{
 		QString reply = HttpRequestHandler(HttpRequestHandler::NONE).get(name);
 		reply_data_ = reply.toLocal8Bit();
-
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
-		if (!buffer_->open(QBuffer::ReadOnly | QBuffer::Text))
+		buffer_->open(QBuffer::ReadOnly | QBuffer::Text);
+		if (!buffer_->isOpen())
 		{
 			THROW(FileAccessException, "Could not open remote file for reading: '" + name + "'!");
 		}
+
+		device_ = buffer_;
 	}
 }
 
 VersatileFile::~VersatileFile()
 {
+	checkIfOpen();
+	device_->close();
 }
 
 void VersatileFile::close()
 {
-	if (is_local_file_)
-	{
-		file_->close();
-	}
-	else
-	{
-		buffer_->close();
-	}
+	checkIfOpen();
+	device_->close();
 }
 
 bool VersatileFile::isSequential() const
 {
-	if (is_local_file_)
-	{
-		return file_->isSequential();
-	}
-	else
-	{
-		return buffer_->isSequential();
-	}
+	checkIfOpen();
+	return device_->isSequential();
 }
 
 qint64 VersatileFile::pos() const
 {
-	if (is_local_file_)
-	{
-		return file_->pos();
-	}
-	else
-	{
-		return buffer_->pos();
-	}
+	checkIfOpen();
+	return device_->pos();
 }
 
 bool VersatileFile::seek(qint64 offset)
 {
-	if (is_local_file_)
-	{
-		return file_->seek(offset);
-	}
-	else
-	{
-		return buffer_->seek(offset);
-	}
+	checkIfOpen();
+	return device_->seek(offset);
 }
 
 qint64 VersatileFile::size() const
 {
-	if (is_local_file_)
-	{
-		return file_->size();
-	}
-	else
-	{
-		return buffer_->size();
-	}
+	checkIfOpen();
+	return device_->size();
 }
 
 bool VersatileFile::atEnd() const
 {
-	if (is_local_file_)
-	{
-		return file_->atEnd();
-	}
-	else
-	{
-		return buffer_->atEnd();
-	}
+	return device_->atEnd();
 }
 
 bool VersatileFile::exists()
 {
-	if (is_local_file_)
-	{
-		return file_->exists();
-	}
-	else
-	{
-		return !buffer_.isNull();
-	}
+	return device_->isOpen();
 }
 
 QByteArray VersatileFile::readLine(qint64 maxlen)
 {
-	if (is_local_file_)
-	{
-		return file_->readLine(maxlen);
-	}
-	else
-	{		
-		return buffer_->readLine(maxlen);
-
-	}
-	return QByteArray();
+	checkIfOpen();
+	return device_->readLine(maxlen);
 }
 
 QByteArray VersatileFile::readAll()
 {
-	if (is_local_file_)
-	{
-		return file_->readAll();
-	}
-	else
-	{
-		return buffer_->readAll();
-	}
+	checkIfOpen();
+	return device_->readAll();
 }
 
 qint64 VersatileFile::readData(char* data, qint64 maxlen)
@@ -162,4 +103,12 @@ qint64 VersatileFile::writeData(const char* data, qint64 len)
 qint64 VersatileFile::readLineData(char* data, qint64 maxlen)
 {
 	return 0;
+}
+
+void VersatileFile::checkIfOpen() const
+{
+	if (!device_->isOpen())
+	{
+		THROW(FileAccessException, "IODevice in VersatileFile is closed!");
+	}
 }

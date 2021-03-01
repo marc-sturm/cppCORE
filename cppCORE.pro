@@ -24,7 +24,6 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
 SOURCES += \
-    ApiRequestHandler.cpp \
     Exceptions.cpp \
     FileInfoProviderLocal.cpp \
     FileInfoProviderRemote.cpp \
@@ -47,7 +46,6 @@ SOURCES += \
     TsvFile.cpp
 
 HEADERS += ToolBase.h \
-    ApiRequestHandler.h \
     Exceptions.h \
     FileInfoProvider.h \
     FileInfoProviderLocal.h \

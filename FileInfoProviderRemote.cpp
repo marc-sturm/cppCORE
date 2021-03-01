@@ -1,4 +1,5 @@
 #include "FileInfoProviderRemote.h"
+#include "HttpRequestHandler.h"
 
 FileInfoProviderRemote::FileInfoProviderRemote(QString file)
 	: file_(file)
@@ -117,7 +118,9 @@ QJsonObject FileInfoProviderRemote::getFileInfo(QString file)
 		return QJsonObject{};
 	}
 
-	QString reply = ApiRequestHandler(server_host_, server_port_).sendGetRequest("/v1/file_info?file=" + file);
+	HttpHeaders add_headers;
+	add_headers.insert("Accept", "application/json");
+	QString reply = HttpRequestHandler(HttpRequestHandler::NONE).get("https://" + server_host_ + ":" + QString::number(server_port_) + "/v1/file_info?file=" + file, add_headers);
 	QJsonDocument json_doc = QJsonDocument::fromJson(reply.toLatin1());
 
 	return json_doc.object();
