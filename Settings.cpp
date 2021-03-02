@@ -135,14 +135,26 @@ QString Settings::path(QString key, bool optional)
 {
 	if (optional && !contains(key)) return "";
 
-	QString path = string(key);
+	QString path = string(key).trimmed();
 
-	if (!path.endsWith(QDir::separator()))
+	//convert separators
+	path = QDir::toNativeSeparators(path);
+
+	//add separator at the end if missing
+	QChar sep = QDir::separator();
+	if (!path.endsWith(sep))
 	{
-		path += QDir::separator();
+		path += sep;
 	}
 
-	return QDir::toNativeSeparators(path);
+	//remove duplicate separators
+	QString sep_twice(2, sep);
+	while(path.contains(sep_twice))
+	{
+		path.replace(sep_twice, sep);
+	}
+
+	return path;
 }
 
 void Settings::setPath(QString key, QString path)
