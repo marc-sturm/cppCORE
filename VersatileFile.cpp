@@ -33,8 +33,7 @@ VersatileFile::VersatileFile(const QString& name, bool stdin_if_empty)
 }
 
 VersatileFile::~VersatileFile()
-{
-	checkIfOpen();
+{	
 	device_->close();
 }
 
