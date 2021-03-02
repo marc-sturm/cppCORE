@@ -111,7 +111,7 @@ QString Helper::fileText(QString filename)
 	QFile file(filename);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		THROW(FileAccessException, "Could not open file for reading: '" + filename + "'!");
+		THROW(FileAccessException, "Could not open text file for reading: '" + filename + "'!");
 	}
 
 	QTextStream stream(&file); // we need a text stream to support UTF8 characters
@@ -251,6 +251,7 @@ bool Helper::isWritable(QString filename)
 
 QString Helper::canonicalPath(QString filename)
 {
+	//TODO: needs to be adjusted for the server version
 	//Linux > Windows separator
 	filename = filename.replace("/", "\\");
 
@@ -298,7 +299,12 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 	{
 		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
 	}
+	return file;
+}
 
+QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
+{
+	QSharedPointer<VersatileFile> file(new VersatileFile(file_name, stdin_if_empty));
 	return file;
 }
 
