@@ -94,7 +94,7 @@ qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_heade
 
 	if (reply->error()!=QNetworkReply::NoError)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString());
 	}
 	reply->deleteLater();
 	return output;
