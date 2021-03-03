@@ -252,12 +252,17 @@ bool Helper::isWritable(QString filename)
 QString Helper::canonicalPath(QString filename)
 {
 	//Use native separator for the current OS
-	QChar sep = QDir::separator();
-	QString sep_twice = QString(sep)+sep;
-	filename = QDir::toNativeSeparators(filename);
+	filename = QDir::toNativeSeparators(filename).trimmed();
+
+	if (filename.isEmpty()) return filename;
 
 	//double > single separator (except for first character in case of UNC path)
-	filename = filename.at(0) + filename.mid(1, filename.length()-1).replace(sep_twice, sep);
+	QChar sep = QDir::separator();
+	QString sep_twice = QString(sep)+sep;
+	while(filename.mid(1).contains(sep_twice))
+	{
+		filename = filename.at(0) + filename.mid(1).replace(sep_twice, sep);
+	}
 
 	//remove "."
 	QStringList parts = filename.split(sep);
