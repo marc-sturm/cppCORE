@@ -36,9 +36,9 @@ class CPPCORESHARED_EXPORT Settings
 	///Write access for map settings.
 	static void setMap(QString key, QMap<QString,QVariant> value);
 
-	///Read access for path settings. If optional and not present, an empty string is returned.
+	///Read access for file or directory path settings. If optional and not present, an empty string is returned.
 	static QString path(QString key, bool optional=false);
-	///Write access for path settings. If the path contains a file name, it is stripped off.
+	///Write access for file or directory path settings. If the path contains a file name, it is stripped off.
     static void setPath(QString key, QString path);
 
 	///Removes all settings from the user-sepecific settings file.

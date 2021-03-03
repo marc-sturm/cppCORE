@@ -136,7 +136,7 @@ QString Helper::tempFileName(QString extension, int length)
 		name.append(extension);
 	}
 
-	return QDir::toNativeSeparators(QDir::tempPath() + "/" + name);
+	return Helper::canonicalPath(QDir::tempPath() + "/" + name);
 }
 
 QStringList Helper::findFiles(const QString& directory, const QString& pattern, bool recursive)
@@ -251,15 +251,16 @@ bool Helper::isWritable(QString filename)
 
 QString Helper::canonicalPath(QString filename)
 {
-	//TODO: needs to be adjusted for the server version
-	//Linux > Windows separator
-	filename = filename.replace("/", "\\");
+	//Use native separator for the current OS
+	QChar sep = QDir::separator();
+	QString sep_twice = QString(sep)+sep;
+	filename = QDir::toNativeSeparators(filename);
 
 	//double > single separator (except for first character in case of UNC path)
-	filename = filename.at(0) + filename.mid(1, filename.length()-1).replace("\\\\", "\\");
+	filename = filename.at(0) + filename.mid(1, filename.length()-1).replace(sep_twice, sep);
 
-	//remove "." and folder before it
-	QStringList parts = filename.split("\\");
+	//remove "."
+	QStringList parts = filename.split(sep);
 	while (parts.contains("."))
 	{
 		int index = parts.indexOf(".");
@@ -276,7 +277,7 @@ QString Helper::canonicalPath(QString filename)
 		parts.removeAt(index-1);
 	}
 
-	return parts.join("\\");
+	return parts.join(sep);
 }
 
 bool Helper::isWindows()

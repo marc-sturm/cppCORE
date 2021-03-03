@@ -85,7 +85,7 @@ public:
 	///Checks if a file is writable (or if the folder is writable in case the file does not exist)
 	static bool isWritable(QString filename);
 
-	///Retruns the canonical (relative or absolute) file path for Windows.
+	///Retruns the canonical (relative or absolute) file path of the current OS.
 	static QString canonicalPath(QString filename);
 
 	///Removes all elements from a container that match the given predicate.
@@ -96,6 +96,7 @@ public:
 		container.erase(it, container.end());
 	}
 
+	///Returns if the current OS is Windows.
 	static bool isWindows();
 
 protected:

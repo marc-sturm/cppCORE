@@ -150,7 +150,7 @@ void ScatterPlot::store(QString filename)
 
 	//check if python is installed
 	QString python_exe = QStandardPaths::findExecutable("python");
-	if (python_exe=="") python_exe = Settings::string("python_exe", true);
+	if (python_exe=="") python_exe = Settings::path("python_exe", true);
 	if (python_exe!="")
 	{
 		QString scriptfile = Helper::tempFileName(".py");

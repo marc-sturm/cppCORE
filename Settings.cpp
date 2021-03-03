@@ -5,6 +5,7 @@
 #include "Log.h"
 #include "ToolBase.h"
 #include "Exceptions.h"
+#include "Helper.h"
 
 
 bool Settings::settingsApplicationUserExists()
@@ -138,20 +139,12 @@ QString Settings::path(QString key, bool optional)
 	QString path = string(key).trimmed();
 
 	//convert separators
-	path = QDir::toNativeSeparators(path);
+	path = Helper::canonicalPath(path);
 
-	//add separator at the end if missing
-	QChar sep = QDir::separator();
-	if (!path.endsWith(sep))
+	//add separator at the end if missing from path
+	if (QFile::exists(path) && QFileInfo(path).isDir() && !path.endsWith(QDir::separator()))
 	{
-		path += sep;
-	}
-
-	//remove duplicate separators
-	QString sep_twice(2, sep);
-	while(path.contains(sep_twice))
-	{
-		path.replace(sep_twice, sep);
+		path += QDir::separator();
 	}
 
 	return path;
@@ -167,7 +160,7 @@ void Settings::setPath(QString key, QString path)
 
 	if (QDir(path).exists())
 	{
-		setString(key, QDir::toNativeSeparators(path));
+		setString(key, Helper::canonicalPath(path));
 	}
 }
 
