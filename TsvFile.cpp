@@ -104,17 +104,10 @@ void TsvFile::load(QString filename)
 {
 	auto file = Helper::openVersatileFileForReading(filename);
 
-//TODO this code does not work (error message is: QIODevice::read (VersatileFile): device not open) > ALEXANDR
-/*
-	QTextStream stream(file.data());
+	QTextStream stream(file.data()->IODevice());
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();
-*/
-
-	while (!file->atEnd())
-	{
-		QString line = file->readLine();
 		//remove line ends
 		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 

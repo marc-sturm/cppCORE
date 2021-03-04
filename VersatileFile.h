@@ -3,74 +3,49 @@
 
 #include "cppCORE_global.h"
 #include <QIODevice>
-#include <QFileDevice>
 #include <QFile>
 #include <QBuffer>
-#include <QTextStream>
 #include "Exceptions.h"
 
-class CPPCORESHARED_EXPORT VersatileFile : public QIODevice
+class CPPCORESHARED_EXPORT VersatileFile
 {
-	Q_OBJECT
-
 public:
-	VersatileFile(const QString &name, bool stdin_if_empty=false);
+	VersatileFile(const QString &file_name, bool stdin_if_empty=false);
 	~VersatileFile();
 
-	OpenMode openMode() const;
-
-	bool open(OpenMode mode) override;
-
-	void setTextModeEnabled(bool enabled);
-	bool isTextModeEnabled() const;
+	bool open(QIODevice::OpenMode mode);
+	QIODevice::OpenMode openMode() const;
 
 	bool isOpen() const;
 	bool isReadable() const;
-	bool isWritable() const;
 
 	qint64 read(char *data, qint64 maxlen);
 	QByteArray read(qint64 maxlen);
 	QByteArray readAll();
 	qint64 readLine(char *data, qint64 maxlen);
 	QByteArray readLine(qint64 maxlen = 0);
-	bool canReadLine() const override;
+	bool canReadLine() const;
 
-	bool atEnd() const override;
+	bool atEnd() const;
 	bool exists();
-	bool isLocalFile(QString src) const;
-	void close() override;
-	bool reset() override;
 
-	qint64 bytesAvailable() const override;
-	qint64 bytesToWrite() const override;
+	void close();
+	bool reset();
 
+	bool isSequential() const;
+	qint64 pos() const;
+	bool seek(qint64 offset);
+	qint64 size() const;
 
-	bool isSequential() const override;
-	qint64 pos() const override;
-	bool seek(qint64 offset) override;
-	qint64 size() const override;
-
-	void ungetChar(char c);
-	bool putChar(char c);
-	bool getChar(char *c);
-
-	QString errorString() const;
-
-	bool waitForReadyRead(int msecs) override;
-	bool waitForBytesWritten(int msecs) override;
-
-	QByteArray toByteArray();
-
-protected:
-	qint64 readData(char *data, qint64 maxlen) override;
-	qint64 writeData(const char *data, qint64 len) override;
-	qint64 readLineData(char *data, qint64 maxlen) override;
+	QIODevice* IODevice();
 
 private:
 	QByteArray reply_data_;
 	QSharedPointer<QFile> file_;
 	QSharedPointer<QBuffer> buffer_;
 	QSharedPointer<QIODevice> device_;
+	QString file_name_;
+	bool stdin_if_empty_;
 	void checkIfOpen() const;
 };
 

@@ -311,6 +311,7 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
 {
 	QSharedPointer<VersatileFile> file(new VersatileFile(file_name, stdin_if_empty));
+	file.data()->open(QIODevice::ReadOnly | QIODevice::Text);
 	return file;
 }
 
