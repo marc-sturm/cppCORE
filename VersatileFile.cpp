@@ -112,8 +112,7 @@ bool VersatileFile::exists()
 
 void VersatileFile::close()
 {
-	checkIfOpen();
-	device_.data()->close();
+	if (device_->isOpen()) device_.data()->close();
 }
 
 bool VersatileFile::reset()
