@@ -1,9 +1,8 @@
 #include "VersatileFile.h"
 #include "HttpRequestHandler.h"
 
-VersatileFile::VersatileFile(const QString& file_name, bool stdin_if_empty)
+VersatileFile::VersatileFile(const QString& file_name)
 	: file_name_(file_name)
-	, stdin_if_empty_(stdin_if_empty)
 {	
 }
 
@@ -16,17 +15,10 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 {
 	if (!file_name_.toLower().startsWith("http"))
 	{
-		file_ = QSharedPointer<QFile>(new QFile(file_name_));
-		if (stdin_if_empty_ && file_name_=="")
-		{
-			file_.data()->open(stdin, mode); //QFile::ReadOnly | QIODevice::Text
-		}
-		else if (!file_.data()->open(mode))
-		{
-			THROW(FileAccessException, "Could not open local file for reading: '" + file_name_ + "'!");
-		}
-
+		file_ = QSharedPointer<QFile>(new QFile(file_name_));				
+		file_.data()->open(mode);
 		device_ = file_;
+
 	}
 	else
 	{
@@ -43,6 +35,18 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 	}
 
 	return device_.data()->isOpen();
+}
+
+bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
+{
+	if (!file_name_.toLower().startsWith("http"))
+	{
+		file_ = QSharedPointer<QFile>(new QFile(file_name_));
+		file_.data()->open(f, ioFlags);
+		device_ = file_;
+		return device_.data()->isOpen();
+	}
+	return false;
 }
 
 QIODevice::OpenMode VersatileFile::openMode() const

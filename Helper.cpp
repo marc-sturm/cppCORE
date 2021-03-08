@@ -310,8 +310,16 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 
 QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
 {
-	QSharedPointer<VersatileFile> file(new VersatileFile(file_name, stdin_if_empty));
-	file.data()->open(QIODevice::ReadOnly | QIODevice::Text);
+	QSharedPointer<VersatileFile> file(new VersatileFile(file_name));
+	if (stdin_if_empty && file_name=="")
+	{
+		file->open(stdin, QFile::ReadOnly | QIODevice::Text);
+	}
+	else if (!file->open(QFile::ReadOnly | QIODevice::Text))
+	{
+		THROW(FileAccessException, "Could not open versatile file for reading: '" + file_name + "'!");
+	}
+
 	return file;
 }
 

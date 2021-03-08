@@ -10,10 +10,12 @@
 class CPPCORESHARED_EXPORT VersatileFile
 {
 public:
-	VersatileFile(const QString &file_name, bool stdin_if_empty=false);
+	VersatileFile(const QString &file_name);
 	~VersatileFile();
 
 	bool open(QIODevice::OpenMode mode);
+	bool open(FILE *f, QIODevice::OpenMode ioFlags);
+
 	QIODevice::OpenMode openMode() const;
 
 	bool isOpen() const;
@@ -44,8 +46,7 @@ private:
 	QSharedPointer<QFile> file_;
 	QSharedPointer<QBuffer> buffer_;
 	QSharedPointer<QIODevice> device_;
-	QString file_name_;
-	bool stdin_if_empty_;
+	QString file_name_;	
 	void checkIfOpen() const;
 };
 
