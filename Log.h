@@ -16,10 +16,10 @@ class CPPCORESHARED_EXPORT Log
 public:
 	enum LogLevel
 	{
-		PERFORMANCE = 1,
-		INFO = 2,
-		WARNING = 4,
-		ERROR = 8
+		LOG_PERFORMANCE = 1,
+		LOG_INFO = 2,
+		LOG_WARNING = 4,
+		LOG_ERROR = 8
 	};
 
 	///Logs message using ERROR level.

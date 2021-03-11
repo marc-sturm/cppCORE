@@ -11,7 +11,7 @@ Log::Log()
 	: log_cmd_(true)
 	, log_file_(false)
 	, log_file_name_(QCoreApplication::applicationFilePath().replace(".exe", "") + ".log")
-	, enabled_(PERFORMANCE|INFO|WARNING|ERROR)
+	, enabled_(LOG_PERFORMANCE|LOG_INFO|LOG_WARNING|LOG_ERROR)
 {
 	//determine and create data path
 	QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
@@ -56,34 +56,34 @@ void Log::enableLogLevels(int enabled)
 
 void Log::error(const QString& message)
 {
-	inst().logMessage(ERROR, message);
+	inst().logMessage(LOG_ERROR, message);
 }
 
 void Log::warn(const QString& message)
 {
-	inst().logMessage(WARNING, message);
+	inst().logMessage(LOG_WARNING, message);
 }
 
 void Log::info(const QString& message)
 {
-	inst().logMessage(INFO, message);
+	inst().logMessage(LOG_INFO, message);
 }
 
 void Log::perf(const QString& message)
 {
-	inst().logMessage(PERFORMANCE, message);
+	inst().logMessage(LOG_PERFORMANCE, message);
 }
 
 void Log::perf(const QString& message, QTime elapsed)
 {
-	inst().logMessage(PERFORMANCE, message.trimmed() + " " + Helper::elapsedTime(elapsed));
+	inst().logMessage(LOG_PERFORMANCE, message.trimmed() + " " + Helper::elapsedTime(elapsed));
 }
 
 void Log::appInfo()
 {
-	inst().logMessage(INFO, "Application path: " + QCoreApplication::applicationFilePath());
-	inst().logMessage(INFO, "Application version: " + QCoreApplication::applicationVersion());
-	inst().logMessage(INFO, "User: " + Helper::userName());
+	inst().logMessage(LOG_INFO, "Application path: " + QCoreApplication::applicationFilePath());
+	inst().logMessage(LOG_INFO, "Application version: " + QCoreApplication::applicationVersion());
+	inst().logMessage(LOG_INFO, "User: " + Helper::userName());
 }
 
 void Log::logMessage(LogLevel level, const QString& message)
@@ -94,7 +94,7 @@ void Log::logMessage(LogLevel level, const QString& message)
 	//CMD
 	if (log_cmd_)
 	{
-		if (level==ERROR || level==WARNING)
+		if (level==LOG_ERROR || level==LOG_WARNING)
 		{
 			QTextStream stream(stderr);
 			stream << level_str << ": " << message << endl;
@@ -123,16 +123,16 @@ QString Log::levelString(Log::LogLevel level)
 {
 	switch(level)
 	{
-		case PERFORMANCE:
+		case LOG_PERFORMANCE:
 			return "PERFORMANCE";
 			break;
-		case INFO:
+		case LOG_INFO:
 			return "INFO";
 			break;
-		case WARNING:
+		case LOG_WARNING:
 			return "WARNING";
 			break;
-		case ERROR:
+		case LOG_ERROR:
 			return "ERROR";
 			break;
 	}
