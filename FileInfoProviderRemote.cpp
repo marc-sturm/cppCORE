@@ -36,7 +36,7 @@ QString FileInfoProviderRemote::parentDirAbsolutePath()
 	return "";
 }
 
-QString FileInfoProviderRemote::parentSubDirAbsolutePath(QString subdir)
+QString FileInfoProviderRemote::parentSubDirAbsolutePath(QString /*subdir*/) //Alexandr
 {
 	return "";
 }
