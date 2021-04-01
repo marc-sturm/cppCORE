@@ -3,8 +3,8 @@
 
 #include "cppCORE_global.h"
 #include "Exceptions.h"
-#include <QFile>
 #include <QVector>
+#include "VersatileFile.h"
 
 /**
   @brief TSV file parser as stream.
@@ -60,7 +60,7 @@ protected:
 	QString filename_;
 	char separator_;
 	char comment_;
-	QFile file_;
+	VersatileFile file_;
 	QByteArray next_line_;
 	QByteArrayList comments_;
 	QByteArrayList header_;
