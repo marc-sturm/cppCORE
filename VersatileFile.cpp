@@ -22,8 +22,7 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 	}
 	else
 	{
-		QString reply = HttpRequestHandler(HttpRequestHandler::NONE).get(file_name_);
-		reply_data_ = reply.toLocal8Bit();
+		reply_data_ = HttpRequestHandler(HttpRequestHandler::NONE).get(file_name_).toLocal8Bit();
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
 		buffer_.data()->open(QBuffer::ReadOnly | QBuffer::Text);
 		if (!buffer_.data()->isOpen())
