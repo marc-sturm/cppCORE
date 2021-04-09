@@ -50,8 +50,6 @@ signals:
 private slots:
 	//Handles SSL errors (by ignoring them)
 	void handleSslErrors(QNetworkReply*, const QList<QSslError>&);
-	///Handles proxy authentification
-//	void handleProxyAuthentification(const QNetworkProxy& , QAuthenticator*);
 
 private:
 	QNetworkAccessManager nmgr_;

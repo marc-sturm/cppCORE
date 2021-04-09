@@ -226,11 +226,3 @@ void HttpRequestHandler::handleSslErrors(QNetworkReply* reply, const QList<QSslE
 	reply->ignoreSslErrors(errors);
 }
 
-//void HttpRequestHandler::handleProxyAuthentification(const QNetworkProxy& proxy, QAuthenticator* auth)
-//{
-//	QString proxy_user = QInputDialog::getText(QApplication::activeWindow(), "Proxy user required", "Proxy user for " + proxy.hostName());
-//	auth->setUser(proxy_user);
-//	QString proxy_pass = QInputDialog::getText(QApplication::activeWindow(), "Proxy password required", "Proxy password for " + proxy.hostName(), QLineEdit::Password);
-//	auth->setPassword(proxy_pass);
-//}
-
