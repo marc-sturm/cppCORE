@@ -51,8 +51,6 @@ public:
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false);
 
-	///Loads a text file. If @p trim_lines is given, the lines are trimmed. If @p skip_header_char is given, header lines starting with that character are skipped. If @p skip_empty_lines is given, empty lines are skipped.
-	static QStringList loadTextFile(QSharedPointer<QFile> file, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
 	///Convenience overload for loadTextFile.
 	static QStringList loadTextFile(QString file_name, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
 	///Stores a string list as a text file. '\r' and '\n' are trimmed from the end of each line and '\n' is appended as newline character.
