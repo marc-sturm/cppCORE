@@ -104,7 +104,7 @@ void TsvFile::load(QString filename)
 {
 	auto file = Helper::openVersatileFileForReading(filename);
 
-	QTextStream stream(file.data()->IODevice());
+	QTextStream& stream = file->createTextStream();
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();

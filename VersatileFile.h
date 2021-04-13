@@ -39,7 +39,7 @@ public:
 	bool seek(qint64 offset);
 	qint64 size() const;
 
-	QIODevice* IODevice();
+	QTextStream& createTextStream();
 
 private:
 	QByteArray reply_data_;
@@ -48,6 +48,8 @@ private:
 	QSharedPointer<QIODevice> device_;
 	QString file_name_;	
 	void checkIfOpen() const;
+
+	QTextStream text_stream;
 };
 
 #endif // VERSATILEFILE_H

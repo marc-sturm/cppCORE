@@ -148,10 +148,11 @@ qint64 VersatileFile::size() const
 	return device_.data()->size();
 }
 
-QIODevice* VersatileFile::IODevice()
+QTextStream& VersatileFile::createTextStream()
 {
 	checkIfOpen();
-	return device_.data();
+	text_stream.setDevice(device_.data());
+	return text_stream;
 }
 
 void VersatileFile::checkIfOpen() const

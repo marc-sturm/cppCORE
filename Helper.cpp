@@ -60,8 +60,8 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 {
 	QStringList output;
 
-	QSharedPointer<QFile> file = openFileForReading(file_name);
-	QTextStream stream(file.data());
+	QSharedPointer<VersatileFile> file = openVersatileFileForReading(file_name);
+	QTextStream& stream = file->createTextStream();
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();
