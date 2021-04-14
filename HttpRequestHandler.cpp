@@ -100,7 +100,7 @@ qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_heade
 	return output;
 }
 
-QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
+QByteArray HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 {
 	//request
 	QNetworkRequest request;
@@ -116,7 +116,7 @@ QString HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 	request.setRawHeader("User-Agent", "Qt NetworkAccess 1.3");
 	request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
-	QString output {};
+	QByteArray output {};
 	int retry_attempts = 5;
 	bool needs_retry = false;
 	for (int i = 0; i < retry_attempts; i++)

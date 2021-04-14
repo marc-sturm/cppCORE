@@ -22,9 +22,9 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 	}
 	else
 	{
-		reply_data_ = HttpRequestHandler(HttpRequestHandler::NONE).get(file_name_).toLocal8Bit();
+		reply_data_ = HttpRequestHandler(HttpRequestHandler::NONE).get(file_name_);
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
-		buffer_.data()->open(QBuffer::ReadOnly | QBuffer::Text);
+		buffer_.data()->open(mode);
 		if (!buffer_.data()->isOpen())
 		{
 			THROW(FileAccessException, "Could not open remote file for reading: '" + file_name_ + "'!");
