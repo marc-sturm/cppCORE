@@ -25,8 +25,6 @@ QMAKE_CXXFLAGS_RELEASE *= -O3
 
 SOURCES += \
     Exceptions.cpp \
-    FileInfoProviderLocal.cpp \
-    FileInfoProviderRemote.cpp \
     HttpRequestHandler.cpp \
     Settings.cpp \
     Log.cpp \
@@ -35,7 +33,6 @@ SOURCES += \
     FileWatcher.cpp \
     LinePlot.cpp \
     VersatileFile.cpp \
-    VersatileFileInfo.cpp \
     WorkerBase.cpp \
     ToolBase.cpp \
     TSVFileStream.cpp \
@@ -47,9 +44,6 @@ SOURCES += \
 
 HEADERS += ToolBase.h \
     Exceptions.h \
-    FileInfoProvider.h \
-    FileInfoProviderLocal.h \
-    FileInfoProviderRemote.h \
     HttpRequestHandler.h \
     Settings.h \
     Log.h \
@@ -58,7 +52,6 @@ HEADERS += ToolBase.h \
     FileWatcher.h \
     LinePlot.h \
     VersatileFile.h \
-    VersatileFileInfo.h \
     WorkerBase.h \
     TSVFileStream.h \
     ScatterPlot.h \
