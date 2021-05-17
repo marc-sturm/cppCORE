@@ -32,9 +32,8 @@ public:
 	const HttpHeaders& headers() const;
 	///Adds/overrides a basic header.
 	void setHeader(const QByteArray& key, const QByteArray& value);
-
-	///Returns filesize based on its URL and infromation from headers
-	qint64 getFileSize(QString url, const HttpHeaders& add_headers);
+	///Returns headers for a specific file (needed to get the size of a file without fetching its content)
+	QMap<QByteArray, QByteArray> head(QString url, const HttpHeaders& add_headers);
 	///Performs GET request
 	QByteArray get(QString url, const HttpHeaders& add_headers = HttpHeaders());
 	///Performs POST request

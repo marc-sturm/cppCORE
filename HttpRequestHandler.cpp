@@ -58,8 +58,9 @@ void HttpRequestHandler::setHeader(const QByteArray& key, const QByteArray& valu
 	headers_.insert(key, value);
 }
 
-qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_headers)
+QMap<QByteArray, QByteArray> HttpRequestHandler::head(QString url, const HttpHeaders& add_headers)
 {
+	QMap<QByteArray, QByteArray> output;
 	//request
 	QNetworkRequest request;
 	request.setUrl(url);
@@ -72,8 +73,6 @@ qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_heade
 		request.setRawHeader(it.key(), it.value());
 	}
 
-	//the entire file is not needed, only the headers will be processed
-	request.setRawHeader("Range", "bytes=0-1");
 	//query
 	QNetworkReply* reply = nmgr_.head(request);
 
@@ -82,20 +81,17 @@ qint64 HttpRequestHandler::getFileSize(QString url, const HttpHeaders& add_heade
 	connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
 	loop.exec();
 
-	qint64 output = 0.0;
-	if (reply->hasRawHeader("Content-Range"))
+	QList<QByteArray> header_list = reply->rawHeaderList();
+	for (int i = 0; i < header_list.size(); i++)
 	{
-		QList<QByteArray> header_parts = reply->rawHeader("Content-Range").split('/');
-		if (header_parts.size() > 1)
-		{
-			output = header_parts[1].toULongLong();
-		}
+		output.insert(header_list.value(i), reply->rawHeader(header_list.value(i)));
 	}
 
 	if (reply->error()!=QNetworkReply::NoError)
 	{
 		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString());
 	}
+
 	reply->deleteLater();
 	return output;
 }
@@ -116,7 +112,7 @@ QByteArray HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 	request.setRawHeader("User-Agent", "Qt NetworkAccess 1.3");
 	request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
-	QByteArray output {};
+	QByteArray output;
 	int retry_attempts = 5;
 	bool needs_retry = false;
 	for (int i = 0; i < retry_attempts; i++)
