@@ -149,6 +149,38 @@ QByteArray HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 	return output;
 }
 
+QByteArray HttpRequestHandler::put(QString url, const QByteArray& data, const HttpHeaders& add_headers)
+{
+	//request
+	QNetworkRequest request;
+	request.setUrl(url);
+	for(auto it=headers_.begin(); it!=headers_.end(); ++it)
+	{
+		request.setRawHeader(it.key(), it.value());
+	}
+	for(auto it=add_headers.begin(); it!=add_headers.end(); ++it)
+	{
+		request.setRawHeader(it.key(), it.value());
+	}
+
+	//query
+	QNetworkReply* reply = nmgr_.put(request, data);
+
+	//make the loop process the reply immediately
+	QEventLoop loop;
+	connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+	loop.exec();
+
+	//output
+	QByteArray output = reply->readAll();
+	if (reply->error()!=QNetworkReply::NoError)
+	{
+		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+	}
+	reply->deleteLater();
+	return output;
+}
+
 QString HttpRequestHandler::post(QString url, const QByteArray& data, const HttpHeaders& add_headers)
 {
 	//request

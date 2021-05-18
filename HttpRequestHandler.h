@@ -36,6 +36,8 @@ public:
 	QMap<QByteArray, QByteArray> head(QString url, const HttpHeaders& add_headers);
 	///Performs GET request
 	QByteArray get(QString url, const HttpHeaders& add_headers = HttpHeaders());
+	///Performs PUT request (modifies existing resources)
+	QByteArray put(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
 	///Performs POST request
 	QString post(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
 	///Performs POST request for content type multipart
