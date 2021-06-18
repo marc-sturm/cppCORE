@@ -19,25 +19,22 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 		file_ = QSharedPointer<QFile>(new QFile(file_name_));
 		file_.data()->open(mode);
 		device_ = file_;
-
 	}
 	else
 	{
 		// remote file
+		bool remote_file_accessed = false;
 		try
 		{
 			reply_data_ = HttpRequestHandler(HttpRequestHandler::NONE).get(file_name_);
+			remote_file_accessed = true;
 		}
 		catch (Exception& e)
 		{
 			qWarning() << "Could not get file location:" << e.message();
 		}
 		buffer_ = QSharedPointer<QBuffer>(new QBuffer(&reply_data_));
-		buffer_.data()->open(mode);
-		if (!buffer_.data()->isOpen())
-		{
-			qDebug() << "Could not open remote file for reading:" << file_name_;
-		}
+		if (remote_file_accessed) buffer_.data()->open(mode);
 
 		device_ = buffer_;
 	}
