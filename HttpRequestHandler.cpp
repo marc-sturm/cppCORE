@@ -181,7 +181,7 @@ QByteArray HttpRequestHandler::put(QString url, const QByteArray& data, const Ht
 	return output;
 }
 
-QString HttpRequestHandler::post(QString url, const QByteArray& data, const HttpHeaders& add_headers)
+QByteArray HttpRequestHandler::post(QString url, const QByteArray& data, const HttpHeaders& add_headers)
 {
 	//request
 	QNetworkRequest request;
@@ -204,7 +204,7 @@ QString HttpRequestHandler::post(QString url, const QByteArray& data, const Http
 	loop.exec();
 
 	//output
-	QString output = reply->readAll();
+	QByteArray output = reply->readAll();
 	if (reply->error()!=QNetworkReply::NoError)
 	{
 		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
@@ -213,7 +213,7 @@ QString HttpRequestHandler::post(QString url, const QByteArray& data, const Http
 	return output;
 }
 
-QString HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const HttpHeaders& add_headers)
+QByteArray HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const HttpHeaders& add_headers)
 {
 	//request
 	QNetworkRequest request;
@@ -236,7 +236,7 @@ QString HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const HttpH
 	loop.exec();
 
 	//output
-	QString output = reply->readAll();
+	QByteArray output = reply->readAll();
 	if (reply->error()!=QNetworkReply::NoError)
 	{
 		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
