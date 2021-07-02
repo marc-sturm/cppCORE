@@ -103,8 +103,7 @@ QStringList TsvFile::extractColumn(int c)
 void TsvFile::load(QString filename)
 {
 	auto file = Helper::openVersatileFileForReading(filename);
-
-	QTextStream& stream = file->createTextStream();
+	VersatileTextStream stream(filename);
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();

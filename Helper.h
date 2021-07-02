@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QSharedPointer>
 #include "VersatileFile.h"
+#include "VersatileTextStream.h"
 
 ///Auxilary helper functions class.
 class CPPCORESHARED_EXPORT Helper

@@ -2,9 +2,8 @@
 #define VERSATILEFILE_H
 
 #include "cppCORE_global.h"
-#include <QIODevice>
+#include <QSslSocket>
 #include <QFile>
-#include <QBuffer>
 #include "Exceptions.h"
 
 class CPPCORESHARED_EXPORT VersatileFile
@@ -21,35 +20,51 @@ public:
 	bool isOpen() const;
 	bool isReadable() const;
 
-	qint64 read(char *data, qint64 maxlen);
-	QByteArray read(qint64 maxlen);
 	QByteArray readAll();
-	qint64 readLine(char *data, qint64 maxlen);
 	QByteArray readLine(qint64 maxlen = 0);
-	bool canReadLine() const;
 
 	bool atEnd() const;
 	bool exists();
 
 	void close();
-	bool reset();
 
-	bool isSequential() const;
 	qint64 pos() const;
-	bool seek(qint64 offset);
 	qint64 size() const;
 
-	QTextStream& createTextStream();
+	QString fileName() const;
 
 private:
+	QSslSocket *socket_;
 	QByteArray reply_data_;
-	QSharedPointer<QFile> file_;
-	QSharedPointer<QBuffer> buffer_;
-	QSharedPointer<QIODevice> device_;
-	QString file_name_;	
+	QSharedPointer<QFile> local_source_;
+	QSharedPointer<QSslSocket> remote_source_;
+
+	QString file_name_;
 	void checkIfOpen() const;
 
-	QTextStream text_stream;
+	bool is_local_;
+	QString server_path_;
+	QString host_name_;
+	quint16 server_port_;
+	qint64 file_size_;
+	qint64 cursor_position_;
+	bool headers_processed_;
+
+	QList<QByteArray> buffer_;
+
+	bool isLocal() const;
+	QString getServerPath();
+	QString getHostName();
+	quint16 getPortNumber();
+	QByteArray createHeadRequestText();
+	QByteArray createGetRequestText();
+	void initiateRequest(const QByteArray& http_request);
+	QByteArray readAllViaSocket(const QByteArray &http_request);
+	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
+	qint64 getFileSize();
+	QByteArray readResponseWithoutHeaders();
+	QByteArray readLineWithoutHeaders(qint64 maxlen = 0);
 };
+
 
 #endif // VERSATILEFILE_H

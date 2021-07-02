@@ -59,9 +59,7 @@ QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
 QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
 	QStringList output;
-
-	QSharedPointer<VersatileFile> file = openVersatileFileForReading(file_name);
-	QTextStream& stream = file->createTextStream();
+	VersatileTextStream stream(file_name);
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();

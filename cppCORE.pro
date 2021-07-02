@@ -33,6 +33,7 @@ SOURCES += \
     FileWatcher.cpp \
     LinePlot.cpp \
     VersatileFile.cpp \
+    VersatileTextStream.cpp \
     WorkerBase.cpp \
     ToolBase.cpp \
     TSVFileStream.cpp \
@@ -52,6 +53,7 @@ HEADERS += ToolBase.h \
     FileWatcher.h \
     LinePlot.h \
     VersatileFile.h \
+    VersatileTextStream.h \
     WorkerBase.h \
     TSVFileStream.h \
     ScatterPlot.h \
