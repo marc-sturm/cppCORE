@@ -322,7 +322,7 @@ QByteArray VersatileFile::readResponseWithoutHeaders()
 	while(!stream.atEnd())
 	{
 		QString line = stream.readLine();
-		pos = pos + line.length() ; // end of line characters (\r\n) separate headers from the body
+		pos = pos + line.length() + 2; // end of line characters (\r\n) separate headers from the body
 		if (line.length() == 0)
 		{
 			break;
