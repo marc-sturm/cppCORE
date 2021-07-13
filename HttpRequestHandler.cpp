@@ -84,7 +84,7 @@ QMap<QByteArray, QByteArray> HttpRequestHandler::head(QString url, const HttpHea
 	QList<QByteArray> header_list = reply->rawHeaderList();
 	for (int i = 0; i < header_list.size(); i++)
 	{
-		output.insert(header_list.value(i), reply->rawHeader(header_list.value(i)));
+		output.insert(header_list[i], reply->rawHeader(header_list[i]));
 	}
 
 	if (reply->error()!=QNetworkReply::NoError)
