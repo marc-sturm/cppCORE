@@ -246,6 +246,8 @@ bool Helper::isWritable(QString filename)
 
 QString Helper::canonicalPath(QString filename)
 {
+	if (filename.startsWith("http")) return filename;
+
 	//Use native separator for the current OS
 	filename = QDir::toNativeSeparators(filename).trimmed();
 
