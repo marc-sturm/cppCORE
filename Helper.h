@@ -97,6 +97,10 @@ public:
 
 	///Returns if the current OS is Windows.
 	static bool isWindows();
+	///Returns if the current OS is MacOS.
+	static bool isMacOS();
+	///Returns if the current OS is Linux.
+	static bool isLinux();
 
 protected:
 	///Constructor declared away.

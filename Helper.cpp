@@ -291,6 +291,24 @@ bool Helper::isWindows()
 	#endif
 }
 
+bool Helper::isMacOS()
+{
+	#ifdef __APPLE__
+		return true;
+	#else
+		return false;
+	#endif
+}
+
+bool Helper::isLinux()
+{
+	#ifdef __linux__
+		return true;
+	#else
+		return false;
+	#endif
+}
+
 QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_if_empty)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));
