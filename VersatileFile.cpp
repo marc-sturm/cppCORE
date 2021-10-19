@@ -192,10 +192,10 @@ QByteArray VersatileFile::createGetRequestText()
 {
 	QByteArray payload;
 	payload.append("GET ");
-	payload.append(server_path_);
+	payload.append(server_path_.toLocal8Bit());
 	payload.append(" HTTP/1.1\r\n");
 	payload.append("Host: ");
-	payload.append(host_name_ + ":");
+	payload.append(host_name_.toLocal8Bit() + ":");
 	payload.append(server_port_);
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
@@ -214,7 +214,7 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 
 	socket_->write(http_request);
 	socket_->flush();
-	socket_->waitForBytesWritten();
+	if (socket_->state() != QSslSocket::SocketState::UnconnectedState) socket_->waitForBytesWritten();
 }
 
 QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
