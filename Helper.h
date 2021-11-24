@@ -11,6 +11,7 @@
 #include <QSharedPointer>
 #include "VersatileFile.h"
 #include "VersatileTextStream.h"
+#include "Settings.h"
 
 ///Auxilary helper functions class.
 class CPPCORESHARED_EXPORT Helper
@@ -101,6 +102,9 @@ public:
 	static bool isMacOS();
 	///Returns if the current OS is Linux.
 	static bool isLinux();
+
+	//Retunrs the URL used for sending requests to the GSvar server (when in server mode)
+	static QString serverApiUrl(const bool& return_http = false);
 
 protected:
 	///Constructor declared away.
