@@ -64,6 +64,13 @@ bool VersatileFile::isReadable() const
 	return remote_source_.data()->isReadable();
 }
 
+QByteArray VersatileFile::read(qint64 maxlen)
+{
+	checkIfOpen();
+	if (isLocal()) return local_source_.data()->read(maxlen);
+	return remote_source_.data()->read(maxlen);
+}
+
 QByteArray VersatileFile::readAll()
 {
 	checkIfOpen();
@@ -108,6 +115,14 @@ qint64 VersatileFile::pos() const
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->pos();
 	return cursor_position_;
+}
+
+bool VersatileFile::seek(qint64 pos) const
+{
+	checkIfOpen();
+	if (isLocal()) return local_source_.data()->seek(pos);
+
+	return remote_source_.data()->seek(pos);
 }
 
 qint64 VersatileFile::size() const

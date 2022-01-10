@@ -20,6 +20,7 @@ public:
 	bool isOpen() const;
 	bool isReadable() const;
 
+	QByteArray read(qint64 maxlen = 0);
 	QByteArray readAll();
 	QByteArray readLine(qint64 maxlen = 0);
 
@@ -29,6 +30,7 @@ public:
 	void close();
 
 	qint64 pos() const;
+	bool seek(qint64 pos) const;
 	qint64 size() const;
 
 	QString fileName() const;
