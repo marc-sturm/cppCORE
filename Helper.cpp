@@ -332,7 +332,7 @@ QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_n
 	}
 	else if (!file->open(QFile::ReadOnly | QIODevice::Text))
 	{
-		THROW(FileAccessException, "Could not open versatile file for reading: '" + file_name + "'!");
+		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
 	}
 
 	return file;
