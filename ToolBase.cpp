@@ -8,8 +8,14 @@
 
 ToolBase::ToolBase(int& argc, char *argv[])
 	: QCoreApplication(argc, argv)
+	, exit_event_loop_(true)
 {
 	QCoreApplication::setApplicationVersion(version());
+}
+
+void ToolBase::setExitEventLoopAfterMain(bool exit_event_loop)
+{
+	exit_event_loop_ = exit_event_loop;
 }
 
 QString ToolBase::version()
@@ -534,7 +540,10 @@ void ToolBase::executeInternal()
 		main();
 	}
 
-    exit(0);
+	if (exit_event_loop_)
+	{
+		exit(0);
+	}
 }
 
 int ToolBase::parameterIndex(QString name) const
