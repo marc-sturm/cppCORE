@@ -535,12 +535,13 @@ void ToolBase::executeInternal()
 	sortChangeLog();
 
 	//execute main method only if no special parameters were set
-	if (parseCommandLine())
+	bool execute_main = parseCommandLine();
+	if (execute_main)
 	{
 		main();
 	}
 
-	if (exit_event_loop_)
+	if (!execute_main || exit_event_loop_)
 	{
 		exit(0);
 	}
