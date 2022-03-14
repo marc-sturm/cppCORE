@@ -1,9 +1,11 @@
 #include "Helper.h"
+#include "ToolBase.h"
 #include "cmath"
 #include "time.h"
 #include <QDir>
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QCoreApplication>
 
 void Helper::randomInit()
 {
@@ -132,6 +134,11 @@ QString Helper::tempFileName(QString extension, int length)
 	}
 
 	return Helper::canonicalPath(QDir::tempPath() + "/" + name);
+}
+
+QString Helper::tempFileNameNonRandom(QString suffix)
+{
+	return Helper::canonicalPath(QDir::tempPath() + "/" + QCoreApplication::applicationName() + "_" + ToolBase::version() + "_" + suffix);
 }
 
 QStringList Helper::findFiles(const QString& directory, const QString& pattern, bool recursive)

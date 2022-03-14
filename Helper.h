@@ -67,6 +67,8 @@ public:
 
 	///Returns a temporary file name. Make sure you delete the file when it is no longer needed to avoid name clashes!
 	static QString tempFileName(QString extension, int length=16);
+	///Returns a temporary file name following the schema [appname]_[appversion]_[suffix]. This is used to avoid several copies of the same file, e.g. when copying temporary files from resources.
+	static QString tempFileNameNonRandom(QString suffix);
 
 	///Find files (recursively).
 	static QStringList findFiles(const QString& directory, const QString& pattern, bool recursive);
