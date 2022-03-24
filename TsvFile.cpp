@@ -85,6 +85,16 @@ int TsvFile::rowCount() const
 	return rows_.count();
 }
 
+int TsvFile::columnIndex(const QString& column) const
+{
+	for (int c=0; c<headers_.count(); ++c)
+	{
+		if (headers_[c]==column) return c;
+	}
+
+	THROW(ProgrammingException, "Column '" + column + "' not found in TsvFile!");
+}
+
 QStringList TsvFile::extractColumn(int c)
 {
 	if (c<0 || c>=headers_.count())

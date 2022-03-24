@@ -21,15 +21,18 @@ public:
 	const QStringList& row(int i) const;
 	int rowCount() const;
 
-	//Creates a columns representation (slow).
-	QStringList extractColumn(int c);
+	//Returns the column index. Throws an exception if the column does not exist
+	int columnIndex(const QString& column) const;
 
 	//Loads a TSV file with '#' as start of header line and '##' as start of comment lines.
 	void load(QString filename);
 	//Stores the TSV file to a file.
 	void store(QString filename) const;
-	//Concerts the TSV file to string.
+	//Converts the TSV file to string.
 	QString toString() const;
+
+	//Creates a columns representation (slow).
+	QStringList extractColumn(int c);
 
 private:
 	QStringList comments_;
