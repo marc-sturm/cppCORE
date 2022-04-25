@@ -1,4 +1,5 @@
 #include "VersatileTextStream.h"
+#include "Helper.h"
 
 VersatileTextStream::VersatileTextStream(const QString &file_name)
 	: file_name_(file_name)
@@ -55,5 +56,5 @@ QString VersatileTextStream::readLine(qint64 maxlen)
 
 bool VersatileTextStream::isLocal()
 {
-	return (!file_name_.startsWith("http", Qt::CaseInsensitive));
+	return !Helper::isHttpUrl(file_name_);
 }

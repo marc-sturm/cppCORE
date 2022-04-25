@@ -108,6 +108,9 @@ public:
 	//Retunrs the URL used for sending requests to the GSvar server (when in server mode)
 	static QString serverApiUrl(const bool& return_http = false);
 
+	//Returns if the given filename is a HTTP/HTTPS URL.
+	static bool isHttpUrl(QString filename);
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;

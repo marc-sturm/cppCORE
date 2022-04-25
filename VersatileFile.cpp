@@ -1,4 +1,5 @@
 #include "VersatileFile.h"
+#include "Helper.h"
 
 VersatileFile::VersatileFile(const QString& file_name)
 	: file_name_(file_name)
@@ -153,7 +154,7 @@ void VersatileFile::checkIfOpen() const
 
 bool VersatileFile::isLocal() const
 {
-	return (!file_name_.startsWith("http", Qt::CaseInsensitive));
+	return !Helper::isHttpUrl(file_name_);
 }
 
 QString VersatileFile::getServerPath()

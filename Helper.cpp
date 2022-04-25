@@ -253,7 +253,7 @@ bool Helper::isWritable(QString filename)
 
 QString Helper::canonicalPath(QString filename)
 {
-	if (filename.startsWith("http")) return filename;
+	if (Helper::isHttpUrl(filename)) return filename;
 
 	//Use native separator for the current OS
 	filename = QDir::toNativeSeparators(filename).trimmed();
@@ -371,4 +371,10 @@ QString Helper::serverApiUrl(const bool& return_http)
 	}
 
 	return protocol + Settings::string("server_host", true) + ":" + port + "/v1/";
+}
+
+bool Helper::isHttpUrl(QString filename)
+{
+	filename = filename.trimmed().toLower();
+	return filename.startsWith("http:") || filename.startsWith("https:");
 }
