@@ -360,19 +360,6 @@ QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_
 	return file;
 }
 
-QString Helper::serverApiUrl(const bool& return_http)
-{
-	QString protocol = "https://";
-	QString port = Settings::string("https_server_port", true);
-	if (return_http)
-	{
-		protocol = "http://";
-		port = Settings::string("http_server_port", true);
-	}
-
-	return protocol + Settings::string("server_host", true) + ":" + port + "/v1/";
-}
-
 bool Helper::isHttpUrl(QString filename)
 {
 	filename = filename.trimmed().toLower();

@@ -10,7 +10,7 @@
 Log::Log()
 	: log_cmd_(true)
 	, log_file_(false)
-	, log_file_name_(QCoreApplication::applicationFilePath().replace(".exe", "") + ".log")
+	, log_file_name_()
 	, enabled_(LOG_PERFORMANCE|LOG_INFO|LOG_WARNING|LOG_ERROR)
 {
 	//determine and create data path
@@ -42,6 +42,7 @@ void Log::setFileEnabled(bool enabled)
 void Log::setFileName(QString filename)
 {
 	inst().log_file_name_ = filename;
+	inst().log_file_ = true;
 }
 
 QString Log::fileName()
@@ -113,9 +114,19 @@ void Log::logMessage(LogLevel level, const QString& message)
 		QString name = QCoreApplication::applicationName().replace(".exe", "");
 		QString message_sanitized = QString(message).replace("\t", " ").replace("\n", "");
 
-		QSharedPointer<QFile> out_file = Helper::openFileForWriting(log_file_name_, false, true);
-		out_file->write((timestamp + "\t" + name + "\t" + level_str + "\t" + message_sanitized).toLatin1() + "\n");
-		out_file->flush();
+		try
+		{
+			QSharedPointer<QFile> out_file = Helper::openFileForWriting(log_file_name_, false, true);
+			out_file->write((timestamp + "\t" + name + "\t" + level_str + "\t" + message_sanitized).toLatin1() + "\n");
+			out_file->flush();
+		}
+		catch(Exception& e)
+		{
+			QTextStream stream(stderr);
+			stream << levelString(LOG_ERROR) << ": Could not write to log file " << log_file_name_ << ": " << e.message() << endl;
+
+			throw e;
+		}
 	}
 }
 
