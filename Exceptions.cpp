@@ -1,9 +1,10 @@
 #include "Exceptions.h"
 
-Exception::Exception(QString message, QString file, int line)
+Exception::Exception(QString message, QString file, int line, ExceptionType type)
 	: message_(message)
 	, file_(file)
 	, line_(line)
+	, type_(type)
 {
 }
 
@@ -22,56 +23,71 @@ int Exception::line() const
 	return line_;
 }
 
-ArgumentException::ArgumentException(QString message, QString file, int line)
-	: Exception(message, file, line)
+ExceptionType Exception::type() const
+{
+	return type_;
+}
+
+ArgumentException::ArgumentException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-FileAccessException::FileAccessException(QString message, QString file, int line)
-	: Exception(message, file, line)
+FileAccessException::FileAccessException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-FileParseException::FileParseException(QString message, QString file, int line)
-	: Exception(message, file, line)
+FileParseException::FileParseException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-ToolFailedException::ToolFailedException(QString message, QString file, int line)
-	: Exception(message, file, line)
+ToolFailedException::ToolFailedException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
-CommandLineParsingException::CommandLineParsingException(QString message, QString file, int line)
-	: Exception(message, file, line)
-{
-}
-
-ProgrammingException::ProgrammingException(QString message, QString file, int line)
-	: Exception(message, file, line)
+CommandLineParsingException::CommandLineParsingException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-DatabaseException::DatabaseException(QString message, QString file, int line)
-	: Exception(message, file, line)
+ProgrammingException::ProgrammingException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-TypeConversionException::TypeConversionException(QString message, QString file, int line)
-	: Exception(message, file, line)
+DatabaseException::DatabaseException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-StatisticsException::StatisticsException(QString message, QString file, int line)
-	: Exception(message, file, line)
+TypeConversionException::TypeConversionException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-AbortByUserException::AbortByUserException(QString message, QString file, int line)
-	: Exception(message, file, line)
+StatisticsException::StatisticsException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
 
-NotImplementedException::NotImplementedException(QString message, QString file, int line)
-	: Exception(message, file, line)
+AbortByUserException::AbortByUserException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
+{
+}
+
+NotImplementedException::NotImplementedException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
+{
+}
+
+AccessDeniedException::AccessDeniedException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
+{
+}
+
+InformationMissingException::InformationMissingException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
 {
 }
