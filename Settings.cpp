@@ -193,7 +193,12 @@ QStringList Settings::allKeys()
 
 bool Settings::contains(QString key)
 {
-	return (settingsApplicationUserExists() && settingsApplicationUser().contains(key)) || settingsApplication().contains(key) || settingsGeneral().contains(key);
+	//check if key exists
+	bool key_exists = (settingsApplicationUserExists() && settingsApplicationUser().contains(key)) || settingsApplication().contains(key) || settingsGeneral().contains(key);
+	if (!key_exists) return false;
+
+	//if the key exists, check that the value is not empty
+	return valueWithFallback(key).toString().trimmed()!="";
 }
 
 QVariant Settings::valueWithFallback(QString key)

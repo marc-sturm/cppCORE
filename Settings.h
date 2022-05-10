@@ -48,7 +48,7 @@ class CPPCORESHARED_EXPORT Settings
 
 	///Returns all available keys.
 	static QStringList allKeys();
-	///Returns if a key is present.
+	///Returns if a key is present and the value is not empty.
 	static bool contains(QString key);
 
   protected:
