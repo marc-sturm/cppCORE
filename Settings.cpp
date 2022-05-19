@@ -21,8 +21,8 @@ bool Settings::settingsApplicationUserExists()
 
 QSettings& Settings::settingsApplicationUser()
 {
-	static QSettings* settings = 0;
-	if(settings==0)
+	static QSharedPointer<QSettings> settings;
+	if(settings.isNull())
 	{
 		QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
 		if(default_paths.isEmpty()) THROW(Exception, "No local application data path was found!");
@@ -31,15 +31,16 @@ QSettings& Settings::settingsApplicationUser()
 
 		//set log file
 		QString filename = path + QDir::separator() + QCoreApplication::applicationName() + "_local.ini";
-		settings = new QSettings(filename, QSettings::IniFormat);
+		settings.reset(new QSettings(filename, QSettings::IniFormat));
+		if (!settings->isWritable()) THROW(Exception, "Settings file '" + filename + "' is not writable!");
 	}
-	return *settings;
+	return *(settings.data());
 }
 
 const QSettings& Settings::settingsApplication()
 {
-	static QSettings* settings = 0;
-	if(settings==0)
+	static QSettings* settings = nullptr;
+	if(settings==nullptr)
 	{
 		QString filename = QCoreApplication::applicationDirPath() + QDir::separator() + QCoreApplication::applicationName() + ".ini";
 		settings = new QSettings(filename, QSettings::IniFormat);
@@ -49,8 +50,8 @@ const QSettings& Settings::settingsApplication()
 
 const QSettings& Settings::settingsGeneral()
 {
-	static QSettings* settings = 0;
-	if(settings==0)
+	static QSettings* settings = nullptr;
+	if(settings==nullptr)
 	{
 		QString filename = QCoreApplication::applicationDirPath() + QDir::separator() + "settings.ini";
 		settings = new QSettings(filename, QSettings::IniFormat);
@@ -65,7 +66,9 @@ int Settings::integer(QString key)
 
 void Settings::setInteger(QString key, int value)
 {
-	settingsApplicationUser().setValue(key, value);
+	QSettings& settings = settingsApplicationUser();
+	settings.setValue(key, value);
+	settings.sync(); //sync, so that the file is created, which is checked by settingsApplicationUserExists
 }
 
 QString Settings::string(QString key, bool optional)
@@ -91,7 +94,9 @@ QString Settings::string(QString key, bool optional)
 
 void Settings::setString(QString key, QString value)
 {
-	settingsApplicationUser().setValue(key, value);
+	QSettings& settings = settingsApplicationUser();
+	settings.setValue(key, value);
+	settings.sync(); //sync, so that the file is created, which is checked by settingsApplicationUserExists
 }
 
 
@@ -104,7 +109,9 @@ QStringList Settings::stringList(QString key, bool optional)
 
 void Settings::setStringList(QString key, QStringList value)
 {
-	settingsApplicationUser().setValue(key, value);
+	QSettings& settings = settingsApplicationUser();
+	settings.setValue(key, value);
+	settings.sync(); //sync, so that the file is created, which is checked by settingsApplicationUserExists
 }
 
 
@@ -117,7 +124,9 @@ bool Settings::boolean(QString key, bool optional)
 
 void Settings::setBoolean(QString key, bool value)
 {
-	settingsApplicationUser().setValue(key, value);
+	QSettings& settings = settingsApplicationUser();
+	settings.setValue(key, value);
+	settings.sync(); //sync, so that the file is created, which is checked by settingsApplicationUserExists
 }
 
 QMap<QString, QVariant> Settings::map(QString key, bool optional)
@@ -129,7 +138,9 @@ QMap<QString, QVariant> Settings::map(QString key, bool optional)
 
 void Settings::setMap(QString key, QMap<QString, QVariant> value)
 {
-	settingsApplicationUser().setValue(key, value);
+	QSettings& settings = settingsApplicationUser();
+	settings.setValue(key, value);
+	settings.sync(); //sync, so that the file is created, which is checked by settingsApplicationUserExists
 }
 
 QString Settings::path(QString key, bool optional)
@@ -198,7 +209,10 @@ bool Settings::contains(QString key)
 	if (!key_exists) return false;
 
 	//if the key exists, check that the value is not empty
-	return valueWithFallback(key).toString().trimmed()!="";
+	QVariant var = valueWithFallback(key);
+	if (var.type()==QVariant::StringList) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
+	if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
+	return var.toString().trimmed()!="";
 }
 
 QVariant Settings::valueWithFallback(QString key)
