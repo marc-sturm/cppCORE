@@ -10,6 +10,22 @@
 
 using HttpHeaders = QMap<QByteArray, QByteArray>;
 
+struct CPPCORESHARED_EXPORT RequestUrlParams
+		: public QMap<QByteArray, QByteArray>
+{
+	QString asString()
+	{
+		QString output;
+		QMap<QByteArray, QByteArray>::iterator i;
+		for (i = this->begin(); i != this->end(); ++i)
+		{
+			if (!output.isEmpty()) output += "&";
+			output += i.key() + "=" + i.value();
+		}
+		return "?" + output;
+	}
+};
+
 ///Helper class for HTTP(S) communication with webserver
 class CPPCORESHARED_EXPORT HttpRequestHandler
 		: public QObject
