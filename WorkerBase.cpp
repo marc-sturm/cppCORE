@@ -46,7 +46,7 @@ void WorkerBase::processInternal()
 	}
 	catch (std::exception& e)
 	{
-		error_message_ = "Error: " + QString::fromLatin1(e.what());
+		error_message_ = "Error: " + QString::fromUtf8(e.what());
 	}
 	catch (...)
 	{
