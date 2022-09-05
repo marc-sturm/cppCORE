@@ -122,7 +122,7 @@ void Log::logMessage(LogLevel level, const QString& message)
 		try
 		{
 			QSharedPointer<QFile> out_file = Helper::openFileForWriting(log_file_name_, false, true);
-			out_file->write((timestamp + "\t" + name + "\t" + level_str + "\t" + message_sanitized).toLatin1() + "\n");
+			out_file->write((timestamp + "\t" + name + "\t" + level_str + "\t" + message_sanitized).toUtf8() + "\n");
 			out_file->flush();
 		}
 		catch(Exception& e)

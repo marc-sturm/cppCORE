@@ -193,10 +193,10 @@ QByteArray VersatileFile::createHeadRequestText()
 {
 	QByteArray payload;
 	payload.append("HEAD ");
-	payload.append(server_path_.toLocal8Bit());
+	payload.append(server_path_.toUtf8());
 	payload.append(" HTTP/1.1\r\n");
 	payload.append("Host: ");
-	payload.append(host_name_.toLocal8Bit() + ":");
+	payload.append(host_name_.toUtf8() + ":");
 	payload.append(server_port_);
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
@@ -208,10 +208,10 @@ QByteArray VersatileFile::createGetRequestText()
 {
 	QByteArray payload;
 	payload.append("GET ");
-	payload.append(server_path_.toLocal8Bit());
+	payload.append(server_path_.toUtf8());
 	payload.append(" HTTP/1.1\r\n");
 	payload.append("Host: ");
-	payload.append(host_name_.toLocal8Bit() + ":");
+	payload.append(host_name_.toUtf8() + ":");
 	payload.append(server_port_);
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
