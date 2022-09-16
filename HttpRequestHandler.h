@@ -17,7 +17,7 @@ struct CPPCORESHARED_EXPORT RequestUrlParams
 	{
 		QString output;
 		QMap<QByteArray, QByteArray>::iterator i;
-		for (i = this->begin(); i != this->end(); ++i)
+		for (i = begin(); i != end(); ++i)
 		{
 			if (!output.isEmpty()) output += "&";
 			output += i.key() + "=" + i.value();

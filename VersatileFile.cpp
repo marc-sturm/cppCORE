@@ -255,7 +255,7 @@ QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
 
 QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint64 maxlen)
 {
-	if (this->atEnd()) return "";
+	if (atEnd()) return "";
 
 	if (buffer_.size() > 0)
 	{
