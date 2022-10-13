@@ -1,6 +1,8 @@
 #include "VersatileFile.h"
 #include "Helper.h"
 #include <QUrl>
+#include <QFileInfo>
+#include <QDir>
 
 VersatileFile::VersatileFile(const QString& file_name)
 	: file_name_(file_name)
@@ -68,8 +70,15 @@ bool VersatileFile::isReadable() const
 {
 	if (isLocal())
 	{
-		if (!local_source_->isOpen()) local_source_->open(QIODevice::ReadOnly);
-		return local_source_.data()->isReadable();
+		if (QFileInfo(local_source_.data()->fileName()).isDir())
+		{
+			return QDir(local_source_.data()->fileName()).isReadable();
+		}
+		else
+		{
+			if (!local_source_->isOpen()) local_source_->open(QIODevice::ReadOnly);
+			return local_source_.data()->isReadable();
+		}
 	}
 	else
 	{
@@ -240,11 +249,14 @@ QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
 
 void VersatileFile::initiateRequest(const QByteArray& http_request)
 {
-	socket_->connectToHostEncrypted(host_name_, server_port_);
-	socket_->ignoreSslErrors();
-	socket_->waitForConnected();
-	socket_->waitForEncrypted();
-	socket_->open(QIODevice::ReadWrite);
+	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
+	{
+		socket_->connectToHostEncrypted(host_name_, server_port_);
+		socket_->ignoreSslErrors();
+		socket_->waitForConnected();
+		socket_->waitForEncrypted();
+		socket_->open(QIODevice::ReadWrite);
+	}
 
 	socket_->write(http_request);
 	socket_->flush();
@@ -253,18 +265,18 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 
 QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
 {	
-	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
-	{
+//	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
+//	{
 		initiateRequest(http_request);
-	}
+//	}
 
 	QByteArray response;
 	while(socket_->waitForReadyRead())
 	{
-		while(socket_->bytesAvailable())
+		if(socket_->bytesAvailable())
 		{
 			response.append(socket_->readAll());
-			cursor_position_ = response.length();
+//			cursor_position_ = response.length();
 		}
 	}
 	return response;
@@ -350,7 +362,9 @@ QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_requ
 {
 	QByteArray response = readAllViaSocket(http_request);
 	qint64 sep = response.indexOf("\r\n\r\n");
-	return response.mid(sep).replace(0, 4, "");
+	response = response.mid(sep).replace(0, 4, "");
+	cursor_position_ = response.length();
+	return response;
 }
 
 QByteArray VersatileFile::readLineWithoutHeaders(qint64 maxlen)
