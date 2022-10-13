@@ -1,6 +1,5 @@
 #include "ToolBase.h"
 #include <QTextStream>
-#include <QFileInfo>
 #include <QTimer>
 #include <QDir>
 #include "Exceptions.h"
@@ -282,7 +281,7 @@ bool ToolBase::parseCommandLine()
 
 			if (args[i]!="" && data.options["check_readable"].toBool())
 			{
-				if (!QFileInfo(args[i]).isReadable())
+				if (!VersatileFile(args[i]).isReadable())
 				{
 					THROW(CommandLineParsingException, "Input file '" + args[i] +"' given for parameter '" + par + "' is not readable.");
 				}
@@ -314,7 +313,7 @@ bool ToolBase::parseCommandLine()
 			{
 				if (data.options["check_readable"].toBool())
 				{
-					if (!QFileInfo(args[j]).isReadable())
+					if (!VersatileFile(args[j]).isReadable())
 					{
 						THROW(CommandLineParsingException, "Input file '" + args[j] +"' given for parameter '" + par + "' is not readable.");
 					}

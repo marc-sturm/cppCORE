@@ -1,16 +1,22 @@
 #include "VersatileFile.h"
 #include "Helper.h"
+#include <QUrl>
 
 VersatileFile::VersatileFile(const QString& file_name)
 	: file_name_(file_name)
 {
-	if (!isLocal())
+	if (isLocal())
+	{
+		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
+	}
+	else
 	{
 		socket_ = new QSslSocket();
 		socket_->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 
-		server_path_ = getServerPath();
-		host_name_ = getHostName();
+		QUrl file_url(file_name);
+		server_path_ = file_url.path();
+		host_name_ = file_url.host();
 		server_port_ = getPortNumber();
 		file_size_ = getFileSize();
 	}
@@ -28,11 +34,10 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 		local_source_.data()->open(mode);
 		return local_source_.data()->isOpen();
 	}
-
 	cursor_position_ = 0;
-	remote_source_ = QSharedPointer<QSslSocket>(socket_);
-	remote_source_.data()->open(mode);
-	return remote_source_.data()->isOpen();
+
+	if (!socket_->isOpen()) socket_->open(mode);
+	return socket_->isOpen();
 }
 
 bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
@@ -43,40 +48,51 @@ bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
 		local_source_.data()->open(f, ioFlags);
 		return local_source_.data()->isOpen();
 	}
+
 	return false;
 }
 
 QIODevice::OpenMode VersatileFile::openMode() const
 {
 	if (isLocal()) return local_source_.data()->openMode();
-	return remote_source_.data()->openMode();
+	return socket_->openMode();
 }
 
 bool VersatileFile::isOpen() const
 {
 	if (isLocal()) return local_source_.data()->isOpen();
-	return remote_source_.data()->isOpen();
+	return socket_->isOpen();
 }
 
 bool VersatileFile::isReadable() const
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->isReadable();
-	return remote_source_.data()->isReadable();
+	if (isLocal())
+	{
+		if (!local_source_->isOpen()) local_source_->open(QIODevice::ReadOnly);
+		return local_source_.data()->isReadable();
+	}
+	else
+	{
+		if (!socket_->isOpen()) socket_->open(QIODevice::ReadOnly);
+		return socket_->isReadable();
+	}
 }
 
 QByteArray VersatileFile::read(qint64 maxlen)
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->read(maxlen);
-	return remote_source_.data()->read(maxlen);
+
+	qint64 end = cursor_position_ + maxlen;
+	if (end > file_size_) end = file_size_;
+	return readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end));
 }
 
 QByteArray VersatileFile::readAll()
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readAll();
-	return readResponseWithoutHeaders();
+	return readResponseWithoutHeaders(createGetRequestText());
 }
 
 QByteArray VersatileFile::readLine(qint64 maxlen)
@@ -101,13 +117,14 @@ bool VersatileFile::exists()
 
 void VersatileFile::close()
 {
-	if (!local_source_.isNull())
+	checkIfOpen();
+	if (isLocal())
 	{
-		if (local_source_.data()->isOpen()) local_source_.data()->close();
+		local_source_.data()->close();
 	}
-	if (!remote_source_.isNull())
+	else
 	{
-		if (remote_source_.data()->isOpen()) remote_source_.data()->close();
+		socket_->close();
 	}
 }
 
@@ -118,12 +135,14 @@ qint64 VersatileFile::pos() const
 	return cursor_position_;
 }
 
-bool VersatileFile::seek(qint64 pos) const
+bool VersatileFile::seek(qint64 pos)
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->seek(pos);
 
-	return remote_source_.data()->seek(pos);
+	cursor_position_ = pos;
+	if (cursor_position_ >= file_size_) cursor_position_ = file_size_;
+	return cursor_position_ <= file_size_;
 }
 
 qint64 VersatileFile::size() const
@@ -147,34 +166,14 @@ void VersatileFile::checkIfOpen() const
 	}
 	else
 	{
-		if (remote_source_.isNull()) THROW(FileAccessException, "Remote file is not set!");
-		if (!remote_source_.data()->isOpen()) THROW(FileAccessException, "Remote file is not open!");
+//		if (remote_source_.isNull()) THROW(FileAccessException, "Remote file is not set!");
+		if (!socket_->isOpen()) THROW(FileAccessException, "Remote file is not open!");
 	}
 }
 
 bool VersatileFile::isLocal() const
 {
 	return !Helper::isHttpUrl(file_name_);
-}
-
-QString VersatileFile::getServerPath()
-{
-	QString server_path = file_name_;
-	server_path = server_path.replace("https://", "", Qt::CaseInsensitive);
-	QList<QString> parts = server_path.split("/");
-	if (parts.size() < 2) server_path = server_path.replace(parts.takeFirst(), "", Qt::CaseInsensitive);
-	return server_path;
-}
-
-QString VersatileFile::getHostName()
-{
-	QString host_name = file_name_;
-	host_name = host_name.replace("https://", "", Qt::CaseInsensitive);
-	QList<QString> url_parts = host_name.split("/");
-	if (url_parts.size() > 1) host_name = url_parts.takeFirst();
-	QList<QString> host_name_parts = host_name.split(":");
-	if (host_name_parts.size()>1) host_name = host_name_parts.takeFirst();
-	return host_name;
 }
 
 quint16 VersatileFile::getPortNumber()
@@ -185,7 +184,7 @@ quint16 VersatileFile::getPortNumber()
 	QList<QString> url_parts = host_name.split("/");
 	if (url_parts.size() > 1) host_name = url_parts.takeFirst();
 	QList<QString> host_name_parts = host_name.split(":");
-	if (host_name_parts.size()>1) port_number = host_name_parts.takeLast().toInt();
+	if (host_name_parts.size()>1) port_number = host_name_parts.takeLast().toInt();	
 	return port_number;
 }
 
@@ -197,7 +196,7 @@ QByteArray VersatileFile::createHeadRequestText()
 	payload.append(" HTTP/1.1\r\n");
 	payload.append("Host: ");
 	payload.append(host_name_.toUtf8() + ":");
-	payload.append(server_port_);
+	payload.append(QString::number(server_port_).toUtf8());
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
 	payload.append("\r\n");
@@ -212,9 +211,29 @@ QByteArray VersatileFile::createGetRequestText()
 	payload.append(" HTTP/1.1\r\n");
 	payload.append("Host: ");
 	payload.append(host_name_.toUtf8() + ":");
-	payload.append(server_port_);
+	payload.append(QString::number(getPortNumber()).toUtf8());
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
+	payload.append("\r\n");	
+	return payload;
+}
+
+QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
+{
+	QByteArray payload;
+	payload.append("GET ");
+	payload.append(server_path_.toUtf8());
+	payload.append(" HTTP/1.1\r\n");
+	payload.append("Host: ");
+	payload.append(host_name_.toUtf8() + ":");
+	payload.append(QString::number(getPortNumber()).toUtf8());
+	payload.append("\r\n");
+	payload.append("Connection: keep-alive\r\n");
+	payload.append("Range: bytes=");
+	payload.append(QString::number(start).toUtf8());
+	payload.append("-");
+	payload.append(QString::number(end).toUtf8());
+	payload.append("\r\n");
 	payload.append("\r\n");
 	return payload;
 }
@@ -225,7 +244,6 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 	socket_->ignoreSslErrors();
 	socket_->waitForConnected();
 	socket_->waitForEncrypted();
-
 	socket_->open(QIODevice::ReadWrite);
 
 	socket_->write(http_request);
@@ -234,7 +252,7 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 }
 
 QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
-{
+{	
 	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
 	{
 		initiateRequest(http_request);
@@ -249,7 +267,6 @@ QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
 			cursor_position_ = response.length();
 		}
 	}
-
 	return response;
 }
 
@@ -329,22 +346,11 @@ qint64 VersatileFile::getFileSize()
 	return 0;
 }
 
-QByteArray VersatileFile::readResponseWithoutHeaders()
+QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_request)
 {
-	QByteArray response = readAllViaSocket(createGetRequestText());
-	QTextStream stream(response);
-
-	qint64 pos = 0;
-	while(!stream.atEnd())
-	{
-		QString line = stream.readLine();
-		pos = pos + line.length() + 2; // end of line characters (\r\n) separate headers from the body
-		if (line.length() == 0)
-		{
-			break;
-		}
-	}
-	return response.mid(pos);
+	QByteArray response = readAllViaSocket(http_request);
+	qint64 sep = response.indexOf("\r\n\r\n");
+	return response.mid(sep).replace(0, 4, "");
 }
 
 QByteArray VersatileFile::readLineWithoutHeaders(qint64 maxlen)

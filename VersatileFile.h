@@ -30,7 +30,7 @@ public:
 	void close();
 
 	qint64 pos() const;
-	bool seek(qint64 pos) const;
+	bool seek(qint64 pos);
 	qint64 size() const;
 
 	QString fileName() const;
@@ -39,7 +39,6 @@ private:
 	QSslSocket *socket_;
 	QByteArray reply_data_;
 	QSharedPointer<QFile> local_source_;
-	QSharedPointer<QSslSocket> remote_source_;
 
 	QString file_name_;
 	void checkIfOpen() const;
@@ -55,16 +54,15 @@ private:
 	QList<QByteArray> buffer_;
 
 	bool isLocal() const;
-	QString getServerPath();
-	QString getHostName();
 	quint16 getPortNumber();
 	QByteArray createHeadRequestText();
 	QByteArray createGetRequestText();
-	void initiateRequest(const QByteArray& http_request);
+	QByteArray createByteRangeRequestText(qint64 start, qint64 end);
+	void initiateRequest(const QByteArray& http_request);	
 	QByteArray readAllViaSocket(const QByteArray &http_request);
 	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
 	qint64 getFileSize();
-	QByteArray readResponseWithoutHeaders();
+	QByteArray readResponseWithoutHeaders(const QByteArray &http_request);
 	QByteArray readLineWithoutHeaders(qint64 maxlen = 0);
 };
 
