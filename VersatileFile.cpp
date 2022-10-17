@@ -16,8 +16,8 @@ VersatileFile::VersatileFile(const QString& file_name)
 		socket_ = new QSslSocket();
 		socket_->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 
-		QUrl file_url(file_name);
-		server_path_ = file_url.path();
+		QUrl file_url(file_name_);
+		server_path_ = file_url.path() + (file_url.hasQuery() ? "?" + file_url.query() : "");
 		host_name_ = file_url.host();
 		server_port_ = getPortNumber();
 		file_size_ = getFileSize();
