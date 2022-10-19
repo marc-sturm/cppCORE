@@ -91,17 +91,26 @@ QByteArray VersatileFile::read(qint64 maxlen)
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->read(maxlen);
+	qint64 end = cursor_position_ + maxlen - 1;
+	if (end > file_size_) end = file_size_;	
 
-	qint64 end = cursor_position_ + maxlen;
-	if (end > file_size_) end = file_size_;
-	return readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end));
+	QByteArray response = readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end)).trimmed();
+	cursor_position_ = cursor_position_ + response.length();
+	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
+
+	return response;
 }
 
 QByteArray VersatileFile::readAll()
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readAll();
-	return readResponseWithoutHeaders(createGetRequestText());
+
+	QByteArray response = readResponseWithoutHeaders(createGetRequestText());
+	cursor_position_ = cursor_position_ + response.length();
+	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
+
+	return response;
 }
 
 QByteArray VersatileFile::readLine(qint64 maxlen)
@@ -156,7 +165,7 @@ bool VersatileFile::seek(qint64 pos)
 
 qint64 VersatileFile::size() const
 {
-	checkIfOpen();
+//	checkIfOpen();
 	if (isLocal()) return local_source_.data()->size();
 	return file_size_;
 }
@@ -175,7 +184,6 @@ void VersatileFile::checkIfOpen() const
 	}
 	else
 	{
-//		if (remote_source_.isNull()) THROW(FileAccessException, "Remote file is not set!");
 		if (!socket_->isOpen()) THROW(FileAccessException, "Remote file is not open!");
 	}
 }
@@ -185,16 +193,19 @@ bool VersatileFile::isLocal() const
 	return !Helper::isHttpUrl(file_name_);
 }
 
+bool VersatileFile::isEncrypted() const
+{
+	if (file_name_.startsWith("https://", Qt::CaseInsensitive)) return true;
+	return false;
+}
+
 quint16 VersatileFile::getPortNumber()
 {
-	qint16 port_number = 443; // default HTTPS port
-	QString host_name = file_name_;
-	host_name = host_name.replace("https://", "", Qt::CaseInsensitive);
-	QList<QString> url_parts = host_name.split("/");
-	if (url_parts.size() > 1) host_name = url_parts.takeFirst();
-	QList<QString> host_name_parts = host_name.split(":");
-	if (host_name_parts.size()>1) port_number = host_name_parts.takeLast().toInt();	
-	return port_number;
+	QUrl file_url(file_name_);
+	int port = file_url.port();
+	if (port > 0) return port;
+	if (isEncrypted()) return 443;
+	return 80;
 }
 
 QByteArray VersatileFile::createHeadRequestText()
@@ -251,10 +262,18 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 {
 	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
 	{
-		socket_->connectToHostEncrypted(host_name_, server_port_);
-		socket_->ignoreSslErrors();
+		if (isEncrypted())
+		{
+			socket_->connectToHostEncrypted(host_name_, server_port_);
+			socket_->ignoreSslErrors();
+		}
+		else
+		{
+			socket_->connectToHost(host_name_, server_port_);
+		}
+
 		socket_->waitForConnected();
-		socket_->waitForEncrypted();
+		if (isEncrypted()) socket_->waitForEncrypted();
 		socket_->open(QIODevice::ReadWrite);
 	}
 
@@ -264,21 +283,17 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 }
 
 QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
-{	
-//	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
-//	{
-		initiateRequest(http_request);
-//	}
-
+{
+	initiateRequest(http_request);
 	QByteArray response;
 	while(socket_->waitForReadyRead())
 	{
 		if(socket_->bytesAvailable())
 		{
 			response.append(socket_->readAll());
-//			cursor_position_ = response.length();
 		}
 	}
+
 	return response;
 }
 
@@ -363,7 +378,6 @@ QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_requ
 	QByteArray response = readAllViaSocket(http_request);
 	qint64 sep = response.indexOf("\r\n\r\n");
 	response = response.mid(sep).replace(0, 4, "");
-	cursor_position_ = response.length();
 	return response;
 }
 

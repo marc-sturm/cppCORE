@@ -54,6 +54,7 @@ private:
 	QList<QByteArray> buffer_;
 
 	bool isLocal() const;
+	bool isEncrypted() const;
 	quint16 getPortNumber();
 	QByteArray createHeadRequestText();
 	QByteArray createGetRequestText();
