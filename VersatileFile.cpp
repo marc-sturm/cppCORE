@@ -91,11 +91,12 @@ QByteArray VersatileFile::read(qint64 maxlen)
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->read(maxlen);
-	qint64 end = cursor_position_ + maxlen - 1;
-	if (end > file_size_) end = file_size_;	
 
-	QByteArray response = readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end)).trimmed();
-	cursor_position_ = cursor_position_ + response.length();
+	qint64 end = cursor_position_ + maxlen;
+	if (end > file_size_) end = file_size_;
+
+	QByteArray response = readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end));
+	cursor_position_ = cursor_position_ + response.length() - 1;
 	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
 
 	return response;

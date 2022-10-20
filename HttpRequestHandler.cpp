@@ -128,7 +128,7 @@ QByteArray HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 		//output
 		reply->setReadBufferSize(0);
 		output = reply->readAll();
-		if (reply->error()!=QNetworkReply::NoError)
+		if ((reply->error()!=QNetworkReply::NoError) && (reply->error()!=QNetworkReply::RemoteHostClosedError))
 		{
 			if (i == retry_attempts - 1)
 			{
