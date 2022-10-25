@@ -189,6 +189,15 @@ void VersatileFile::checkIfOpen() const
 	}
 }
 
+void VersatileFile::checkResponse(QByteArray& response) const
+{
+	QByteArray const http_version = "HTTP/1.1 ";
+	if (response.isEmpty()) THROW(FileAccessException, "Empty response from the server!");
+	int start_pos = response.toLower().indexOf(http_version.toLower());
+	int response_code = response.mid(start_pos + http_version.length(), 3).toInt();
+	if ((response_code != 200) && (response_code != 206)) THROW(FileAccessException, "Server replied with the code " + QString::number(response_code));
+}
+
 bool VersatileFile::isLocal() const
 {
 	return !Helper::isHttpUrl(file_name_);
@@ -235,7 +244,7 @@ QByteArray VersatileFile::createGetRequestText()
 	payload.append(QString::number(getPortNumber()).toUtf8());
 	payload.append("\r\n");
 	payload.append("Connection: keep-alive\r\n");
-	payload.append("\r\n");	
+	payload.append("\r\n");
 	return payload;
 }
 
@@ -261,39 +270,54 @@ QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
 
 void VersatileFile::initiateRequest(const QByteArray& http_request)
 {
-	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
+	try
 	{
-		if (isEncrypted())
+		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
 		{
-			socket_->connectToHostEncrypted(host_name_, server_port_);
-			socket_->ignoreSslErrors();
-		}
-		else
-		{
-			socket_->connectToHost(host_name_, server_port_);
+			if (isEncrypted())
+			{
+				socket_->connectToHostEncrypted(host_name_, server_port_);
+				socket_->ignoreSslErrors();
+			}
+			else
+			{
+				socket_->connectToHost(host_name_, server_port_);
+			}
+
+			socket_->waitForConnected();
+			if (isEncrypted()) socket_->waitForEncrypted();
+			socket_->open(QIODevice::ReadWrite);
 		}
 
-		socket_->waitForConnected();
-		if (isEncrypted()) socket_->waitForEncrypted();
-		socket_->open(QIODevice::ReadWrite);
+		socket_->write(http_request);
+		socket_->flush();
+		if (socket_->state() != QSslSocket::SocketState::UnconnectedState) socket_->waitForBytesWritten();
 	}
-
-	socket_->write(http_request);
-	socket_->flush();
-	if (socket_->state() != QSslSocket::SocketState::UnconnectedState) socket_->waitForBytesWritten();
+	catch (Exception& e)
+	{
+		THROW(FileAccessException, "There was an error while connecting to the server " + host_name_ + ": " + e.message());
+	}
 }
 
 QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
 {
-	initiateRequest(http_request);
 	QByteArray response;
-	while(socket_->waitForReadyRead())
+	try
 	{
-		if(socket_->bytesAvailable())
+		initiateRequest(http_request);
+		while(socket_->waitForReadyRead())
 		{
-			response.append(socket_->readAll());
+			if(socket_->bytesAvailable())
+			{
+				response.append(socket_->readAll());
+			}
 		}
 	}
+	catch (Exception& e)
+	{
+		THROW(FileAccessException, "There was an error while reading a remote file: " + e.message());
+	}
+	checkResponse(response);
 
 	return response;
 }
@@ -302,55 +326,69 @@ QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint
 {
 	if (atEnd()) return "";
 
-	if (buffer_.size() > 0)
+	try
 	{
-		QByteArray result_line = buffer_.first();
-		buffer_.removeFirst();
-		cursor_position_ = cursor_position_ + result_line.length();
-		return result_line;
-	}
-
-	if (socket_->state() != QSslSocket::SocketState::ConnectedState)
-	{
-		initiateRequest(http_request);
-		bool found_headers = false;
-		while(socket_->waitForReadyRead())
+		if (buffer_.size() > 0)
 		{
-			while(socket_->bytesAvailable())
-			{
-				QString line = socket_->readLine(maxlen);
-				if (line.trimmed().length() == 0)
-				{
-					found_headers = true;
-					break;
-				}
-			}
-			if (found_headers) break;
-		}
-	}
-
-	QByteArray result_line;
-	bool found_line = false;
-
-	while((socket_->waitForReadyRead()) || (socket_->bytesAvailable()))
-	{
-		if (socket_->canReadLine())
-		{
-			found_line = true;
-			result_line = socket_->readLine(maxlen);
+			QByteArray result_line = buffer_.first();
+			buffer_.removeFirst();
 			cursor_position_ = cursor_position_ + result_line.length();
-		}
-		if(socket_->bytesAvailable())
-		{
-			while (socket_->canReadLine())
-			{
-				buffer_.append(socket_->readLine(maxlen));
-			}
-		}
-		if (found_line)
-		{
 			return result_line;
 		}
+
+		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
+		{
+			initiateRequest(http_request);
+			bool found_headers = false;
+			bool read_first_line = false;
+			while(socket_->waitForReadyRead())
+			{
+				while(socket_->bytesAvailable())
+				{
+					QByteArray line = socket_->readLine(maxlen);
+					if (!read_first_line)
+					{
+						checkResponse(line);
+						read_first_line = true;
+					}
+
+					if (line.trimmed().length() == 0)
+					{
+						found_headers = true;
+						break;
+					}
+				}
+				if (found_headers) break;
+			}
+		}
+
+		QByteArray result_line;
+		bool found_line = false;
+
+		while((socket_->waitForReadyRead()) || (socket_->bytesAvailable()))
+		{
+			if (socket_->canReadLine())
+			{
+				found_line = true;
+				result_line = socket_->readLine(maxlen);
+				cursor_position_ = cursor_position_ + result_line.length();
+			}
+			if(socket_->bytesAvailable())
+			{
+				while (socket_->canReadLine())
+				{
+					buffer_.append(socket_->readLine(maxlen));
+				}
+			}
+			if (found_line)
+			{
+				return result_line;
+			}
+		}
+	}
+	catch (Exception& e)
+	{
+		THROW(FileAccessException, "There was an error while reading a line from a remote file: " + e.message());
 	}
 
 	return "";

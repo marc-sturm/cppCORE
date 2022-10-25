@@ -42,6 +42,7 @@ private:
 
 	QString file_name_;
 	void checkIfOpen() const;
+	void checkResponse(QByteArray& response) const;
 
 	bool is_local_;
 	QString server_path_;
@@ -59,7 +60,7 @@ private:
 	QByteArray createHeadRequestText();
 	QByteArray createGetRequestText();
 	QByteArray createByteRangeRequestText(qint64 start, qint64 end);
-	void initiateRequest(const QByteArray& http_request);	
+	void initiateRequest(const QByteArray& http_request);
 	QByteArray readAllViaSocket(const QByteArray &http_request);
 	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
 	qint64 getFileSize();
