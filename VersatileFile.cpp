@@ -6,6 +6,7 @@
 
 VersatileFile::VersatileFile(const QString& file_name)
 	: file_name_(file_name)
+	, cursor_position_(0)
 {
 	if (isLocal())
 	{
@@ -80,11 +81,8 @@ bool VersatileFile::isReadable() const
 			return local_source_.data()->isReadable();
 		}
 	}
-	else
-	{
-		if (!socket_->isOpen()) socket_->open(QIODevice::ReadOnly);
-		return socket_->isReadable();
-	}
+
+	return file_size_ > 0;
 }
 
 QByteArray VersatileFile::read(qint64 maxlen)
@@ -98,7 +96,6 @@ QByteArray VersatileFile::read(qint64 maxlen)
 	QByteArray response = readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end));
 	cursor_position_ = cursor_position_ + response.length() - 1;
 	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
-
 	return response;
 }
 
@@ -131,7 +128,7 @@ bool VersatileFile::atEnd() const
 bool VersatileFile::exists()
 {
 	if (!local_source_.isNull()) return local_source_.data()->exists();
-	return (file_size_ > 0);
+	return file_size_ > 0;
 }
 
 void VersatileFile::close()
@@ -164,11 +161,11 @@ bool VersatileFile::seek(qint64 pos)
 	return cursor_position_ <= file_size_;
 }
 
-qint64 VersatileFile::size() const
+qint64 VersatileFile::size()
 {
-//	checkIfOpen();
 	if (isLocal()) return local_source_.data()->size();
-	return file_size_;
+	checkIfOpen();
+	return getFileSize();
 }
 
 QString VersatileFile::fileName() const
@@ -185,7 +182,7 @@ void VersatileFile::checkIfOpen() const
 	}
 	else
 	{
-		if (!socket_->isOpen()) THROW(FileAccessException, "Remote file is not open!");
+		if (!socket_->isOpen()) THROW(FileAccessException, "No connection to the remote file!");
 	}
 }
 
@@ -228,7 +225,6 @@ QByteArray VersatileFile::createHeadRequestText()
 	payload.append(host_name_.toUtf8() + ":");
 	payload.append(QString::number(server_port_).toUtf8());
 	payload.append("\r\n");
-	payload.append("Connection: keep-alive\r\n");
 	payload.append("\r\n");
 	return payload;
 }

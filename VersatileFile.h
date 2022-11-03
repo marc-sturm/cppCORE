@@ -31,7 +31,7 @@ public:
 
 	qint64 pos() const;
 	bool seek(qint64 pos);
-	qint64 size() const;
+	qint64 size();
 
 	QString fileName() const;
 
