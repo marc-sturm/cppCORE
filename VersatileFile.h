@@ -57,6 +57,7 @@ private:
 	bool isLocal() const;
 	bool isEncrypted() const;
 	quint16 getPortNumber();
+	void addCommonHeaders(QByteArray &request);
 	QByteArray createHeadRequestText();
 	QByteArray createGetRequestText();
 	QByteArray createByteRangeRequestText(qint64 start, qint64 end);

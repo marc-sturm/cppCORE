@@ -215,16 +215,23 @@ quint16 VersatileFile::getPortNumber()
 	return 80;
 }
 
+void VersatileFile::addCommonHeaders(QByteArray& request)
+{
+	request.append(server_path_.toUtf8());
+	request.append(" HTTP/1.1\r\n");
+	request.append("Host: ");
+	request.append(host_name_.toUtf8() + ":");
+	request.append(QString::number(server_port_).toUtf8());
+	request.append("\r\n");
+	request.append("User-Agent: GSvar\r\n");
+	request.append("X-Custom-User-Agent: GSvar\r\n");
+}
+
 QByteArray VersatileFile::createHeadRequestText()
 {
 	QByteArray payload;
 	payload.append("HEAD ");
-	payload.append(server_path_.toUtf8());
-	payload.append(" HTTP/1.1\r\n");
-	payload.append("Host: ");
-	payload.append(host_name_.toUtf8() + ":");
-	payload.append(QString::number(server_port_).toUtf8());
-	payload.append("\r\n");
+	addCommonHeaders(payload);
 	payload.append("\r\n");
 	return payload;
 }
@@ -233,27 +240,17 @@ QByteArray VersatileFile::createGetRequestText()
 {
 	QByteArray payload;
 	payload.append("GET ");
-	payload.append(server_path_.toUtf8());
-	payload.append(" HTTP/1.1\r\n");
-	payload.append("Host: ");
-	payload.append(host_name_.toUtf8() + ":");
-	payload.append(QString::number(getPortNumber()).toUtf8());
-	payload.append("\r\n");
+	addCommonHeaders(payload);
 	payload.append("Connection: keep-alive\r\n");
-	payload.append("\r\n");
+	payload.append("\r\n");	
 	return payload;
 }
 
 QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
 {
 	QByteArray payload;
-	payload.append("GET ");
-	payload.append(server_path_.toUtf8());
-	payload.append(" HTTP/1.1\r\n");
-	payload.append("Host: ");
-	payload.append(host_name_.toUtf8() + ":");
-	payload.append(QString::number(getPortNumber()).toUtf8());
-	payload.append("\r\n");
+	payload.append("GET ");	
+	addCommonHeaders(payload);
 	payload.append("Connection: keep-alive\r\n");
 	payload.append("Range: bytes=");
 	payload.append(QString::number(start).toUtf8());
