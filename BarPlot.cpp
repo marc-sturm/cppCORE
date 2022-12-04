@@ -120,7 +120,7 @@ void BarPlot::store(QString filename)
 	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
 
 	//check if python is installed
-	QString python_exe = QStandardPaths::findExecutable("python");
+	QString python_exe = QStandardPaths::findExecutable("python3");
 	if (python_exe=="") python_exe = Settings::path("python_exe", true);
 	if (python_exe!="")
 	{
