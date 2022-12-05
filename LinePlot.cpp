@@ -54,8 +54,8 @@ void LinePlot::setYRange(double ymin, double ymax)
 void LinePlot::store(QString filename)
 {
 	//check if python is installed
-	QString python_exe = QStandardPaths::findExecutable("python3");
-	if (python_exe=="") python_exe = Settings::path("python_exe", true);
+	QString python_exe = Settings::path("python_exe", true);
+	if (python_exe=="") python_exe = QStandardPaths::findExecutable("python3");
 	if (python_exe=="")
 	{
 		Log::warn("Python executable not found in PATH - skipping plot generation!");
