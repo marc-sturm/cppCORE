@@ -35,7 +35,8 @@ QString Helper::randomString(int length, const QString& chars)
 	QString output;
 	for (int i=0; i<length; ++i)
 	{
-        output.append(chars[randomNumber(0, chars.length()-1)]);
+		int index = std::round(randomNumber(0, chars.length()-1));
+		output.append(chars[index]);
 	}
 	return output;
 }
