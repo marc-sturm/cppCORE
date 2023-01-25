@@ -21,16 +21,21 @@ double Helper::randomNumber(double min, double max)
 	return min + r * (max - min);
 }
 
-QString Helper::randomString(int length, const QString& chars, bool init)
+QString Helper::randomString(int length, const QString& chars)
 {
-	//initialize random number generator
-	if (init) randomInit();
+	//initialize random number generator once
+	static bool is_initialized = false;
+	if (!is_initialized)
+	{
+		randomInit();
+		is_initialized = true;
+	}
 
 	//create random string
 	QString output;
 	for (int i=0; i<length; ++i)
 	{
-        output.append(chars[rand() % chars.length()]);
+        output.append(chars[randomNumber(0, chars.length()-1)]);
 	}
 	return output;
 }
