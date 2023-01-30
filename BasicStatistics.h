@@ -80,8 +80,24 @@ public:
 		return start1<=end2 && end1>=start2;
 	}
 
+	///Precalculates log factorials.
+	static void precalculateLogFactorials();
+
+	/// Returns the log factorial of 'n'
+	static double logFactorial(int n);
+
+	///Returns the log hypergeometric probability (required for Fisher's Exact Test)
+	static double hypergeometricLogProbability(int a, int b, int c, int d);
+
+	///Returns the p-value of a two-sided Fisher's Exact Test
+	/// based on https://genome.sph.umich.edu/w/images/b/b3/Bios615-fa12-lec03-presentation.pdf
+	static double fishersExactTest(int a, int b, int c, int d);
+
+
 protected:
+	static QVector<double> log_factorial_cache;
 	static QVector<double> factorial_cache;
+
 };
 
 #endif

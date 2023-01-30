@@ -6,6 +6,8 @@
 #include "Exceptions.h"
 
 QVector<double> BasicStatistics::factorial_cache = QVector<double>();
+const int LOG_FACTORIAL_CACHE_SIZE = 100000;
+QVector<double> BasicStatistics::log_factorial_cache = QVector<double>();
 
 double BasicStatistics::mean(const QVector<double>& data)
 {
@@ -286,4 +288,65 @@ double BasicStatistics::matchProbability(double p, int n, int count)
 	}
 
 	return output;
+}
+
+void BasicStatistics::precalculateLogFactorials()
+{
+	if (!log_factorial_cache.isEmpty()) return;
+
+	//calculate factorials until double overflow happens
+	int i = 0;
+	double value = 0.0;
+	while(isValidFloat(value) && (i < 100000))
+	{
+		log_factorial_cache.append(value);
+		++i;
+		value += log(i);
+	}
+}
+
+double BasicStatistics::logFactorial(int n)
+{
+	if (n<0) THROW(ProgrammingException, "Cannot calculate log factorial of negative number " + QByteArray::number(n) + "!");
+	if(log_factorial_cache.count()==0) THROW(ProgrammingException, "Cannot calculate log factorial! Cache not initialized!");
+	if(n >= LOG_FACTORIAL_CACHE_SIZE)
+	{
+		THROW(ProgrammingException, "Cannot calculate log factorial of " + QByteArray::number(n) + "! Number exceeds cache size of " + QByteArray::number(LOG_FACTORIAL_CACHE_SIZE) + "!");
+	}
+
+	return log_factorial_cache[n];
+}
+
+double BasicStatistics::hypergeometricLogProbability(int a, int b, int c, int d)
+{
+	return logFactorial(a+b) + logFactorial(c+d) + logFactorial(a+c) + logFactorial(b+d) - logFactorial(a) - logFactorial(b) - logFactorial(c) - logFactorial(d) - logFactorial(a+b+c+d);
+}
+
+double BasicStatistics::fishersExactTest(int a, int b, int c, int d)
+{
+	// check input
+	if (a<0 || b<0 || c<0 || d<0)
+	{
+		THROW(ArgumentException, "Cannot perform Fisher's Exact Test on negative counts!");
+	}
+
+	precalculateLogFactorials();
+
+	int n = a + b + c + d;
+	double log_p_cutoff = hypergeometricLogProbability(a, b, c, d) + 1e-12; //add small offset to ensure '<=' operation below works even with double precision
+	double p_fraction = 0.0;
+
+	for (int i = 0; i <= n; ++i)
+	{
+		if ((a+b-i >= 0) && (a+c-i >= 0) && (d-a+i >= 0))
+		{
+			double log_p = hypergeometricLogProbability(i, a+b-i, a+c-i, d-a+i);
+			if (log_p <= log_p_cutoff)
+			{
+				p_fraction += exp(log_p - log_p_cutoff);
+			}
+		}
+	}
+
+	return exp(log_p_cutoff + log(p_fraction));
 }
