@@ -128,7 +128,16 @@ bool VersatileFile::atEnd() const
 bool VersatileFile::exists()
 {
 	if (!local_source_.isNull()) return local_source_.data()->exists();
-	return file_size_ > 0;
+
+	try
+	{
+		readAllViaSocket(createHeadRequestText());
+		return true;
+	}
+	catch(Exception& e)
+	{
+		return false;
+	}
 }
 
 void VersatileFile::close()
@@ -389,16 +398,19 @@ QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint
 
 qint64 VersatileFile::getFileSize()
 {
-	QByteArray response = readAllViaSocket(createHeadRequestText());
-	cursor_position_ = 0;
-	QTextStream stream(response);
-	while(!stream.atEnd())
+	if (exists())
 	{
-		QString line = stream.readLine();
-		if (line.startsWith("Content-Length", Qt::CaseInsensitive))
+		QByteArray response = readAllViaSocket(createHeadRequestText());
+		cursor_position_ = 0;
+		QTextStream stream(response);
+		while(!stream.atEnd())
 		{
-			QList<QString> parts = line.split(":");
-			if (parts.size() > 1) return parts.takeLast().trimmed().toLongLong();
+			QString line = stream.readLine();
+			if (line.startsWith("Content-Length", Qt::CaseInsensitive))
+			{
+				QList<QString> parts = line.split(":");
+				if (parts.size() > 1) return parts.takeLast().trimmed().toLongLong();
+			}
 		}
 	}
 
