@@ -264,7 +264,7 @@ QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
 	payload.append("Range: bytes=");
 	payload.append(QString::number(start).toUtf8());
 	payload.append("-");
-	payload.append(QString::number(end).toUtf8());
+	if (end > 0) payload.append(QString::number(end).toUtf8());
 	payload.append("\r\n");
 	payload.append("\r\n");
 	return payload;
@@ -330,14 +330,6 @@ QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint
 
 	try
 	{
-		if (buffer_.size() > 0)
-		{
-			QByteArray result_line = buffer_.first();
-			buffer_.removeFirst();
-			cursor_position_ = cursor_position_ + result_line.length();
-			return result_line;
-		}
-
 		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
 		{
 			initiateRequest(http_request);
@@ -364,26 +356,12 @@ QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint
 			}
 		}
 
-		QByteArray result_line;
-		bool found_line = false;
-
 		while((socket_->waitForReadyRead()) || (socket_->bytesAvailable()))
 		{
 			if (socket_->canReadLine())
 			{
-				found_line = true;
-				result_line = socket_->readLine(maxlen);
+				QByteArray result_line = socket_->readLine(maxlen);
 				cursor_position_ = cursor_position_ + result_line.length();
-			}
-			if(socket_->bytesAvailable())
-			{
-				while (socket_->canReadLine())
-				{
-					buffer_.append(socket_->readLine(maxlen));
-				}
-			}
-			if (found_line)
-			{
 				return result_line;
 			}
 		}
@@ -427,7 +405,7 @@ QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_requ
 
 QByteArray VersatileFile::readLineWithoutHeaders(qint64 maxlen)
 {
-	QByteArray response = readLineViaSocket(createGetRequestText(), maxlen);
+	QByteArray response = readLineViaSocket(createByteRangeRequestText(cursor_position_, 0), maxlen);
 	return response;
 }
 
