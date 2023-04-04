@@ -4,10 +4,11 @@
 #include <QFileInfo>
 #include <QDir>
 
-VersatileFile::VersatileFile(const QString& file_name)
+VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
-{
+	, line_number_(0)
+{	
 	if (isLocal())
 	{
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
@@ -23,6 +24,12 @@ VersatileFile::VersatileFile(const QString& file_name)
 		server_port_ = getPortNumber();
 		file_size_ = getFileSize();
 	}
+	finished_reading_ = false;
+	worker_ = new RemoteReaderWorker(buffer_, host_name_, server_port_, server_path_, finished_reading_);
+//	connect(worker_, SIGNAL(lineRetrieved(QString)), this, SLOT(addToBuffer(QString)));
+//	connect(worker_, SIGNAL(reachedEnd()), this, SLOT(setEndOfFile()));
+	connect(worker_, &RemoteReaderWorker::finished, this, &QObject::deleteLater);
+
 }
 
 VersatileFile::~VersatileFile()
@@ -115,7 +122,7 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 {
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readLine(maxlen);
-	return readLineWithoutHeaders();
+	return readLineFromBuffer();
 }
 
 bool VersatileFile::atEnd() const
@@ -150,6 +157,7 @@ void VersatileFile::close()
 	else
 	{
 		socket_->close();
+		worker_->exit(0);
 	}
 }
 
@@ -403,9 +411,36 @@ QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_requ
 	return response;
 }
 
-QByteArray VersatileFile::readLineWithoutHeaders(qint64 maxlen)
+QByteArray VersatileFile::readLineFromBuffer()
 {
-	QByteArray response = readLineViaSocket(createByteRangeRequestText(cursor_position_, 0), maxlen);
-	return response;
-}
+	if (line_number_ == 0)
+	{		
+		worker_->start();
+	}
 
+	if (((line_number_ == buffer_.count()-1) || (buffer_.count() == 0)) && (!finished_reading_))
+	{
+		worker_->wait(1000);
+	}
+
+	if (buffer_.count() == 0)
+	{
+		Log::error("File is empty");
+		THROW(FileAccessException, "Could not read a line from a remote file: empty buffer");
+	}
+
+	if (line_number_ >= buffer_.count())
+	{
+		THROW(FileAccessException, "Could not read a line from a remote file: reached the end of the buffer");
+	}
+
+	QString line = buffer_[line_number_];
+	line_number_++;
+
+	if (line_number_>=buffer_.count())
+	{
+		cursor_position_ = file_size_;
+	}
+
+	return line.toUtf8();
+}

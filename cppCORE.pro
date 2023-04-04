@@ -26,6 +26,8 @@ QMAKE_CXXFLAGS_RELEASE *= -O3
 SOURCES += \
     Exceptions.cpp \
     HttpRequestHandler.cpp \
+    RemoteFileReader.cpp \
+    RemoteReaderWorker.cpp \
     Settings.cpp \
     Log.cpp \
     Helper.cpp \
@@ -46,6 +48,8 @@ SOURCES += \
 HEADERS += ToolBase.h \
     Exceptions.h \
     HttpRequestHandler.h \
+    RemoteFileReader.h \
+    RemoteReaderWorker.h \
     Settings.h \
     Log.h \
     Helper.h \
