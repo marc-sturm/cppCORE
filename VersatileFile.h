@@ -6,14 +6,8 @@
 #include <QFile>
 #include "Exceptions.h"
 
-#include "RemoteReaderWorker.h"
-
 class CPPCORESHARED_EXPORT VersatileFile
-
-	: public QObject
-//	, public QRunnable
 {
-	Q_OBJECT
 public:
 	VersatileFile(QString file_name);
 
@@ -59,11 +53,7 @@ private:
 	qint64 cursor_position_;
 	bool headers_processed_;
 
-	QStringList buffer_;
-	bool finished_reading_;
-	long long line_number_;
-
-
+	QSharedPointer<QFile> readline_pointer_;
 	bool isLocal() const;
 	bool isEncrypted() const;
 	quint16 getPortNumber();
@@ -76,10 +66,10 @@ private:
 	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
 	qint64 getFileSize();
 	QByteArray readResponseWithoutHeaders(const QByteArray &http_request);
-	QByteArray readLineFromBuffer();
 
 
-	RemoteReaderWorker* worker_;
+
+
 };
 
 
