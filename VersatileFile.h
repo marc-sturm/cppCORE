@@ -4,6 +4,7 @@
 #include "cppCORE_global.h"
 #include <QSslSocket>
 #include <QFile>
+#include <zlib.h>
 #include "Exceptions.h"
 
 class CPPCORESHARED_EXPORT VersatileFile

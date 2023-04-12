@@ -126,6 +126,29 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 
 		QSharedPointer<QFile> buffer_file = Helper::openFileForWriting(temp_file.fileName());
 		buffer_file.data()->write(readAll());
+		buffer_file.data()->close();
+
+		// Special handling of *.vcf.gz files: they need to be unzipped
+		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
+		{
+			gzFile gz_file = gzopen(temp_file.fileName().toUtf8().data(), "rb");
+			if(!gz_file)
+			{
+				THROW(FileAccessException, "Could not open GZ file!");
+			}
+			QByteArray uncompressed_data;
+			const int buffer_size = 1048576; //1MB buffer
+			char* gz_buffer = new char[buffer_size];
+			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
+			{
+				uncompressed_data.append(QByteArray(gz_buffer, read_bytes));
+			}
+			gzclose(gz_file);
+
+			QSharedPointer<QFile> gz_buffer_file = Helper::openFileForWriting(temp_file.fileName(), false, false);
+			gz_buffer_file.data()->write(uncompressed_data);
+			gz_buffer_file.data()->close();
+		}
 
 		cursor_position_ = 0;
 		readline_pointer_ = Helper::openFileForReading(temp_file.fileName());
