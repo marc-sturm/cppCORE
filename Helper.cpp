@@ -351,14 +351,17 @@ QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_n
 	return file;
 }
 
-QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append)
+QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append, bool is_binary)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));
+	QFile::OpenMode mode = QFile::WriteOnly | QIODevice::Text;
+	if (is_binary) mode = QFile::WriteOnly;
+
 	if (stdout_if_file_empty && file_name=="")
 	{
-		file->open(stdout, QFile::WriteOnly | QIODevice::Text);
+		file->open(stdout, mode);
 	}
-	else if (!file->open(QFile::WriteOnly | QIODevice::Text |(append? QFile::Append : QFile::Truncate)))
+	else if (!file->open(mode |(append? QFile::Append : QFile::Truncate)))
 	{
 		THROW(FileAccessException, "Could not open file for writing: '" + file_name + "'!");
 	}

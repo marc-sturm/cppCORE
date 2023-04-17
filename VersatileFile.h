@@ -6,6 +6,7 @@
 #include <QFile>
 #include <zlib.h>
 #include "Exceptions.h"
+#include <QThreadPool>
 
 class CPPCORESHARED_EXPORT VersatileFile
 {
@@ -54,6 +55,12 @@ private:
 	qint64 cursor_position_;
 	bool headers_processed_;
 
+	QByteArray data_;
+	bool started_download_;
+
+	QThreadPool thread_pool_;
+
+
 	QSharedPointer<QFile> readline_pointer_;
 	bool isLocal() const;
 	bool isEncrypted() const;
@@ -67,7 +74,7 @@ private:
 	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
 	qint64 getFileSize();
 	QByteArray readResponseWithoutHeaders(const QByteArray &http_request);
-
+	QByteArray uncompressGZ(const QByteArray &data);
 
 
 

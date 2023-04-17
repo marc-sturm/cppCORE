@@ -29,6 +29,7 @@ LIBS += -lz
 SOURCES += \
     Exceptions.cpp \
     HttpRequestHandler.cpp \
+    RemoteReader.cpp \
     Settings.cpp \
     Log.cpp \
     Helper.cpp \
@@ -49,6 +50,7 @@ SOURCES += \
 HEADERS += ToolBase.h \
     Exceptions.h \
     HttpRequestHandler.h \
+    RemoteReader.h \
     Settings.h \
     Log.h \
     Helper.h \

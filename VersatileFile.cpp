@@ -3,13 +3,16 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
-#include <QThread>
+//#include <QThread>
+
 
 #include <QTemporaryFile>
+#include "RemoteReader.h"
 
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
+	, started_download_(false)
 {	
 	if (isLocal())
 	{
@@ -25,6 +28,10 @@ VersatileFile::VersatileFile(QString file_name)
 		host_name_ = file_url.host();
 		server_port_ = getPortNumber();
 		file_size_ = getFileSize();
+
+
+
+
 	}
 }
 
@@ -119,42 +126,31 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readLine(maxlen);
 
-	if (readline_pointer_.isNull())
+	if (!started_download_)
 	{
-		QTemporaryFile temp_file;
-		if (!temp_file.open()) THROW(FileAccessException, "Could not create and open a temporary file!");
-
-		QSharedPointer<QFile> buffer_file = Helper::openFileForWriting(temp_file.fileName());
-		buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
-		buffer_file.data()->close();
-		file_size_ = QFileInfo(temp_file.fileName()).size();
-
-		// Special handling of *.vcf.gz files: they need to be unzipped
-		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
-		{
-			gzFile gz_file = gzopen(temp_file.fileName().toUtf8().data(), "rb");
-			if(!gz_file)
-			{
-				THROW(FileAccessException, "Could not open GZ file!");
-			}
-			QByteArray uncompressed_data;
-			const int buffer_size = 1048576; //1MB buffer
-			char* gz_buffer = new char[buffer_size];
-			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
-			{
-				uncompressed_data.append(QByteArray(gz_buffer, read_bytes));
-			}
-			gzclose(gz_file);
-
-			QSharedPointer<QFile> gz_buffer_file = Helper::openFileForWriting(temp_file.fileName(), false, false);
-			gz_buffer_file.data()->write(uncompressed_data);
-			gz_buffer_file.data()->close();
-		}
-		readline_pointer_ = Helper::openFileForReading(temp_file.fileName());
+		thread_pool_.setMaxThreadCount(1);
+		RemoteReader* reader = new RemoteReader(file_name_, data_, file_size_);
+		thread_pool_.start(reader);
+		started_download_ = true;
 	}
 
-	QByteArray line = readline_pointer_.data()->readLine(maxlen);
-	cursor_position_ = readline_pointer_.data()->pos();
+	while(thread_pool_.activeThreadCount()>0)
+	{
+		QThread::msleep(1000);
+	}
+	if ((cursor_position_==0) && file_name_.endsWith("vcf.gz", Qt::CaseInsensitive))
+	{
+		data_ = uncompressGZ(data_);
+	}
+
+	qint64 prev_position = cursor_position_;
+	while(cursor_position_<data_.size() && data_.at(cursor_position_)!='\0' && data_.at(cursor_position_)!='\n' && data_.at(cursor_position_)!='\r')
+	{
+		++cursor_position_;
+	}
+
+	QByteArray line = data_.mid(prev_position, cursor_position_ - prev_position);
+	cursor_position_++;
 
 	return line;
 }
@@ -443,5 +439,53 @@ QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_requ
 	qint64 sep = response.indexOf("\r\n\r\n");
 	response = response.mid(sep).replace(0, 4, "");
 	return response;
+}
+
+QByteArray VersatileFile::uncompressGZ(const QByteArray& data)
+{
+	if (data.size() <= 4)
+	{
+		THROW(FileAccessException, "There was an error while reading GZ file: headers may be missing!");
+		return QByteArray();
+	}
+
+	QByteArray output;
+	int ret;
+	z_stream stream;
+	static const int CHUNK_SIZE = 1024;
+	char out[CHUNK_SIZE];
+
+	stream.zalloc = Z_NULL;
+	stream.zfree = Z_NULL;
+	stream.opaque = Z_NULL;
+	stream.avail_in = data.size();
+	stream.next_in = (Bytef*)(data.data());
+
+	ret = inflateInit2(&stream, 15+32);
+	if (ret != Z_OK) return QByteArray();
+
+	do
+	{
+		stream.avail_out = CHUNK_SIZE;
+		stream.next_out = (Bytef*)(out);
+		ret = inflate(&stream, Z_NO_FLUSH);
+
+		Q_ASSERT(ret != Z_STREAM_ERROR);
+		switch (ret)
+		{
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR;
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+				(void)inflateEnd(&stream);
+				return QByteArray();
+	   }
+
+	   output.append(out, CHUNK_SIZE - stream.avail_out);
+	}
+	while (stream.avail_out == 0);
+
+	inflateEnd(&stream);
+	return output;
 }
 

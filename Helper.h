@@ -51,7 +51,7 @@ public:
 	static QSharedPointer<VersatileFile> openVersatileFileForReading(QString file_name, bool stdin_if_empty=false);
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
-	static QSharedPointer<QFile> openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false);
+	static QSharedPointer<QFile> openFileForWriting(QString file_name, bool stdout_if_file_empty=false, bool append=false, bool is_binary=false);
 
 	///Convenience overload for loadTextFile.
 	static QStringList loadTextFile(QString file_name, bool trim_lines = false, QChar skip_header_char = QChar::Null, bool skip_empty_lines = false);
