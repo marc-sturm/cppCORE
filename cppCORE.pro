@@ -29,6 +29,7 @@ LIBS += -lz
 SOURCES += \
     Exceptions.cpp \
     HttpRequestHandler.cpp \
+    ProxyDataService.cpp \
     Settings.cpp \
     Log.cpp \
     Helper.cpp \
@@ -49,6 +50,7 @@ SOURCES += \
 HEADERS += ToolBase.h \
     Exceptions.h \
     HttpRequestHandler.h \
+    ProxyDataService.h \
     Settings.h \
     Log.h \
     Helper.h \
