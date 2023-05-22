@@ -133,60 +133,7 @@ bool ProxyDataService::test_connection(QNetworkProxy proxy)
 		return false;
 	}
 
-	qDebug() << reply->readAll();
-	qDebug() << reply->error();
-	qDebug() << (reply->error() == QNetworkReply::NoError);
+	qDebug() << "Network error:" << reply->error();
 
 	return (reply->error() == QNetworkReply::NoError);
-
-//	QEventLoop loop;
-//	QTimer timer;
-//	timer.setSingleShot(true);
-//	connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-//	connect(&network_manager, SIGNAL(proxyAuthenticationRequired(const QNetworkProxy& , QAuthenticator*)), &loop, SLOT(quit()));
-//	timer.start(10000);
-//	loop.exec();
-//	network_manager.
-//	QNetworkReply*reply = network_manager.get(QNetworkRequest(QUrl("https://www.google.com")));
-//	connect(reply, SIGNAL(finished), &loop, SLOT(quit()));
-
-//	if(timer.isActive())
-//	{
-//		//no timeout -> analyse reply
-//		timer.stop();
-//		qDebug() << reply->readAll();
-//		qDebug() << reply->error();
-//		int status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-//		//cleanup
-//		disconnect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-//		disconnect(reply, SIGNAL(finished), &loop, SLOT(quit()));
-//		delete reply;
-
-//		//return depending on status code
-//		return ((status_code >= 200) && (status_code < 300));
-//	}
-//	else
-//	{
-//		//timeout
-//		qDebug() << "Internet check failed (time out)!";
-//		//cleanup
-//		disconnect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-//		disconnect(reply, SIGNAL(finished), &loop, SLOT(quit()));
-//		delete reply;
-
-//		return false;
-//	}
-
-//	QTimer timer;
-//	timer.setInterval(3000);
-//	connect(&timer, SIGNAL(timeout()), request, SLOT())
-//	timer.start()
-//	network_manager.set
-
-
-//	qDebug() << reply->readAll();
-//	qDebug() << reply->error();
-
-//	return reply->error()==QNetworkReply::NoError;
-
 }
