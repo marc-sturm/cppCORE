@@ -11,17 +11,16 @@ class CPPCORESHARED_EXPORT ProxyDataService
 {
 	Q_OBJECT
 public:
-	ProxyDataService();
-	bool setCredentials(QString user, QString password);
-
-signals:
-	void proxyAuthenticationRequired();
+	static bool setCredentials(QString user, QString password);
+	static const QNetworkProxy& getProxy();
+	static bool isConnected();
 
 private:
 	QNetworkProxy proxy_;
 
-	void initProxy();
-	static bool test_connection(const QNetworkProxy& proxy);
+	ProxyDataService();
+	static ProxyDataService& instance();
+	static bool test_connection(QNetworkProxy proxy);
 
 };
 

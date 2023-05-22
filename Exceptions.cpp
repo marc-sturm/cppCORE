@@ -91,3 +91,9 @@ InformationMissingException::InformationMissingException(QString message, QStrin
 	: Exception(message, file, line, type)
 {
 }
+
+NetworkException::NetworkException(QString message, QString file, int line, ExceptionType type)
+	: Exception(message, file, line, type)
+{
+
+}

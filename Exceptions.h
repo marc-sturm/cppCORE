@@ -143,6 +143,14 @@ public:
 	InformationMissingException(QString message, QString file, int line, ExceptionType type);
 };
 
+///Exception for Network errors
+class CPPCORESHARED_EXPORT NetworkException
+		: public Exception
+{
+public:
+	NetworkException(QString message, QString file, int line, ExceptionType type);
+};
+
 
 
 #define THROW(name, message) \

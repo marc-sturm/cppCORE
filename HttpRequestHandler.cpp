@@ -13,7 +13,7 @@
 #include <QPointer>
 #include <QHttpMultiPart>
 
-HttpRequestHandler::HttpRequestHandler(ProxyType proxy_type, QObject* parent)
+HttpRequestHandler::HttpRequestHandler(QNetworkProxy proxy, QObject* parent)
 	: QObject(parent)
 	, nmgr_()
 	, headers_()
@@ -24,28 +24,13 @@ HttpRequestHandler::HttpRequestHandler(ProxyType proxy_type, QObject* parent)
 	setHeader("X-Custom-User-Agent", "GSvar");
 
 	//proxy
-	if (proxy_type==SYSTEM)
-	{
-		QNetworkProxyFactory::setUseSystemConfiguration(true);
-	}
-	else if (proxy_type==INI)
-	{
-		QNetworkProxy proxy;
-		proxy.setType(QNetworkProxy::HttpProxy);
-		proxy.setHostName(Settings::string("proxy_host"));
-		proxy.setPort(Settings::integer("proxy_port"));
-		nmgr_.setProxy(proxy);
-	}
-	else
-	{
-		nmgr_.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
-	}
+	nmgr_.setProxy(proxy);
 
 	connect(&nmgr_, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), this, SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError>&)));
-	if (parent != nullptr)
-	{
-		parent->connect(&nmgr_, SIGNAL(proxyAuthenticationRequired(const QNetworkProxy& , QAuthenticator*)), parent, SLOT(handleProxyAuthentification(const QNetworkProxy& , QAuthenticator*)));
-	}
+//	if (parent != nullptr)
+//	{
+//		parent->connect(&nmgr_, SIGNAL(proxyAuthenticationRequired(const QNetworkProxy& , QAuthenticator*)), parent, SLOT(handleProxyAuthentification(const QNetworkProxy& , QAuthenticator*)));
+//	}
 }
 
 const HttpHeaders& HttpRequestHandler::headers() const
@@ -89,7 +74,7 @@ QMap<QByteArray, QByteArray> HttpRequestHandler::head(QString url, const HttpHea
 
 	if (reply->error()!=QNetworkReply::NoError)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString());
+		THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString());
 	}
 
 	reply->deleteLater();
@@ -132,7 +117,7 @@ QByteArray HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 		{
 			if (i == retry_attempts - 1)
 			{
-				THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+				THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
 			}
 			else
 			{
@@ -175,7 +160,7 @@ QByteArray HttpRequestHandler::put(QString url, const QByteArray& data, const Ht
 	QByteArray output = reply->readAll();
 	if (reply->error()!=QNetworkReply::NoError)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+		THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
 	}
 	reply->deleteLater();
 	return output;
@@ -207,7 +192,7 @@ QByteArray HttpRequestHandler::post(QString url, const QByteArray& data, const H
 	QByteArray output = reply->readAll();
 	if (reply->error()!=QNetworkReply::NoError)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+		THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
 	}
 	reply->deleteLater();
 	return output;
@@ -239,7 +224,7 @@ QByteArray HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const Ht
 	QByteArray output = reply->readAll();
 	if (reply->error()!=QNetworkReply::NoError)
 	{
-		THROW(Exception, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
+		THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output);
 	}
 	reply->deleteLater();
 	return output;

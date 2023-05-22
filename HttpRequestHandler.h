@@ -33,16 +33,9 @@ class CPPCORESHARED_EXPORT HttpRequestHandler
 	Q_OBJECT
 
 public:
-	///Proxy type
-	enum ProxyType
-	{
-		SYSTEM, //from system settings
-		INI, //from ini file
-		NONE //no proxy
-	};
 
 	///Constructor
-	HttpRequestHandler(ProxyType proxy_type, QObject* parent=0);
+	HttpRequestHandler(QNetworkProxy proxy, QObject* parent=0);
 
 	///Returns basic headers used for all get/post requests. Additional headers that are only used for one request can be given in the get/post methods.
 	const HttpHeaders& headers() const;
