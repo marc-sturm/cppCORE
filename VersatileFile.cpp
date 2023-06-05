@@ -124,15 +124,17 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 		QTemporaryFile temp_file;
 		if (!temp_file.open()) THROW(FileAccessException, "Could not create and open a temporary file!");
 
-		QSharedPointer<QFile> buffer_file = Helper::openFileForWriting(temp_file.fileName());
-		buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
-		buffer_file.data()->close();
+        QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
+        buffer_file.data()->open(QIODevice::WriteOnly);
+        buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
+        buffer_file.data()->close();
+
 		file_size_ = QFileInfo(temp_file.fileName()).size();
 
 		// Special handling of *.vcf.gz files: they need to be unzipped
 		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
 		{
-			gzFile gz_file = gzopen(temp_file.fileName().toUtf8().data(), "rb");
+            gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
 			if(!gz_file)
 			{
 				THROW(FileAccessException, "Could not open GZ file!");
