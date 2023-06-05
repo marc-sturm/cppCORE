@@ -122,14 +122,17 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 	if (readline_pointer_.isNull())
 	{
 		QTemporaryFile temp_file;
-		if (!temp_file.open()) THROW(FileAccessException, "Could not create and open a temporary file!");
+        if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
+        QTemporaryFile temp_gz_file;
+        if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
 
         QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
-        buffer_file.data()->open(QIODevice::WriteOnly);
+        if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
         buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
         buffer_file.data()->close();
 
 		file_size_ = QFileInfo(temp_file.fileName()).size();
+        QString src_file = temp_file.fileName();
 
 		// Special handling of *.vcf.gz files: they need to be unzipped
 		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
@@ -139,20 +142,21 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 			{
 				THROW(FileAccessException, "Could not open GZ file!");
 			}
-			QByteArray uncompressed_data;
+
+            QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
+            if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
+
 			const int buffer_size = 1048576; //1MB buffer
 			char* gz_buffer = new char[buffer_size];
 			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
 			{
-				uncompressed_data.append(QByteArray(gz_buffer, read_bytes));
+                gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
 			}
 			gzclose(gz_file);
-
-			QSharedPointer<QFile> gz_buffer_file = Helper::openFileForWriting(temp_file.fileName(), false, false);
-			gz_buffer_file.data()->write(uncompressed_data);
 			gz_buffer_file.data()->close();
+            src_file = temp_gz_file.fileName();
 		}
-		readline_pointer_ = Helper::openFileForReading(temp_file.fileName());
+        readline_pointer_ = Helper::openFileForReading(src_file);
 	}
 
 	QByteArray line = readline_pointer_.data()->readLine(maxlen);
