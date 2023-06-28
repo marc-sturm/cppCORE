@@ -363,5 +363,5 @@ double BasicStatistics::fishersExactTest(int a, int b, int c, int d, QByteArray 
 		}
 	}
 
-	return exp(log_p_cutoff + log(p_fraction));
+	return std::min(1.0, exp(log_p_cutoff + log(p_fraction)));
 }
