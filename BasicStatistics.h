@@ -91,7 +91,7 @@ public:
 
 	///Returns the p-value of a two-sided Fisher's Exact Test
 	/// based on https://genome.sph.umich.edu/w/images/b/b3/Bios615-fa12-lec03-presentation.pdf
-	static double fishersExactTest(int a, int b, int c, int d);
+	static double fishersExactTest(int a, int b, int c, int d, QByteArray type);
 
 
 protected:

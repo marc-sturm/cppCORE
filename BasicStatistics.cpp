@@ -6,7 +6,7 @@
 #include "Exceptions.h"
 
 QVector<double> BasicStatistics::factorial_cache = QVector<double>();
-const int LOG_FACTORIAL_CACHE_SIZE = 100000;
+const int LOG_FACTORIAL_CACHE_SIZE = 120000;
 QVector<double> BasicStatistics::log_factorial_cache = QVector<double>();
 
 double BasicStatistics::mean(const QVector<double>& data)
@@ -322,10 +322,16 @@ double BasicStatistics::hypergeometricLogProbability(int a, int b, int c, int d)
 	return logFactorial(a+b) + logFactorial(c+d) + logFactorial(a+c) + logFactorial(b+d) - logFactorial(a) - logFactorial(b) - logFactorial(c) - logFactorial(d) - logFactorial(a+b+c+d);
 }
 
-double BasicStatistics::fishersExactTest(int a, int b, int c, int d)
+double BasicStatistics::fishersExactTest(int a, int b, int c, int d, QByteArray type)
 {
 	// check input
-	if (a<0 || b<0 || c<0 || d<0)
+	QList<QByteArray> valid_types;
+	valid_types << "two-sided" << "greater" << "less";
+	if(!valid_types.contains(type))
+	{
+		THROW(ArgumentException, "Invalid type '" + type + "' provided! Valid types are: '" + valid_types.join("', '") + "' ");
+	}
+	if(a<0 || b<0 || c<0 || d<0)
 	{
 		THROW(ArgumentException, "Cannot perform Fisher's Exact Test on negative counts!");
 	}
@@ -341,7 +347,16 @@ double BasicStatistics::fishersExactTest(int a, int b, int c, int d)
 		if ((a+b-i >= 0) && (a+c-i >= 0) && (d-a+i >= 0))
 		{
 			double log_p = hypergeometricLogProbability(i, a+b-i, a+c-i, d-a+i);
-			if (log_p <= log_p_cutoff)
+
+			if ((type == "two-sided") && (log_p <= log_p_cutoff))
+			{
+				p_fraction += exp(log_p - log_p_cutoff);
+			}
+			else if((type == "greater") && (i >= a))
+			{
+				p_fraction += exp(log_p - log_p_cutoff);
+			}
+			else if((type == "less") && (i <= a))
 			{
 				p_fraction += exp(log_p - log_p_cutoff);
 			}
