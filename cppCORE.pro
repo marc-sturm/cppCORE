@@ -14,7 +14,7 @@ SVN_VER= \\\"$$system(cd .. && git describe --tags)\\\"
 DEFINES += "CPPCORE_VERSION=$$SVN_VER"
 
 #get decryption key
-CRYPT_KEY= \\\"$$cat("CRYPT_KEY.txt", blob)\\\"
+CRYPT_KEY= \\\"$$cat("CRYPT_KEY.txt", lines)\\\"
 DEFINES += "CRYPT_KEY=$$CRYPT_KEY"
 
 #enable O3 optimization
