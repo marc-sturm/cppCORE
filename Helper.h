@@ -108,6 +108,13 @@ public:
 	//Returns if the given filename is a HTTP/HTTPS URL.
 	static bool isHttpUrl(QString filename);
 
+	//Returns a reference to an empty QByteArray
+	static const QByteArray& empty()
+	{
+		static QByteArray empty;
+		return empty;
+	}
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;
