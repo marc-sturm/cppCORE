@@ -4,6 +4,7 @@
 #include "cppCORE_global.h"
 #include <QSslSocket>
 #include <QFile>
+#include <QBuffer>
 #include <zlib.h>
 #include "Exceptions.h"
 
@@ -53,6 +54,10 @@ private:
 	qint64 file_size_;
 	qint64 cursor_position_;
 	bool headers_processed_;
+
+
+    QByteArray content_;
+    QSharedPointer<QBuffer> buffer_;
 
 	QSharedPointer<QFile> readline_pointer_;
 	bool isLocal() const;

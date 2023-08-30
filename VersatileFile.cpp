@@ -7,9 +7,12 @@
 
 #include <QTemporaryFile>
 
+
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
+    , buffer_()
+    , content_()
 {	
 	if (isLocal())
 	{
@@ -119,48 +122,90 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readLine(maxlen);
 
-	if (readline_pointer_.isNull())
-	{
-		QTemporaryFile temp_file;
-        if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
-        QTemporaryFile temp_gz_file;
-        if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
+    QByteArray line;
 
-        QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
-        if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
-        buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
-        buffer_file.data()->close();
+    if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
+    {
+        if (readline_pointer_.isNull())
+        {
+            QTemporaryFile temp_file;
+            if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
+            QTemporaryFile temp_gz_file;
+            if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
 
-		file_size_ = QFileInfo(temp_file.fileName()).size();
-        QString src_file = temp_file.fileName();
+            QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
+            if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
+            buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
+            buffer_file.data()->close();
 
-		// Special handling of *.vcf.gz files: they need to be unzipped
-		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
-		{
-            gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
-			if(!gz_file)
-			{
-				THROW(FileAccessException, "Could not open GZ file!");
-			}
+            file_size_ = QFileInfo(temp_file.fileName()).size();
+            QString src_file = temp_file.fileName();
 
-            QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
-            if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
+            // Special handling of *.vcf.gz files: they need to be unzipped
+            if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
+            {
+                gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
+                if(!gz_file)
+                {
+                    THROW(FileAccessException, "Could not open GZ file!");
+                }
 
-			const int buffer_size = 1048576; //1MB buffer
-			char* gz_buffer = new char[buffer_size];
-			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
-			{
-                gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
-			}
-			gzclose(gz_file);
-			gz_buffer_file.data()->close();
-            src_file = temp_gz_file.fileName();
-		}
-        readline_pointer_ = Helper::openFileForReading(src_file);
-	}
+                QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
+                if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
 
-	QByteArray line = readline_pointer_.data()->readLine(maxlen);
-	cursor_position_ = readline_pointer_.data()->pos();
+                const int buffer_size = 1048576; //1MB buffer
+                char* gz_buffer = new char[buffer_size];
+                while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
+                {
+                    gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
+                }
+                gzclose(gz_file);
+                gz_buffer_file.data()->close();
+                src_file = temp_gz_file.fileName();
+            }
+            readline_pointer_ = Helper::openFileForReading(src_file);
+        }
+
+
+
+        line = readline_pointer_.data()->readLine(maxlen);
+        cursor_position_ = readline_pointer_.data()->pos();
+    }
+    else
+    {
+        const int CHUNK_SIZE = 1024;
+
+        if (buffer_.isNull())
+        {
+            qDebug() << "Init realine" << file_name_;
+            content_.clear();
+            content_ = readResponseWithoutHeaders(createByteRangeRequestText(0, file_size_-1));
+
+            buffer_ = QSharedPointer<QBuffer>(new QBuffer(&content_));
+
+            qDebug() << "Opening file";
+            if (!buffer_->open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                THROW(FileAccessException, "Could not open buffer for reading!");
+            }
+        }
+
+
+//        if (readline_pointer_.isNull())
+//        {
+
+//            int end_pos = CHUNK_SIZE;
+//            if (end_pos>(file_size_-1)) end_pos = file_size_-1;
+
+
+
+
+
+        line = buffer_->readLine(maxlen);
+        cursor_position_ = buffer_->pos();
+    }
+
+
 
 	return line;
 }
