@@ -53,6 +53,9 @@ private:
 	quint16 server_port_;
 	qint64 file_size_;
 	qint64 cursor_position_;
+
+    qint64 prev_end_position_;
+
 	bool headers_processed_;
 
 

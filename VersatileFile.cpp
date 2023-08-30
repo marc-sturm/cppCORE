@@ -11,6 +11,7 @@
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
+    , prev_end_position_(0)
     , buffer_()
     , content_()
 {	
@@ -173,13 +174,19 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
     }
     else
     {
-        const int CHUNK_SIZE = 1024;
+        const int CHUNK_SIZE = 1024*1024;
+
+        int end_pos = CHUNK_SIZE + prev_end_position_;
+        if (end_pos>(file_size_-1)) end_pos = file_size_-1;
 
         if (buffer_.isNull())
         {
             qDebug() << "Init realine" << file_name_;
+
             content_.clear();
-            content_ = readResponseWithoutHeaders(createByteRangeRequestText(0, file_size_-1));
+            content_ = readResponseWithoutHeaders(createByteRangeRequestText(0, end_pos));
+            prev_end_position_ = end_pos;
+
 
             buffer_ = QSharedPointer<QBuffer>(new QBuffer(&content_));
 
@@ -189,17 +196,29 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
                 THROW(FileAccessException, "Could not open buffer for reading!");
             }
         }
+        else
+        {
+            if (buffer_->size() != file_size_)
+            {
+                content_.append(readResponseWithoutHeaders(createByteRangeRequestText(prev_end_position_+1, end_pos)));
+                prev_end_position_ = end_pos;
+            }
+        }
 
 
-//        if (readline_pointer_.isNull())
-//        {
+        if (buffer_->size() != file_size_)
+        {
+            while(!buffer_->canReadLine())
+            {
+                end_pos = end_pos + CHUNK_SIZE;
+                if (end_pos>(file_size_-1)) end_pos = file_size_-1;
 
-//            int end_pos = CHUNK_SIZE;
-//            if (end_pos>(file_size_-1)) end_pos = file_size_-1;
+                content_.append(readResponseWithoutHeaders(createByteRangeRequestText(prev_end_position_+1, end_pos)));
+                prev_end_position_ = end_pos;
+                if (end_pos == file_size_-1) break;
 
-
-
-
+            }
+        }
 
         line = buffer_->readLine(maxlen);
         cursor_position_ = buffer_->pos();
