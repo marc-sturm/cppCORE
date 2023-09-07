@@ -6,6 +6,8 @@
 #include <QString>
 #include <QSslError>
 #include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QHttpMultiPart>
 
 using HttpHeaders = QMap<QByteArray, QByteArray>;
@@ -26,6 +28,14 @@ struct CPPCORESHARED_EXPORT RequestUrlParams
 	}
 };
 
+struct CPPCORESHARED_EXPORT ServerReply
+{
+    int status_code = 200;
+    QMap<QByteArray, QByteArray> headers;
+    QString error;
+    QByteArray body;
+};
+
 ///Helper class for HTTP(S) communication with webserver
 class CPPCORESHARED_EXPORT HttpRequestHandler
 		: public QObject
@@ -42,15 +52,15 @@ public:
 	///Adds/overrides a basic header.
 	void setHeader(const QByteArray& key, const QByteArray& value);
 	///Returns headers for a specific file (needed to get the size of a file without fetching its content)
-	QMap<QByteArray, QByteArray> head(QString url, const HttpHeaders& add_headers);
+    ServerReply head(QString url, const HttpHeaders& add_headers);
 	///Performs GET request
-	QByteArray get(QString url, const HttpHeaders& add_headers = HttpHeaders());
+    ServerReply get(QString url, const HttpHeaders& add_headers = HttpHeaders());
 	///Performs PUT request (modifies existing resources)
-	QByteArray put(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
-	///Performs POST request
-	QByteArray post(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
-	///Performs POST request for content type multipart
-	QByteArray post(QString url, QHttpMultiPart* parts, const HttpHeaders& add_headers = HttpHeaders() );
+    ServerReply put(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
+    ///Performs POST request
+    ServerReply post(QString url, const QByteArray& data, const HttpHeaders& add_headers = HttpHeaders());
+    ///Performs POST request for content type multipart
+    ServerReply post(QString url, QHttpMultiPart* parts, const HttpHeaders& add_headers = HttpHeaders());
 
 	HttpRequestHandler() = delete;
 
@@ -62,6 +72,7 @@ private slots:
 	void handleSslErrors(QNetworkReply*, const QList<QSslError>&);
 
 private:
+    QString networkErrorAsString(QNetworkReply::NetworkError error);
 	QNetworkAccessManager nmgr_;
 	HttpHeaders headers_;
 	//declared away
