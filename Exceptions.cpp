@@ -97,3 +97,26 @@ NetworkException::NetworkException(QString message, QString file, int line, Exce
 {
 
 }
+
+HttpException::HttpException(QString message, QString file, int line, ExceptionType type, int status_code, QMap<QByteArray, QByteArray> headers, QByteArray body)
+    : Exception(message, file, line, type)
+    , status_code_(status_code)
+    , headers_(headers)
+    , body_(body)
+{
+}
+
+int HttpException::status_code() const
+{
+    return status_code_;
+}
+
+QMap<QByteArray, QByteArray> HttpException::headers()
+{
+    return headers_;
+}
+
+QByteArray HttpException::body() const
+{
+    return body_;
+}

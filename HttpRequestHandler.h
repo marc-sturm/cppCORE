@@ -32,7 +32,6 @@ struct CPPCORESHARED_EXPORT ServerReply
 {
     int status_code = 200;
     QMap<QByteArray, QByteArray> headers;
-    QString error;
     QByteArray body;
 };
 

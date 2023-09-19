@@ -67,10 +67,10 @@ ServerReply HttpRequestHandler::head(QString url, const HttpHeaders& add_headers
     }
 
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    output.error = networkErrorAsString(reply->error());
+
     if (reply->error()!=QNetworkReply::NoError)
     {
-        THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString());
+        THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
     }
 
     reply->deleteLater();
@@ -116,13 +116,12 @@ ServerReply HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
             output.headers.insert(header_list[i], reply->rawHeader(header_list[i]));
         }
         output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        output.error = networkErrorAsString(reply->error());
         output.body = reply->readAll();
         if ((reply->error()!=QNetworkReply::NoError) && (reply->error()!=QNetworkReply::RemoteHostClosedError))
         {
             if (i == retry_attempts - 1)
             {
-                THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output.body);
+                THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
             }
             else
             {
@@ -168,12 +167,11 @@ ServerReply HttpRequestHandler::put(QString url, const QByteArray& data, const H
         output.headers.insert(reply->rawHeaderList()[i], reply->rawHeader(reply->rawHeaderList()[i]));
     }
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    output.error = networkErrorAsString(reply->error());
     output.body = reply->readAll();
 
-	if (reply->error()!=QNetworkReply::NoError)
-	{
-        THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output.body);
+    if (reply->error()!=QNetworkReply::NoError)
+    {
+        THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
 	}
     reply->deleteLater();
     return output;
@@ -208,11 +206,11 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
         output.headers.insert(reply->rawHeaderList()[i], reply->rawHeader(reply->rawHeaderList()[i]));
     }
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    output.error = networkErrorAsString(reply->error());
     output.body = reply->readAll();
+
     if (reply->error()!=QNetworkReply::NoError)
     {
-        THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output.body);
+        THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
     }
     reply->deleteLater();
     return output;
@@ -247,11 +245,10 @@ ServerReply HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const H
         output.headers.insert(reply->rawHeaderList()[i], reply->rawHeader(reply->rawHeaderList()[i]));
     }
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    output.error = networkErrorAsString(reply->error());
     output.body = reply->readAll();
     if (reply->error()!=QNetworkReply::NoError)
     {
-        THROW(NetworkException, "Network error " + QString::number(reply->error()) + "\nError message: " + reply->errorString() + "\nReply: " + output.body);
+        THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
     }
     reply->deleteLater();
     return output;
@@ -301,6 +298,7 @@ QString HttpRequestHandler::networkErrorAsString(QNetworkReply::NetworkError err
         case QNetworkReply::NetworkError::ContentNotFoundError: return "Content not found";
         case QNetworkReply::NetworkError::AuthenticationRequiredError: return "Authentication required";
         case QNetworkReply::NetworkError::ContentReSendError: return "Content ReSend";
+
         case QNetworkReply::NetworkError::ContentConflictError: return "Content conflict";
         case QNetworkReply::NetworkError::ContentGoneError: return "Content gone";
         case QNetworkReply::NetworkError::UnknownContentError: return "Unknown content error";

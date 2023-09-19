@@ -36,6 +36,27 @@ protected:
 	ExceptionType type_;
 };
 
+///Exception for dealing with server connection errors
+class CPPCORESHARED_EXPORT HttpException
+    : public Exception
+{
+public:
+    //Construtor.
+    HttpException(QString message, QString file, int line, ExceptionType type, int status_code, QMap<QByteArray, QByteArray> headers, QByteArray body);
+
+    //Status code of HTTP response (e.g. 200 means OK, 404 - not found, 500 - internal server error, etc.)
+    int status_code() const;
+    //Headers of HTTP response
+    QMap<QByteArray, QByteArray> headers();
+    //Body of HTTP response
+    QByteArray body() const;
+
+protected:
+    int status_code_;
+    QMap<QByteArray, QByteArray> headers_;
+    QByteArray body_;
+};
+
 ///Exception that is thrown when a function/method receives invalid arguments.
 class CPPCORESHARED_EXPORT ArgumentException
 		: public Exception
@@ -148,9 +169,8 @@ class CPPCORESHARED_EXPORT NetworkException
 		: public Exception
 {
 public:
-	NetworkException(QString message, QString file, int line, ExceptionType type);
+    NetworkException(QString message, QString file, int line, ExceptionType type);
 };
-
 
 
 #define THROW(name, message) \
@@ -161,5 +181,9 @@ throw name(message, __FILE__, __LINE__, ExceptionType::WARNING);
 
 #define INFO(name, message) \
 throw name(message, __FILE__, __LINE__, ExceptionType::INFO);
+
+
+#define THROW_HTTP(name, message, status_code, headers, body) \
+throw name(message, __FILE__, __LINE__, ExceptionType::CRITIAL, status_code, headers, body);
 
 #endif // EXCEPTIONS_H
