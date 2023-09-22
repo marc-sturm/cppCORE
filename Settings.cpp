@@ -215,6 +215,23 @@ bool Settings::contains(QString key)
 	return var.toString().trimmed()!="";
 }
 
+QStringList Settings::files()
+{
+	QStringList output;
+	if (settingsApplicationUserExists())
+	{
+		QString filename = settingsApplicationUser().fileName();
+		if (QFile::exists(filename)) output << settingsApplicationUser().fileName();
+	}
+
+	QString filename = settingsApplication().fileName();
+	if (QFile::exists(filename)) output << filename;
+	filename = settingsGeneral().fileName();
+	if (QFile::exists(filename)) output << filename;
+
+	return output;
+}
+
 QVariant Settings::valueWithFallback(QString key)
 {
 	if (settingsApplicationUserExists() && settingsApplicationUser().contains(key))

@@ -51,6 +51,9 @@ class CPPCORESHARED_EXPORT Settings
 	///Returns if a key is present and the value is not empty.
 	static bool contains(QString key);
 
+	///Returns the settings files that are used (user-specific, app-specific, general).
+	static QStringList files();
+
   protected:
 	///Default constructor "declared away"
 	Settings() = delete;
