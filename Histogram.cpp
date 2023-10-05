@@ -138,7 +138,7 @@ QVector<double> Histogram::yCoords(bool as_percentage)
 	}
 }
 
-void Histogram::store(QString filename)
+void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, double min_offset)
 {
 	//create python script
 	QStringList script;
@@ -149,11 +149,27 @@ void Histogram::store(QString filename)
 	script.append("plt.figure(figsize=(10, 4), dpi=100)");
 	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
 	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
-
+	//scale axis
+	double x_min = min();
+	double y_min = minValue();
+	if(x_log_scale)
+	{
+		script.append("plt.xscale(\"log\")");
+		//add offset to avoid 0 in log-scale plot
+		if(x_min == 0.0)  x_min += min_offset;
+	}
+	if(y_log_scale)
+	{
+		script.append("plt.yscale(\"log\")");
+		//add offset to avoid 0 in log-scale plot
+		if(y_min == 0.0) y_min += min_offset;
+	}
 	script.append("plt.tick_params(axis='x', which='both', bottom='off', top='off')");
 	script.append("plt.tick_params(axis='y', which='both', left='off', right='off')");
-	script.append("plt.ylim(" + QString::number(minValue()) + "," + QString::number(maxValue()+0.2*maxValue()) + ")");
-	script.append("plt.xlim(" + QString::number(min()) + "," + QString::number(max()) + ")");
+	script.append("plt.ylim(" + QString::number(y_min) + "," + QString::number(maxValue()+0.2*maxValue()) + ")");
+	script.append("plt.xlim(" + QString::number(x_min) + "," + QString::number(max()) + ")");
+
+
 
 	//data
 	QString yvaluestring = "";

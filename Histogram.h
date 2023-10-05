@@ -85,7 +85,7 @@ public:
 	QVector<double> yCoords(bool as_percentage=false);
 
 	/// store
-	void store(QString filename);
+	void store(QString filename, bool x_log_scale=false, bool y_log_scale=false, double min_offset=1e-6);
 	/// stores a combined histogram of different histograms
 	static void storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel);
 
