@@ -50,11 +50,13 @@ public:
     QMap<QByteArray, QByteArray> headers();
     //Body of HTTP response
     QByteArray body() const;
+    QString message() const;
 
 protected:
     int status_code_;
     QMap<QByteArray, QByteArray> headers_;
     QByteArray body_;
+    QString message_;
 };
 
 ///Exception that is thrown when a function/method receives invalid arguments.

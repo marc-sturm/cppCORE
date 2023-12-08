@@ -103,6 +103,7 @@ HttpException::HttpException(QString message, QString file, int line, ExceptionT
     , status_code_(status_code)
     , headers_(headers)
     , body_(body)
+    , message_(message + ", server replied: " + body)
 {
 }
 
@@ -119,4 +120,9 @@ QMap<QByteArray, QByteArray> HttpException::headers()
 QByteArray HttpException::body() const
 {
     return body_;
+}
+
+QString HttpException::message() const
+{
+    return message_;
 }
