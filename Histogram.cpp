@@ -207,7 +207,7 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 		process.start(python_exe, QStringList() << scriptfile);
 		bool success = process.waitForFinished(-1);
 		QByteArray output = process.readAll();
-		if (!success || output.contains("rror"))
+		if (!success || process.exitCode()>0)
 		{
 			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 		}
@@ -289,7 +289,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		process.start(python_exe, QStringList() << scriptfile);
 		bool success = process.waitForFinished(-1);
 		QByteArray output = process.readAll();
-		if (!success || output.contains("rror"))
+		if (!success || process.exitCode()>0)
 		{
 			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 		}

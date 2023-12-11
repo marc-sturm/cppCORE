@@ -162,7 +162,7 @@ void ScatterPlot::store(QString filename)
 		process.start(python_exe, QStringList() << scriptfile);
 		bool success = process.waitForFinished(-1);
 		QByteArray output = process.readAll();
-		if (!success || output.contains("rror"))
+		if (!success || process.exitCode()>0)
 		{
 			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
 		}
