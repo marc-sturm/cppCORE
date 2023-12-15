@@ -25,6 +25,8 @@ public:
 	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
+	///Returns the elapsed time as a human-readable string.
+	static QByteArray elapsedTime(int elapsed_ms, bool only_seconds = false);
 
 	///Converts a QString/QByteArray to an integer. Throws an error if the conversion fails.
 	template <typename T>

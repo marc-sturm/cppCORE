@@ -41,10 +41,16 @@ QString Helper::randomString(int length, const QString& chars)
 	return output;
 }
 
+
 QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
 {
+	return elapsedTime(elapsed.elapsed(), only_seconds);
+}
+
+QByteArray Helper::elapsedTime(int elapsed_ms, bool only_seconds)
+{
 	//calculate minutes and seconds
-	double s = elapsed.elapsed()/1000.0;
+	double s = elapsed_ms/1000.0;
 	double m = 0;
 	double h = 0;
 	if (!only_seconds)
