@@ -66,6 +66,8 @@ public:
 	static QString fileText(QString filename);
 	///Creates a text file if it does not exist. Throws an error if the file cannot be opened for writing.
 	static void touchFile(QString filename);
+	///Moves a file. Throws an error if something goes wrong.
+	static void moveFile(QString from, QString to);
 
 	///Returns a temporary file name. Make sure you delete the file when it is no longer needed to avoid name clashes!
 	static QString tempFileName(QString extension, int length=16);

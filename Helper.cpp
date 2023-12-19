@@ -135,6 +135,18 @@ void Helper::touchFile(QString filename)
 	}
 }
 
+void Helper::moveFile(QString from, QString to)
+{
+	if (QFile::exists(to) && !QFile(to).remove())
+	{
+		THROW(FileAccessException,"Could not remove file: " + to);
+	}
+	if (!QFile::rename(from, to))
+	{
+		THROW(FileAccessException,"Could not move file " + from + " to " + to + " !");
+	}
+}
+
 
 QString Helper::tempFileName(QString extension, int length)
 {
