@@ -389,3 +389,25 @@ bool Helper::isHttpUrl(QString filename)
 	filename = filename.trimmed().toLower();
 	return filename.startsWith("http:") || filename.startsWith("https:");
 }
+
+QString Helper::FormatLargeNumber(long long input_number, const QString& format_type)
+{
+	if (format_type == "raw_counts")
+	{
+		return QString::number(input_number);
+	}
+	else if (format_type == "modifier")
+	{
+		if (input_number >= 1e13) return QString::number(input_number/1e12, 'f', 2) + " T";
+		if (input_number >= 1e10) return QString::number(input_number/1e9, 'f', 2) + " G";
+		if (input_number >= 1e7) return QString::number(input_number/1e6, 'f', 2) + " M";
+		if (input_number >= 1e4) return QString::number(input_number/1e3, 'f', 2) + " k";
+		return QString::number(input_number);
+	}
+	else if (format_type == "thousands_separator")
+	{
+		QLocale english(QLocale::English, QLocale::UnitedStates);
+		return english.toString(input_number);
+	}
+	THROW(ArgumentException, "Invalid format type '" + format_type + "' provided. \n(Valid types are: 'raw_counts', 'modifier', 'thousands_separator')")
+}

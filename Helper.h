@@ -119,6 +119,9 @@ public:
 		return empty;
 	}
 
+	///Returns a formatted QString of a number
+	static QString FormatLargeNumber(long long input_number, const QString& format_type);
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;
