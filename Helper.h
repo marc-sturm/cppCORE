@@ -28,6 +28,12 @@ public:
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(int elapsed_ms, bool only_seconds = false);
 
+	///check if the argument is a int/float (also returns false in case of extra whitespaces)
+	static bool isNumeric(QString str);
+
+	///check if the argument is a int/float (also returns false in case of extra whitespaces)
+	static bool isNumeric(QByteArray str);
+
 	///Converts a QString/QByteArray to an integer. Throws an error if the conversion fails.
 	template <typename T>
 	static int toInt(const T& str, const QString& name = "string", const QString& line = "")

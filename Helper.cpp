@@ -69,6 +69,40 @@ QByteArray Helper::elapsedTime(int elapsed_ms, bool only_seconds)
 	return hours + min + sec;
 }
 
+bool Helper::isNumeric(QString str)
+{
+	//remove minus
+	if (str.startsWith('-')) str = str.mid(1);
+
+	//check that we have digits and one dot max
+	int c_digit = 0;
+	int c_dot = 0;
+	foreach(auto c, str)
+	{
+		if (c=='.') ++c_dot;
+		else if (c.isDigit()) ++c_digit;
+		else return false;
+	}
+	return c_digit>0 && c_dot<=1;
+}
+
+bool Helper::isNumeric(QByteArray str)
+{
+	//remove minus
+	if (str.startsWith('-')) str = str.mid(1);
+
+	//check that we have digits and one dot max
+	int c_digit = 0;
+	int c_dot = 0;
+	foreach(auto c, str)
+	{
+		if (c=='.') ++c_dot;
+		else if (isdigit(c)) ++c_digit;
+		else return false;
+	}
+	return c_digit>0 && c_dot<=1;
+}
+
 
 QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
