@@ -424,7 +424,7 @@ bool Helper::isHttpUrl(QString filename)
 	return filename.startsWith("http:") || filename.startsWith("https:");
 }
 
-QString Helper::FormatLargeNumber(long long input_number, const QString& format_type)
+QString Helper::formatLargeNumber(long long input_number, const QString& format_type)
 {
 	if (format_type == "raw_counts")
 	{
