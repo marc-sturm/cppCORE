@@ -20,8 +20,22 @@ HttpRequestHandler::HttpRequestHandler(QNetworkProxy proxy, QObject* parent)
 	setHeader("User-Agent", "GSvar");
 	setHeader("X-Custom-User-Agent", "GSvar");
 
-	//proxy
-	nmgr_.setProxy(proxy);
+    //proxy settings
+    if (Settings::boolean("use_proxy_for_gsvar_server", true))
+    {
+        // GSvar server inside an external network
+        QNetworkProxy external_proxy;
+        external_proxy.setHostName(Settings::string("proxy_host"));
+        external_proxy.setPort(Settings::integer("proxy_port"));
+        external_proxy.setUser(Settings::string("proxy_user"));
+        external_proxy.setPassword(Settings::string("proxy_password"));
+        nmgr_.setProxy(external_proxy);
+    }
+    else
+    {
+        // GSvar server inside an internal network (direct connection)
+        nmgr_.setProxy(proxy);
+    }
 
 	connect(&nmgr_, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), this, SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError>&)));
 }
