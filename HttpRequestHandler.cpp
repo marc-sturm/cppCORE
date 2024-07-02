@@ -25,6 +25,7 @@ HttpRequestHandler::HttpRequestHandler(QNetworkProxy proxy, QObject* parent)
     {
         // GSvar server inside an external network
         QNetworkProxy external_proxy;
+        external_proxy.setType(QNetworkProxy::HttpProxy);
         external_proxy.setHostName(Settings::string("proxy_host"));
         external_proxy.setPort(Settings::integer("proxy_port"));
         external_proxy.setUser(Settings::string("proxy_user"));

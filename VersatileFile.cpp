@@ -23,6 +23,7 @@ VersatileFile::VersatileFile(QString file_name)
         if (Settings::boolean("use_proxy_for_gsvar_server", true))
         {
             QNetworkProxy proxy;
+            proxy.setType(QNetworkProxy::HttpProxy);
             proxy.setHostName(Settings::string("proxy_host"));
             proxy.setPort(Settings::integer("proxy_port"));
             proxy.setUser(Settings::string("proxy_user"));
