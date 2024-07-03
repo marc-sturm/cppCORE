@@ -4,7 +4,6 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QThread>
-#include <QNetworkProxy>
 #include <QTemporaryFile>
 
 VersatileFile::VersatileFile(QString file_name)
@@ -19,17 +18,6 @@ VersatileFile::VersatileFile(QString file_name)
 	{
 		socket_ = new QSslSocket();
 		socket_->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
-
-        if (Settings::boolean("use_proxy_for_gsvar_server", true))
-        {
-            QNetworkProxy proxy;
-            proxy.setType(QNetworkProxy::HttpProxy);
-            proxy.setHostName(Settings::string("proxy_host"));
-            proxy.setPort(Settings::integer("proxy_port"));
-            proxy.setUser(Settings::string("proxy_user"));
-            proxy.setPassword(Settings::string("proxy_password"));
-            socket_->setProxy(proxy);
-        }
 
 		QUrl file_url(file_name_);
 		server_path_ = file_url.path() + (file_url.hasQuery() ? "?" + file_url.query() : "");
