@@ -27,6 +27,7 @@ QMAKE_CXXFLAGS_RELEASE *= -O3
 LIBS += -lz
 
 SOURCES += \
+    CustomProxyService.cpp \
     Exceptions.cpp \
     HttpRequestHandler.cpp \
     ProxyDataService.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
     TsvFile.cpp
 
 HEADERS += ToolBase.h \
+    CustomProxyService.h \
     Exceptions.h \
     HttpRequestHandler.h \
     ProxyDataService.h \

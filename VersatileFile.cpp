@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QThread>
 #include <QTemporaryFile>
+#include "CustomProxyService.h"
 
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
@@ -18,6 +19,12 @@ VersatileFile::VersatileFile(QString file_name)
 	{
 		socket_ = new QSslSocket();
 		socket_->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
+
+        //set a proxy, if custom proxy settings have been provided
+        if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
+        {
+            socket_->setProxy(CustomProxyService::getProxy());
+        }
 
 		QUrl file_url(file_name_);
 		server_path_ = file_url.path() + (file_url.hasQuery() ? "?" + file_url.query() : "");
