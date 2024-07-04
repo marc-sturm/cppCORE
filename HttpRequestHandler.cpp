@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QPointer>
 #include <QHttpMultiPart>
+#include "CustomProxyService.h"
 
 HttpRequestHandler::HttpRequestHandler(QNetworkProxy proxy, QObject* parent)
 	: QObject(parent)
@@ -22,6 +23,12 @@ HttpRequestHandler::HttpRequestHandler(QNetworkProxy proxy, QObject* parent)
 
     //proxy settings
     nmgr_.setProxy(proxy);
+
+    //override existing proxy, if custom proxy settings have been provided
+    if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
+    {
+        nmgr_.setProxy(CustomProxyService::getProxy());
+    }
 
 	connect(&nmgr_, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), this, SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError>&)));
 }
