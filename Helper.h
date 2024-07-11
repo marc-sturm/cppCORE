@@ -108,6 +108,16 @@ public:
 		container.erase(it, container.end());
 	}
 
+	///Trim all strings in a container
+	template<typename T>
+	static void trim(T& container)
+	{
+		for (int i=0; i<container.count(); ++i)
+		{
+			container[i] = container[i].trimmed();
+		}
+	}
+
 	///Returns if the current OS is Windows.
 	static bool isWindows();
 	///Returns if the current OS is MacOS.
@@ -127,6 +137,15 @@ public:
 
 	///Returns a formatted QString of a number
 	static QString formatLargeNumber(long long input_number, const QString& format_type);
+
+	///Creates the path if it does not exists. Returns 0 if the path already existed, 1 if it was created or -1 if it could not be created.
+	static int mkdir(QString path);
+
+	///Sets permissions to 777. Returns false if permissions could not be set.
+	static bool set777(QString file);
+
+	///Executes a command using the given arguments. Returns -1 if the execution failed and the exit code otherwise. If output is set, it is filled with the output from STDOUT and STDERR.
+	static int executeCommand(QString command, QStringList args, QByteArrayList* output = nullptr);
 
 protected:
 	///Constructor declared away.

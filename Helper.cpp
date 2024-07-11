@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QCoreApplication>
+#include <QProcess>
 
 void Helper::randomInit()
 {
@@ -444,4 +445,37 @@ QString Helper::formatLargeNumber(long long input_number, const QString& format_
 		return english.toString(input_number);
 	}
 	THROW(ArgumentException, "Invalid format type '" + format_type + "' provided. \n(Valid types are: 'raw_counts', 'modifier', 'thousands_separator')")
+}
+
+int Helper::mkdir(QString path)
+{
+	QDir dir(path);
+	if (dir.exists()) return 0;
+
+	return dir.mkpath(".") ? 1 : -1;
+}
+
+bool Helper::set777(QString file)
+{
+	return QFile::setPermissions(file, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner | QFileDevice::ReadGroup | QFileDevice::WriteGroup | QFileDevice::ExeGroup | QFileDevice::ReadOther | QFileDevice::WriteOther | QFileDevice::ExeOther);
+}
+
+int Helper::executeCommand(QString command, QStringList args, QByteArrayList* output)
+{
+	QProcess process;
+	process.setProcessChannelMode(QProcess::MergedChannels);
+	process.start(command, args);
+	process.waitForFinished(-1);
+
+	//set output
+	if (output!=nullptr)
+	{
+		output->clear();
+		output->operator=(process.readAll().split('\n'));
+	}
+
+	//special case exit code handling
+	if (process.exitStatus()!=QProcess::NormalExit) return -1;
+
+	return process.exitCode();
 }

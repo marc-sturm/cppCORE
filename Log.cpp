@@ -35,7 +35,7 @@ void Log::setFileEnabled(bool enabled)
 		QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
 		if(default_paths.isEmpty()) THROW(Exception, "No local application data path was found!");
 		QString path = default_paths[0];
-		if (!QDir().mkpath(path)) THROW(Exception, "Could not create application data path '" + path + "'!");
+		if (Helper::mkdir(path)==-1) THROW(Exception, "Could not create application data path '" + path + "'!");
 
 		//set log file
 		inst().log_file_name_ = path + QDir::separator() + QCoreApplication::applicationName() + ".log";
