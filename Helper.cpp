@@ -464,7 +464,7 @@ int Helper::executeCommand(QString command, QStringList args, QByteArrayList* ou
 {
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
-	process.start(command, args);
+	process.start(command + " " + args.join(' '));
 	process.waitForFinished(-1);
 
 	//set output
