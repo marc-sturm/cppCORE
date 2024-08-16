@@ -11,13 +11,18 @@ QVector<double> BasicStatistics::log_factorial_cache = QVector<double>();
 
 double BasicStatistics::mean(const QVector<double>& data)
 {
-	const int n = data.count();
+	return mean(data, 0, data.size() - 1);
+}
+
+double BasicStatistics::mean(const QVector<double>& data, int start_index, int end_index)
+{
+	const int n = end_index - start_index + 1;
 	if (n==0)
 	{
 		THROW(StatisticsException, "Cannot calculate mean on empty data array.");
 	}
 
-	return std::accumulate(data.begin(), data.end(), 0.0) / n;
+	return std::accumulate(data.begin() + start_index, data.begin() + (end_index + 1), 0.0) / n;
 }
 
 double BasicStatistics::stdev(const QVector<double>& data)
@@ -27,14 +32,19 @@ double BasicStatistics::stdev(const QVector<double>& data)
 
 double BasicStatistics::stdev(const QVector<double>& data, double mean)
 {
-	const int n = data.count();
+	return stdev(data, mean, 0, data.size() - 1);
+}
+
+double BasicStatistics::stdev(const QVector<double>& data, double mean, int start_index, int end_index)
+{
+	const int n = end_index - start_index + 1;
 	if (n==0)
 	{
 		THROW(StatisticsException, "Cannot calculate standard deviation on empty data array.");
 	}
 
 	double output = 0.0;
-	for (int i=0; i<n; ++i)
+	for (int i=start_index; i<=end_index; ++i)
 	{
 		output += pow(data[i]-mean, 2);
 	}
@@ -107,6 +117,11 @@ double BasicStatistics::q3(const QVector<double>& data, bool check_sorted)
 
 double BasicStatistics::correlation(const QVector<double>& x, const QVector<double>& y)
 {
+	return correlation(x, y, 0, x.size()-1);
+}
+
+double BasicStatistics::correlation(const QVector<double>& x, const QVector<double>& y, int start_index, int end_index)
+{
 	if (x.count()!=y.count())
 	{
 		THROW(StatisticsException, "Cannot calculate correlation of data arrays with different length!");
@@ -116,16 +131,17 @@ double BasicStatistics::correlation(const QVector<double>& x, const QVector<doub
 		THROW(StatisticsException, "Cannot calculate correlation of data arrays with zero length!");
 	}
 
-	const double x_mean = mean(x);
-	const double y_mean = mean(y);
+	const double x_mean = mean(x, start_index, end_index);
+
+	const double y_mean = mean(y, start_index, end_index);
 
 	double sum = 0.0;
-	for(int i=0; i<x.size(); ++i)
+	for(int i=start_index; i<=end_index; ++i)
 	{
 		sum += (x[i]-x_mean) * (y[i]-y_mean);
 	}
 
-	return sum / stdev(x, x_mean) / stdev(y, y_mean) / x.size();
+	return sum / stdev(x, x_mean, start_index, end_index) / stdev(y, y_mean, start_index, end_index) / (end_index - start_index + 1);
 }
 
 bool BasicStatistics::isValidFloat(double value)

@@ -11,10 +11,14 @@ class CPPCORESHARED_EXPORT BasicStatistics
 public:
 	///Calculates the mean of the data.
 	static double mean(const QVector<double>& data);
+	///Calculates the mean of the data in sub-range of indices.
+	static double mean(const QVector<double>& data, int start_index, int end_index);
 	///Calculates the standard deviation of the data.
 	static double stdev(const QVector<double>& data);
 	///Calculates the standard deviation of the data, using a given mean.
 	static double stdev(const QVector<double>& data, double mean);
+	///Calculates the standard deviation of the data, using a given mean in sub-range of indices.
+	static double stdev(const QVector<double>& data, double mean, int start_index, int end_index);
 	///Calculates the median from sorted data.
 	static double median(const QVector<double>& data, bool check_sorted=false);
 	///Calculates the median average deviation (multiply by 1.482 to get a robust estimator of the stdev).
@@ -25,6 +29,8 @@ public:
 	static double q3(const QVector<double>& data, bool check_sorted=false);
 	///Calculates the correlation of two data arrays.
 	static double correlation(const QVector<double>& x, const QVector<double>& y);
+	///Calculates the correlation of two data arrays in sub-range of indices.
+	static double correlation(const QVector<double>& x, const QVector<double>& y, int start_index, int end_index);
 
 	///Returns if a float is valid.
 	static bool isValidFloat(double value);
