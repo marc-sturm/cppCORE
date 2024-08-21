@@ -132,7 +132,6 @@ public:
 };
 
 ///Exception that indicates that the user aborted a dialog or action.
-///This exception is 'expected' by default!
 class CPPCORESHARED_EXPORT AbortByUserException
 		: public Exception
 {
@@ -149,7 +148,6 @@ public:
 };
 
 ///Exception that indicates that a certain functionality is is not accessible by the current user.
-///This exception is 'expected' by default!
 class CPPCORESHARED_EXPORT AccessDeniedException
 		: public Exception
 {
@@ -158,7 +156,6 @@ public:
 };
 
 ///Exception that indicates that some information is missing for a certain action.
-///This exception is 'expected' by default!
 class CPPCORESHARED_EXPORT InformationMissingException
 		: public Exception
 {
