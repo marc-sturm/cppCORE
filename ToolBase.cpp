@@ -197,6 +197,16 @@ bool ToolBase::parseCommandLine()
 		return false;
 	}
 
+	//handle settings override
+	int settings_idx = args.indexOf("--settings");
+	if(settings_idx!=-1)
+	{
+		if (settings_idx==args.count()-1) THROW(CommandLineParsingException, "Parameter '--settings' given without argument.");
+		Settings::setSettingsOverride(args[settings_idx+1]);
+		args.removeAt(settings_idx);
+		args.removeAt(settings_idx);
+	}
+
 	//parse command line
 	for (int i=1; i<args.count(); ++i)
 	{
@@ -453,6 +463,7 @@ void ToolBase::printHelp() const
 	stream << QString("  --version").leftJustified(offset, ' ') << "Prints version and exits." << endl;
 	stream << QString("  --changelog").leftJustified(offset, ' ') << "Prints changeloge and exits." << endl;
 	stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Definition Xml file. The file name is the application name with the suffix '.tdx'." << endl;
+	stream << QString("  --settings [file]").leftJustified(offset, ' ') << "Settings override file (no other settings files are used)." << endl;
 	stream << "" << endl;
 }
 

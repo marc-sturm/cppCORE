@@ -54,6 +54,9 @@ class CPPCORESHARED_EXPORT Settings
 	///Returns the settings files that are used (user-specific, app-specific, general).
 	static QStringList files();
 
+	///Settings file override (no other files are used)
+	static void setSettingsOverride(QString filename);
+
   protected:
 	///Default constructor "declared away"
 	Settings() = delete;
@@ -68,6 +71,10 @@ class CPPCORESHARED_EXPORT Settings
 	static const QSettings& settingsApplication();
 	///returns the general settings file "settings.ini" in the application folder (read only)
 	static const QSettings& settingsGeneral();
+
+
+	static QString override_settings_file;
+	static QSharedPointer<QSettings> override_settings;
 };
 
 #endif //SETTINGS_H

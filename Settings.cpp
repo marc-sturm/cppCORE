@@ -8,6 +8,10 @@
 #include "Helper.h"
 
 
+
+QString Settings::override_settings_file = "";
+QSharedPointer<QSettings> Settings::override_settings = QSharedPointer<QSettings>();
+
 bool Settings::settingsApplicationUserExists()
 {
 	QStringList default_paths = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
@@ -189,6 +193,13 @@ QStringList Settings::allKeys()
 {
 	QStringList output;
 
+	//override set > report only it
+	if (!override_settings_file.isEmpty())
+	{
+		output << override_settings->allKeys();
+		return output;
+	}
+
 	if (settingsApplicationUserExists())
 	{
 		output << settingsApplicationUser().allKeys();
@@ -204,12 +215,19 @@ QStringList Settings::allKeys()
 
 bool Settings::contains(QString key)
 {
-	//check if key exists
-	bool key_exists = (settingsApplicationUserExists() && settingsApplicationUser().contains(key)) || settingsApplication().contains(key) || settingsGeneral().contains(key);
-	if (!key_exists) return false;
+	QVariant var;
 
-	//if the key exists, check that the value is not empty
-	QVariant var = valueWithFallback(key);
+	//override set > report only it
+	if (!override_settings_file.isEmpty())
+	{
+		var = override_settings->value(key);
+	}
+	else if ((settingsApplicationUserExists() && settingsApplicationUser().contains(key)) || settingsApplication().contains(key) || settingsGeneral().contains(key))
+	{
+		 var = valueWithFallback(key);
+	}
+
+	//check that the value is not empty
 	if (var.type()==QVariant::StringList) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
 	if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
 	return var.toString().trimmed()!="";
@@ -218,6 +236,14 @@ bool Settings::contains(QString key)
 QStringList Settings::files()
 {
 	QStringList output;
+
+	//override set > report only it
+	if (!override_settings_file.isEmpty())
+	{
+		output << override_settings_file;
+		return output;
+	}
+
 	if (settingsApplicationUserExists())
 	{
 		QString filename = settingsApplicationUser().fileName();
@@ -232,8 +258,21 @@ QStringList Settings::files()
 	return output;
 }
 
+void Settings::setSettingsOverride(QString filename)
+{
+	if (!QFile::exists(filename)) THROW(FileParseException, "Override settings file does not exist: " + filename);
+
+	override_settings_file = filename;
+	override_settings.reset(new QSettings(filename, QSettings::IniFormat));
+}
+
 QVariant Settings::valueWithFallback(QString key)
 {
+	if (!override_settings_file.isEmpty())
+	{
+		return override_settings->value(key);
+	}
+
 	if (settingsApplicationUserExists() && settingsApplicationUser().contains(key))
 	{
 		return settingsApplicationUser().value(key);
