@@ -128,7 +128,7 @@ ServerReply HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
         {
             if (i == retry_attempts - 1)
             {
-                THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
+				THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nDevice Error: " + reply->errorString()+ "\nReply: " + output.body, output.status_code, output.headers, output.body);
             }
             else
             {
@@ -214,10 +214,9 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
     }
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     output.body = reply->readAll();
-
     if (reply->error()!=QNetworkReply::NoError)
     {
-        THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nIODevice Error: " + reply->errorString(), output.status_code, output.headers, output.body);
+		THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nDevice error: " + reply->errorString() + "\nReply: " + output.body, output.status_code, output.headers, output.body);
     }
     reply->deleteLater();
     return output;
