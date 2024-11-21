@@ -389,7 +389,7 @@ void ToolBase::printHelp() const
     {
         max_name = std::max(max_name, data.name.length() + typeToArgString(data.type).length());
 	}
-	int offset = std::max(18, max_name + 5);
+	int offset = std::max(20, max_name + 5);
 
 	//print general info
 	stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << endl;
