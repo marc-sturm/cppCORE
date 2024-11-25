@@ -6,9 +6,13 @@
 #include <QFile>
 #include <zlib.h>
 #include "Exceptions.h"
+#include <QNetworkReply>
 
 class CPPCORESHARED_EXPORT VersatileFile
+    : public QObject
 {
+    Q_OBJECT
+
 public:
 	VersatileFile(QString file_name);
 
@@ -36,6 +40,9 @@ public:
 	qint64 size();
 
 	QString fileName() const;
+
+private slots:
+    void onSslErrors(const QList<QSslError> &errors);
 
 private:
 	QSslSocket *socket_;

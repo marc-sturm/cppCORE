@@ -6,12 +6,14 @@
 #include <QThread>
 #include <QTemporaryFile>
 #include "CustomProxyService.h"
+#include "Log.h"
 
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
-{	
-	if (isLocal())
+{
+    Log::info("Requesting file: " + file_name_);
+    if (isLocal())
 	{
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
 	}
@@ -31,6 +33,8 @@ VersatileFile::VersatileFile(QString file_name)
 		host_name_ = file_url.host();
 		server_port_ = getPortNumber();
 		file_size_ = getFileSize();
+
+        connect(socket_, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors), this, &VersatileFile::onSslErrors);
 	}
 }
 
@@ -203,7 +207,6 @@ void VersatileFile::close()
 	else
 	{
 		socket_->close();
-//		worker_->exit(0);
 	}
 }
 
@@ -234,6 +237,16 @@ qint64 VersatileFile::size()
 QString VersatileFile::fileName() const
 {
 	return file_name_;
+}
+
+void VersatileFile::onSslErrors(const QList<QSslError>& errors)
+{
+    for (const QSslError &error : errors) {
+        Log::error("Ignored the following SSL error: " + error.errorString());
+    }
+
+    // To ignore SSL errors (not recommended in production):
+    socket_->ignoreSslErrors();
 }
 
 void VersatileFile::checkIfOpen() const
@@ -330,14 +343,16 @@ void VersatileFile::initiateRequest(const QByteArray& http_request)
 	{
 		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
 		{
-			if (isEncrypted())
+            Log::info("Initiate a connection to " + host_name_ + ":" + QString::number(server_port_));
+            if (isEncrypted())
 			{
-				socket_->connectToHostEncrypted(host_name_, server_port_);
-				socket_->ignoreSslErrors();
+                Log::info("Trying to read " + file_name_ + " over HTTPS protocol");
+                socket_->connectToHostEncrypted(host_name_, server_port_);
 			}
 			else
 			{
-				socket_->connectToHost(host_name_, server_port_);
+                Log::info("Trying to read " + file_name_ + " over HTTP protocol");
+                socket_->connectToHost(host_name_, server_port_);
 			}
 
 			socket_->waitForConnected();
