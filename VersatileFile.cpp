@@ -12,7 +12,7 @@ VersatileFile::VersatileFile(QString file_name)
 	, cursor_position_(0)
     , proxy_(QNetworkProxy::NoProxy)
 {
-    Log::info("Requesting file: " + file_name_);
+    // Log::info("Requesting file: " + file_name_);
     if (isLocal())
 	{
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
@@ -258,7 +258,7 @@ ServerReply VersatileFile::sendHeadRequest()
 {
     try
     {
-        Log::info("HEAD request for " + file_name_);
+        // Log::info("HEAD request for " + file_name_);
         HttpHeaders add_headers;
         addCommonHeaders(add_headers);
         return HttpRequestHandler(proxy_).head(file_name_, add_headers);
@@ -275,7 +275,7 @@ ServerReply VersatileFile::sendGetRequestText()
 {	
     try
     {
-        Log::info("GET request for " + file_name_);
+        // Log::info("GET request for " + file_name_);
         HttpHeaders add_headers;
         addCommonHeaders(add_headers);
         add_headers.insert("Connection", "keep-alive");
@@ -292,7 +292,7 @@ ServerReply VersatileFile::sendByteRangeRequestText(qint64 start, qint64 end)
 {
     try
     {
-        Log::info("GET Range request for " + file_name_);
+        // Log::info("GET Range request for " + file_name_);
         HttpHeaders add_headers;
         add_headers.insert("Connection", "keep-alive");
         addCommonHeaders(add_headers);
@@ -321,7 +321,7 @@ qint64 VersatileFile::getFileSize()
         {
             if (item.toLower() == "content-length")
             {
-                Log::info("Size from Network Manager: " + reply.headers[item]);
+                // Log::info("Size from Network Manager: " + reply.headers[item]);
                 return reply.headers[item].toLongLong();
             }
         }
