@@ -2,11 +2,11 @@
 #define VERSATILEFILE_H
 
 #include "cppCORE_global.h"
-#include <QSslSocket>
+#include <QNetworkProxy>
 #include <QFile>
 #include <zlib.h>
 #include "Exceptions.h"
-#include <QNetworkReply>
+#include "HttpRequestHandler.h"
 
 class CPPCORESHARED_EXPORT VersatileFile
     : public QObject
@@ -32,7 +32,6 @@ public:
 
 	bool atEnd() const;
 	bool exists();
-
 	void close();
 
 	qint64 pos() const;
@@ -41,12 +40,8 @@ public:
 
 	QString fileName() const;
 
-private slots:
-    void onSslErrors(const QList<QSslError> &errors);
-
 private:
-	QSslSocket *socket_;
-	QByteArray reply_data_;
+    QNetworkProxy proxy_;
 	QSharedPointer<QFile> local_source_;
 
 	QString file_name_;
@@ -54,30 +49,18 @@ private:
 	void checkResponse(QByteArray& response) const;
 
 	bool is_local_;
-	QString server_path_;
-	QString host_name_;
-	quint16 server_port_;
 	qint64 file_size_;
 	qint64 cursor_position_;
-	bool headers_processed_;
 
 	QSharedPointer<QFile> readline_pointer_;
-	bool isLocal() const;
-	bool isEncrypted() const;
-	quint16 getPortNumber();
-	void addCommonHeaders(QByteArray &request);
-	QByteArray createHeadRequestText();
-	QByteArray createGetRequestText();
-	QByteArray createByteRangeRequestText(qint64 start, qint64 end);
-	void initiateRequest(const QByteArray& http_request);
-	QByteArray readAllViaSocket(const QByteArray &http_request);
-	QByteArray readLineViaSocket(const QByteArray& http_request, qint64 maxlen = 0);
+	bool isLocal() const;	
+    void addCommonHeaders(HttpHeaders &request_headers);
+
+    ServerReply sendHeadRequest();
+    ServerReply sendGetRequestText();
+    ServerReply sendByteRangeRequestText(qint64 start, qint64 end);
+
 	qint64 getFileSize();
-	QByteArray readResponseWithoutHeaders(const QByteArray &http_request);
-
-
-
-
 };
 
 

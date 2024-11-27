@@ -3,7 +3,6 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
-#include <QThread>
 #include <QTemporaryFile>
 #include "CustomProxyService.h"
 #include "Log.h"
@@ -11,6 +10,7 @@
 VersatileFile::VersatileFile(QString file_name)
 	: file_name_(file_name)
 	, cursor_position_(0)
+    , proxy_(QNetworkProxy::NoProxy)
 {
     Log::info("Requesting file: " + file_name_);
     if (isLocal())
@@ -18,23 +18,14 @@ VersatileFile::VersatileFile(QString file_name)
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
 	}
 	else
-	{
-		socket_ = new QSslSocket();
-		socket_->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
-
+    {
         //set a proxy, if custom proxy settings have been provided
         if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
         {
-            socket_->setProxy(CustomProxyService::getProxy());
+            proxy_ = CustomProxyService::getProxy();
         }
 
-		QUrl file_url(file_name_);
-		server_path_ = file_url.path() + (file_url.hasQuery() ? "?" + file_url.query() : "");
-		host_name_ = file_url.host();
-		server_port_ = getPortNumber();
-		file_size_ = getFileSize();
-
-        connect(socket_, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors), this, &VersatileFile::onSslErrors);
+        file_size_ = getFileSize();
 	}
 }
 
@@ -52,8 +43,7 @@ bool VersatileFile::open(QIODevice::OpenMode mode)
 	}
 	cursor_position_ = 0;
 
-	if (!socket_->isOpen()) socket_->open(mode);
-	return socket_->isOpen();
+    return true;
 }
 
 bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
@@ -71,13 +61,13 @@ bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
 QIODevice::OpenMode VersatileFile::openMode() const
 {
 	if (isLocal()) return local_source_.data()->openMode();
-	return socket_->openMode();
+    return QFile::ReadWrite;
 }
 
 bool VersatileFile::isOpen() const
 {
 	if (isLocal()) return local_source_.data()->isOpen();
-	return socket_->isOpen();
+    return true;
 }
 
 bool VersatileFile::isReadable() const
@@ -106,7 +96,7 @@ QByteArray VersatileFile::read(qint64 maxlen)
 	qint64 end = cursor_position_ + maxlen;
 	if (end > file_size_) end = file_size_;
 
-	QByteArray response = readResponseWithoutHeaders(createByteRangeRequestText(cursor_position_, end));
+    QByteArray response = sendByteRangeRequestText(cursor_position_, end).body;
 	cursor_position_ = cursor_position_ + response.length() - 1;
 	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
 	return response;
@@ -117,7 +107,7 @@ QByteArray VersatileFile::readAll()
 	checkIfOpen();
 	if (isLocal()) return local_source_.data()->readAll();
 
-	QByteArray response = readResponseWithoutHeaders(createGetRequestText());
+    QByteArray response = sendGetRequestText().body;
 	cursor_position_ = cursor_position_ + response.length();
 	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
 
@@ -138,7 +128,7 @@ QByteArray VersatileFile::readLine(qint64 maxlen)
 
         QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
         if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
-        buffer_file.data()->write(readResponseWithoutHeaders(createGetRequestText()));
+        buffer_file.data()->write(sendGetRequestText().body);
         buffer_file.data()->close();
 
 		file_size_ = QFileInfo(temp_file.fileName()).size();
@@ -187,9 +177,9 @@ bool VersatileFile::exists()
 	if (!local_source_.isNull()) return local_source_.data()->exists();
 
 	try
-	{
-		readAllViaSocket(createHeadRequestText());
-		return true;
+    {
+        ServerReply reply = sendHeadRequest();
+        return reply.status_code != 404;
 	}
 	catch(Exception& e)
 	{
@@ -203,10 +193,6 @@ void VersatileFile::close()
 	if (isLocal())
 	{
 		local_source_.data()->close();
-	}
-	else
-	{
-		socket_->close();
 	}
 }
 
@@ -239,27 +225,13 @@ QString VersatileFile::fileName() const
 	return file_name_;
 }
 
-void VersatileFile::onSslErrors(const QList<QSslError>& errors)
-{
-    for (const QSslError &error : errors) {
-        Log::error("Ignored the following SSL error: " + error.errorString());
-    }
-
-    // To ignore SSL errors (not recommended in production):
-    socket_->ignoreSslErrors();
-}
-
 void VersatileFile::checkIfOpen() const
 {
 	if (isLocal())
 	{
 		if (local_source_.isNull()) THROW(FileAccessException, "Local file is not set!");
 		if (!local_source_.data()->isOpen()) THROW(FileAccessException, "Local file is not open!");
-	}
-	else
-	{
-		if (!socket_->isOpen()) THROW(FileAccessException, "No connection to the remote file!");
-	}
+	}	
 }
 
 void VersatileFile::checkResponse(QByteArray& response) const
@@ -276,199 +248,85 @@ bool VersatileFile::isLocal() const
 	return !Helper::isHttpUrl(file_name_);
 }
 
-bool VersatileFile::isEncrypted() const
+void VersatileFile::addCommonHeaders(HttpHeaders& request_headers)
 {
-	if (file_name_.startsWith("https://", Qt::CaseInsensitive)) return true;
-	return false;
+    request_headers.insert("User-Agent", "GSvar");
+    request_headers.insert("X-Custom-User-Agent", "GSvar");
 }
 
-quint16 VersatileFile::getPortNumber()
+ServerReply VersatileFile::sendHeadRequest()
 {
-	QUrl file_url(file_name_);
-	int port = file_url.port();
-	if (port > 0) return port;
-	if (isEncrypted()) return 443;
-	return 80;
+    try
+    {
+        Log::info("HEAD request for " + file_name_);
+        HttpHeaders add_headers;
+        addCommonHeaders(add_headers);
+        return HttpRequestHandler(proxy_).head(file_name_, add_headers);
+    }
+    catch (HttpException& e)
+    {
+        Log::error("An error while performing a HEAD request for the file '" + file_name_ + "': " + e.message());
+
+    }
+    return ServerReply();
 }
 
-void VersatileFile::addCommonHeaders(QByteArray& request)
-{
-	request.append(server_path_.toUtf8());
-	request.append(" HTTP/1.1\r\n");
-	request.append("Host: ");
-	request.append(host_name_.toUtf8() + ":");
-	request.append(QString::number(server_port_).toUtf8());
-	request.append("\r\n");
-	request.append("User-Agent: GSvar\r\n");
-	request.append("X-Custom-User-Agent: GSvar\r\n");
+ServerReply VersatileFile::sendGetRequestText()
+{	
+    try
+    {
+        Log::info("GET request for " + file_name_);
+        HttpHeaders add_headers;
+        addCommonHeaders(add_headers);
+        add_headers.insert("Connection", "keep-alive");
+        return HttpRequestHandler(proxy_).get(file_name_, add_headers);
+    }
+    catch (HttpException& e)
+    {
+        Log::error("An error while performing a GET request for the file '" + file_name_ + "': " + e.message());
+    }
+    return ServerReply();
 }
 
-QByteArray VersatileFile::createHeadRequestText()
+ServerReply VersatileFile::sendByteRangeRequestText(qint64 start, qint64 end)
 {
-	QByteArray payload;
-	payload.append("HEAD ");
-	addCommonHeaders(payload);
-	payload.append("\r\n");
-	return payload;
-}
+    try
+    {
+        Log::info("GET Range request for " + file_name_);
+        HttpHeaders add_headers;
+        add_headers.insert("Connection", "keep-alive");
+        addCommonHeaders(add_headers);
 
-QByteArray VersatileFile::createGetRequestText()
-{
-	QByteArray payload;
-	payload.append("GET ");
-	addCommonHeaders(payload);
-	payload.append("Connection: keep-alive\r\n");
-	payload.append("\r\n");	
-	return payload;
-}
-
-QByteArray VersatileFile::createByteRangeRequestText(qint64 start, qint64 end)
-{
-	QByteArray payload;
-	payload.append("GET ");	
-	addCommonHeaders(payload);
-	payload.append("Connection: keep-alive\r\n");
-	payload.append("Range: bytes=");
-	payload.append(QString::number(start).toUtf8());
-	payload.append("-");
-	if (end > 0) payload.append(QString::number(end).toUtf8());
-	payload.append("\r\n");
-	payload.append("\r\n");
-	return payload;
-}
-
-void VersatileFile::initiateRequest(const QByteArray& http_request)
-{
-	try
-	{
-		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
-		{
-            Log::info("Initiate a connection to " + host_name_ + ":" + QString::number(server_port_));
-            if (isEncrypted())
-			{
-                Log::info("Trying to read " + file_name_ + " over HTTPS protocol");
-                socket_->connectToHostEncrypted(host_name_, server_port_);
-			}
-			else
-			{
-                Log::info("Trying to read " + file_name_ + " over HTTP protocol");
-                socket_->connectToHost(host_name_, server_port_);
-			}
-
-			socket_->waitForConnected();
-			if (isEncrypted()) socket_->waitForEncrypted();
-			socket_->open(QIODevice::ReadWrite);
-		}
-
-		socket_->write(http_request);
-		socket_->flush();
-		if (socket_->state() != QSslSocket::SocketState::UnconnectedState) socket_->waitForBytesWritten();
-	}
-	catch (Exception& e)
-	{
-		THROW(FileAccessException, "There was an error while connecting to the server " + host_name_ + ": " + e.message());
-	}
-}
-
-QByteArray VersatileFile::readAllViaSocket(const QByteArray& http_request)
-{
-	QByteArray response;
-	try
-	{
-		initiateRequest(http_request);
-		while(socket_->waitForReadyRead())
-		{
-			if(socket_->bytesAvailable())
-			{
-				response.append(socket_->readAll());
-			}
-		}
-	}
-	catch (Exception& e)
-	{
-		THROW(FileAccessException, "There was an error while reading a remote file: " + e.message());
-	}
-	checkResponse(response);
-
-	return response;
-}
-
-QByteArray VersatileFile::readLineViaSocket(const QByteArray& http_request, qint64 maxlen)
-{
-	if (atEnd()) return "";
-
-	try
-	{
-		if (socket_->state() != QSslSocket::SocketState::ConnectedState)
-		{
-			initiateRequest(http_request);
-			bool found_headers = false;
-			bool read_first_line = false;
-			while(socket_->waitForReadyRead())
-			{
-				while(socket_->bytesAvailable())
-				{
-					QByteArray line = socket_->readLine(maxlen);
-					if (!read_first_line)
-					{
-						checkResponse(line);
-						read_first_line = true;
-					}
-
-					if (line.trimmed().length() == 0)
-					{
-						found_headers = true;
-						break;
-					}
-				}
-				if (found_headers) break;
-			}
-		}
-
-		while((socket_->waitForReadyRead()) || (socket_->bytesAvailable()))
-		{
-			if (socket_->canReadLine())
-			{
-				QByteArray result_line = socket_->readLine(maxlen);
-				cursor_position_ = cursor_position_ + result_line.length();
-				return result_line;
-			}
-		}
-	}
-	catch (Exception& e)
-	{
-		THROW(FileAccessException, "There was an error while reading a line from a remote file: " + e.message());
-	}
-
-	return "";
+        QByteArray range_values = "bytes=" + QString::number(start).toUtf8() + "-";
+        if (end>0)
+        {
+            range_values.append(QString::number(end).toUtf8());
+        }
+        add_headers.insert("Range", range_values);
+        return HttpRequestHandler(proxy_).get(file_name_, add_headers);
+    }
+    catch (HttpException& e)
+    {
+        Log::error("An error while performing a GET request for the file '" + file_name_ + "': " + e.message());
+    }
+    return ServerReply();
 }
 
 qint64 VersatileFile::getFileSize()
 {
 	if (exists())
-	{
-		QByteArray response = readAllViaSocket(createHeadRequestText());
-		cursor_position_ = 0;
-		QTextStream stream(response);
-		while(!stream.atEnd())
-		{
-			QString line = stream.readLine();
-			if (line.startsWith("Content-Length", Qt::CaseInsensitive))
-			{
-				QList<QString> parts = line.split(":");
-				if (parts.size() > 1) return parts.takeLast().trimmed().toLongLong();
-			}
-		}
+	{        
+        ServerReply reply = sendHeadRequest();
+        foreach(const QByteArray& item, reply.headers.keys())
+        {
+            if (item.toLower() == "content-length")
+            {
+                Log::info("Size from Network Manager: " + reply.headers[item]);
+                return reply.headers[item].toLongLong();
+            }
+        }
 	}
 
 	return 0;
-}
-
-QByteArray VersatileFile::readResponseWithoutHeaders(const QByteArray &http_request)
-{
-	QByteArray response = readAllViaSocket(http_request);
-	qint64 sep = response.indexOf("\r\n\r\n");
-	response = response.mid(sep).replace(0, 4, "");
-	return response;
 }
 
