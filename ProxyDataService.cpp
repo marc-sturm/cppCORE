@@ -13,7 +13,6 @@ ProxyDataService::ProxyDataService()
 	//test no proxy
 	if(test_connection(QNetworkProxy(QNetworkProxy::NoProxy)))
 	{
-		qDebug() << "No proxy required.";
 		proxy_ = QNetworkProxy(QNetworkProxy::NoProxy);
 		return;
 	}
@@ -24,14 +23,11 @@ ProxyDataService::ProxyDataService()
 	QList<QNetworkProxy> system_proxies = QNetworkProxyFactory::systemProxyForQuery(npq);
 	if(system_proxies.size() > 0)
 	{
-		if(system_proxies.size() > 1) qDebug() << "Multiple proxy settings found.";
 		foreach(const QNetworkProxy system_proxy, system_proxies)
 		{
 			//debug
-			qDebug() << system_proxy.hostName() << system_proxy.port() << system_proxy.user() << system_proxy.password();
 			if(test_connection(system_proxy))
 			{
-				qDebug() << "System proxy used.";
 				proxy_ = system_proxy;
 				return;
 			}
@@ -49,7 +45,6 @@ ProxyDataService::ProxyDataService()
 
 	if(test_connection(tmp_proxy))
 	{
-		qDebug() << "Proxy settings from INI file used.";
 		proxy_ = tmp_proxy;
 
 		return;
@@ -57,7 +52,6 @@ ProxyDataService::ProxyDataService()
 
 	if(tmp_proxy.password().isEmpty() || tmp_proxy.user().isEmpty())
 	{
-		qDebug() << "Incomplete proxy settings from INI file used.";
 		proxy_ = tmp_proxy;
 
 		return;
@@ -79,11 +73,9 @@ bool ProxyDataService::setCredentials(QString user, QString password)
 	if(test_connection(tmp_proxy))
 	{
 		service.proxy_ = tmp_proxy;
-		qDebug() << "proxy settings applied";
 		return true;
 	}
 
-	qDebug() << "Failed to connect with provided proxy settings.";
 	return false;
 }
 
@@ -129,11 +121,8 @@ bool ProxyDataService::test_connection(QNetworkProxy proxy)
 	if((proxy.type() == QNetworkProxy::NoProxy) && !timeout_timer.isActive())
 	{
 		// reply ran in time out
-		qDebug() << "Network timeout for NoProxy check!";
 		return false;
 	}
-
-	qDebug() << "Network error:" << reply->error();
 
 	return (reply->error() == QNetworkReply::NoError);
 }
