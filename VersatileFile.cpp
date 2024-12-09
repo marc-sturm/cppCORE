@@ -8,9 +8,9 @@
 #include "Log.h"
 
 VersatileFile::VersatileFile(QString file_name)
-	: file_name_(file_name)
+	: proxy_(QNetworkProxy::NoProxy)
+	, file_name_(file_name)
 	, cursor_position_(0)
-    , proxy_(QNetworkProxy::NoProxy)
 {
     if (isLocal())
 	{
