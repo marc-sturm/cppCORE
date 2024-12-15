@@ -20,6 +20,8 @@ public:
 	ToolBase(int& argc, char *argv[]);
 	///Sets if the event loop is aborted after the main (default), or if it keeps running. Keeping it running is necessary for event-driven applications, which exit the event loop themselves when they are done.
 	void setExitEventLoopAfterMain(bool exit_event_loop);
+	///Exit application with error state '1'.
+	void setExitErrorState(bool exit_error_state);
 	///Sets the descripton.
 	void setDescription(QString description);
 	///Sets the extended descripton.
@@ -114,6 +116,7 @@ private:
 	};
 
 	bool exit_event_loop_;
+	bool exit_error_state_;
 	QString description_;
 	QStringList description_extended_;
 	QList<ChangeLogEntry> changelog_;

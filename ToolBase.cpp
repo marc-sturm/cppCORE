@@ -8,6 +8,7 @@
 ToolBase::ToolBase(int& argc, char *argv[])
 	: QCoreApplication(argc, argv)
 	, exit_event_loop_(true)
+	, exit_error_state_(false)
 {
 	QCoreApplication::setApplicationVersion(version());
 }
@@ -15,6 +16,11 @@ ToolBase::ToolBase(int& argc, char *argv[])
 void ToolBase::setExitEventLoopAfterMain(bool exit_event_loop)
 {
 	exit_event_loop_ = exit_event_loop;
+}
+
+void ToolBase::setExitErrorState(bool exit_error_state)
+{
+	exit_error_state_ = exit_error_state;
 }
 
 QString ToolBase::version()
@@ -554,6 +560,11 @@ void ToolBase::executeInternal()
 	if (!execute_main || exit_event_loop_)
 	{
 		exit(0);
+	}
+
+	if (exit_error_state_)
+	{
+		exit(1);
 	}
 }
 

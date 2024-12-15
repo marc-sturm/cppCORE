@@ -25,6 +25,15 @@ const QStringList& TsvFile::comments() const
 	return comments_;
 }
 
+void TsvFile::setComments(const QStringList& comments)
+{
+	comments_.clear();
+	foreach(const QString& comment, comments)
+	{
+		addComment(comment);
+	}
+}
+
 void TsvFile::addHeader(const QString& header)
 {
 	if (header.isEmpty())
@@ -85,14 +94,16 @@ int TsvFile::rowCount() const
 	return rows_.count();
 }
 
-int TsvFile::columnIndex(const QString& column) const
+int TsvFile::columnIndex(const QString& column, bool throw_if_not_found) const
 {
 	for (int c=0; c<headers_.count(); ++c)
 	{
 		if (headers_[c]==column) return c;
 	}
 
-	THROW(ProgrammingException, "Column '" + column + "' not found in TsvFile!");
+	if (throw_if_not_found)	THROW(ProgrammingException, "Column '" + column + "' not found in TsvFile!");
+
+	return -1;
 }
 
 QStringList TsvFile::extractColumn(int c)
@@ -108,6 +119,20 @@ QStringList TsvFile::extractColumn(int c)
 		output << row[c];
 	}
 	return output;
+}
+
+void TsvFile::removeColumn(int c)
+{
+	if (c<0 || c>=headers_.count())
+	{
+		THROW(ProgrammingException, "TsvFile: table has " + QString::number(headers_.count()) + " columns, but column with index " + QString::number(c) + " was requested.");
+	}
+
+	headers_.removeAt(c);
+	for (int i=0; i<rows_.count(); ++i)
+	{
+		rows_[i].removeAt(c);
+	}
 }
 
 void TsvFile::load(QString filename)

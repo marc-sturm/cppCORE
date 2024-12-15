@@ -13,6 +13,7 @@ public:
 
 	void addComment(const QString& comment);
 	const QStringList& comments() const;
+	void setComments(const QStringList& comments);
 
 	void addHeader(const QString& header);
 	const QStringList& headers() const;
@@ -21,8 +22,8 @@ public:
 	const QStringList& row(int i) const;
 	int rowCount() const;
 
-	//Returns the column index. Throws an exception if the column does not exist
-	int columnIndex(const QString& column) const;
+	//Returns the column index. Throws an exception if the column does not exist, or returns -1.
+	int columnIndex(const QString& column, bool throw_if_not_found=true) const;
 
 	//Loads a TSV file with '#' as start of header line and '##' as start of comment lines.
 	void load(QString filename);
@@ -33,6 +34,8 @@ public:
 
 	//Creates a columns representation (slow).
 	QStringList extractColumn(int c);
+	//Removes a column.
+	void removeColumn(int c);
 
 private:
 	QStringList comments_;
