@@ -20,11 +20,6 @@ void TsvFile::addComment(const QString& comment)
 	comments_ << comment;
 }
 
-const QStringList& TsvFile::comments() const
-{
-	return comments_;
-}
-
 void TsvFile::setComments(const QStringList& comments)
 {
 	comments_.clear();
@@ -79,7 +74,7 @@ void TsvFile::addRow(const QStringList& row)
 	rows_ << row;
 }
 
-const QStringList& TsvFile::row(int i) const
+const QStringList& TsvFile::operator[](int i) const
 {
 	if (i<0 || i>=rows_.count())
 	{
@@ -87,11 +82,6 @@ const QStringList& TsvFile::row(int i) const
 	}
 
 	return rows_[i];
-}
-
-int TsvFile::rowCount() const
-{
-	return rows_.count();
 }
 
 int TsvFile::columnIndex(const QString& column, bool throw_if_not_found) const

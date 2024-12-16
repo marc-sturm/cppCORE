@@ -12,15 +12,15 @@ public:
 	TsvFile();
 
 	void addComment(const QString& comment);
-	const QStringList& comments() const;
+	const QStringList& comments() const { return comments_; }
 	void setComments(const QStringList& comments);
 
 	void addHeader(const QString& header);
 	const QStringList& headers() const;
 
 	void addRow(const QStringList& row);
-	const QStringList& row(int i) const;
-	int rowCount() const;
+	const QStringList& operator[](int i) const;
+	int count() const { return rows_.count(); }
 
 	//Returns the column index. Throws an exception if the column does not exist, or returns -1.
 	int columnIndex(const QString& column, bool throw_if_not_found=true) const;
