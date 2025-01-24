@@ -125,7 +125,7 @@ void TsvFile::removeColumn(int c)
 	}
 }
 
-void TsvFile::load(QString filename)
+void TsvFile::load(QString filename, bool use_string_hash)
 {
 	auto file = Helper::openVersatileFileForReading(filename);
 	VersatileTextStream stream(filename);
@@ -157,8 +157,24 @@ void TsvFile::load(QString filename)
 		}
 
 		//content lines
-		addRow(line.split('\t'));
+
+		if (use_string_hash)
+		{
+			QStringList tmp;
+			foreach(QString entry, line.split('\t'))
+			{
+				if (!hash_.contains(entry)) hash_.insert(entry, entry);
+				tmp.append(hash_[entry]);
+			}
+			rows_ << tmp;
+		}
+		else
+		{
+			addRow(line.split('\t'));
+		}
 	}
+
+	hash_.clear();
 }
 
 void TsvFile::store(QString filename) const
