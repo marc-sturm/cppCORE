@@ -127,7 +127,6 @@ void TsvFile::removeColumn(int c)
 
 void TsvFile::load(QString filename, bool use_string_hash)
 {
-	auto file = Helper::openVersatileFileForReading(filename);
 	VersatileTextStream stream(filename);
 	while (!stream.atEnd())
 	{
