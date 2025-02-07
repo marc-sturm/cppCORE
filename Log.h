@@ -3,7 +3,7 @@
 
 #include "cppCORE_global.h"
 #include <QString>
-#include <QTime>
+#include <QElapsedTimer>
 
 
 /**
@@ -31,7 +31,7 @@ public:
 	///Logs message using PERF level (performance data).
 	static void perf(const QString& message);
 	///Convenice: Logs a performance message appending the human-readable elapsed time.
-	static void perf(const QString& message, QTime elapsed);
+    static void perf(const QString& message, QElapsedTimer elapsed);
 	///Convenice: Logs basic application info (path, version, ...) using INFO level.
 	static void appInfo();
 
