@@ -124,6 +124,51 @@ QByteArray Git::pull(QString dir)
 	return process.readAll();
 }
 
+QByteArray Git::push(QString dir)
+{
+	QString git_exe = gitExe();
+
+	QProcess process;
+	process.setProcessChannelMode(QProcess::MergedChannels);
+	process.setWorkingDirectory(dir);
+	process.start(git_exe, QStringList() << "push");
+	if (!process.waitForFinished(-1))
+	{
+		QByteArray output = process.readAll();
+		THROW(Exception, "Could not execute 'git pull':\n" + output);
+	}
+	return process.readAll();
+}
+
+QByteArray Git::branch(QString dir)
+{
+	QString git_exe = gitExe();
+
+	QProcess process;
+	process.setProcessChannelMode(QProcess::MergedChannels);
+	process.setWorkingDirectory(dir);
+	process.start(git_exe, QStringList() << "branch");
+	if (!process.waitForFinished(-1))
+	{
+		THROW(Exception, "Could not execute 'git pull':\n" + process.readAll());
+	}
+
+	QByteArrayList lines = process.readAll().split('\n');
+	foreach(QByteArray line, lines)
+	{
+		line = line.trimmed();
+		if (line.startsWith("* "))
+		{
+			QByteArray branch = line.mid(2);
+			if (branch=="master" || branch=="main") continue;
+
+			return branch;
+		}
+	}
+
+	return "";
+}
+
 QString Git::gitExe()
 {
 	QString exe = Settings::string("git_exe", true);

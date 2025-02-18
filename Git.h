@@ -32,6 +32,12 @@ public:
 	//Perform 'git pull'
 	static QByteArray pull(QString dir);
 
+	//Perform 'git push'
+	static QByteArray push(QString dir);
+
+	//Returns the branch nach the repository is on (if not master/main)
+	static QByteArray branch(QString dir);
+
 protected:
 	static QString gitExe();
 
