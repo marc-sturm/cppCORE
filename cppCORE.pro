@@ -46,7 +46,8 @@ SOURCES += \
     BarPlot.cpp \
 	Histogram.cpp \
     SimpleCrypt.cpp \
-    TsvFile.cpp
+    TsvFile.cpp \
+	Git.cpp
 
 HEADERS += ToolBase.h \
     CustomProxyService.h \
@@ -67,5 +68,6 @@ HEADERS += ToolBase.h \
     BarPlot.h \
 	Histogram.h \
     SimpleCrypt.h \
-    TsvFile.h
+    TsvFile.h \
+	Git.h
 	
