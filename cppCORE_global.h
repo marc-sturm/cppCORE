@@ -34,13 +34,14 @@ QSet<T> LIST_TO_SET(const QList<T>& list)
 template <typename T>
 QList<T> SET_TO_LIST(const QSet<T>& set)
 {
+    QList<T> list;
     #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        QList<T> list(set.begin(), set.end());
-        std::sort(list.begin(), list.end());
-        return list;
+        list = QList<T>(set.begin(), set.end());
     #else
-        return QList<T>::toList(set);
+        list = set.toList();
     #endif
+    std::sort(list.begin(), list.end());
+    return list;
 }
 
 #endif // CPPCORE_GLOBAL_H
