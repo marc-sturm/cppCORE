@@ -80,7 +80,7 @@ void Log::perf(const QString& message)
 	inst().logMessage(LOG_PERFORMANCE, message);
 }
 
-void Log::perf(const QString& message, QTime elapsed)
+void Log::perf(const QString& message, QElapsedTimer elapsed)
 {
 	inst().logMessage(LOG_PERFORMANCE, message.trimmed() + " " + Helper::elapsedTime(elapsed));
 }
@@ -103,12 +103,12 @@ void Log::logMessage(LogLevel level, const QString& message)
 		if (level==LOG_ERROR || level==LOG_WARNING)
 		{
 			QTextStream stream(stderr);
-			stream << level_str << ": " << message << endl;
+            stream << level_str << ": " << message << QT_ENDL;
 		}
 		else
 		{
 			QTextStream stream(stdout);
-			stream << level_str << ": " << message << endl;
+            stream << level_str << ": " << message << QT_ENDL;
 		}
 	}
 	//FILE
@@ -128,7 +128,7 @@ void Log::logMessage(LogLevel level, const QString& message)
 		catch(Exception& e)
 		{
 			QTextStream stream(stderr);
-			stream << levelString(LOG_ERROR) << ": Could not write to log file " << log_file_name_ << ": " << e.message() << endl;
+            stream << levelString(LOG_ERROR) << ": Could not write to log file " << log_file_name_ << ": " << e.message() << QT_ENDL;
 
 			throw e;
 		}

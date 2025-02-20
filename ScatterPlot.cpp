@@ -14,7 +14,7 @@ ScatterPlot::ScatterPlot()
 {
 }
 
-void ScatterPlot::setValues(const QList< QPair<double,double> >& values, const QList< QString >& colors)
+void ScatterPlot::setValues(const QList< std::pair<double,double> >& values, const QList< QString >& colors)
 {
 	points_.clear();
 	points_.append(values);
@@ -73,7 +73,7 @@ void ScatterPlot::store(QString filename)
 	{
 		double min = std::numeric_limits<double>::max();
 		double max = -std::numeric_limits<double>::max();
-		QPair<double,double> point;
+        std::pair<double,double> point;
 		foreach(point, points_)
 		{
 				min = std::min(point.second, min);
@@ -86,7 +86,7 @@ void ScatterPlot::store(QString filename)
 	{
 		double min = std::numeric_limits<double>::max();
 		double max = -std::numeric_limits<double>::max();
-		QPair<double,double> point;
+        std::pair<double,double> point;
 		foreach(point, points_)
 		{
 				min = std::min(point.first, min);
