@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QDataStream>
+#include <QIODevice>
 #include <QRandomGenerator>
 
 SimpleCrypt::SimpleCrypt():
