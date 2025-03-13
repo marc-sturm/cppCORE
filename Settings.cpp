@@ -266,6 +266,11 @@ void Settings::setSettingsOverride(QString filename)
 	override_settings.reset(new QSettings(filename, QSettings::IniFormat));
 }
 
+QString Settings::settingsOverride()
+{
+	return override_settings_file;
+}
+
 QVariant Settings::valueWithFallback(QString key)
 {
 	if (!override_settings_file.isEmpty())

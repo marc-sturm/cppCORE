@@ -56,6 +56,8 @@ class CPPCORESHARED_EXPORT Settings
 
 	///Settings file override (no other files are used)
 	static void setSettingsOverride(QString filename);
+	///Returns the settings override or an empty string if unset
+	static QString settingsOverride();
 
   protected:
 	///Default constructor "declared away"
