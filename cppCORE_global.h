@@ -45,15 +45,7 @@ QList<T> SET_TO_LIST(const QSet<T>& set)
     return list;
 }
 
-
-template <typename T>
-T SIZE_TO_INT(const T& size_value)
-{
-#if QT_VERSION > QT_VERSION_CHECK(5, 15, 0)
-    return size_value;
-#else
-    return static_cast<int>(size_value)
-#endif
-}
+#define SIZE_TO_INT(size_value) \
+(QT_VERSION > QT_VERSION_CHECK(5, 15, 0) ? (static_cast<qsizetype>(size_value)) : (size_value))
 
 #endif // CPPCORE_GLOBAL_H
