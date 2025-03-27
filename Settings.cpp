@@ -86,7 +86,7 @@ QString Settings::string(QString key, bool optional)
 	if (value.startsWith(crypt_prefix))
 	{
 		//remove prefix
-		value = value.mid(crypt_prefix.count()).trimmed();
+        value = value.mid(crypt_prefix.size()).trimmed();
 
 		//decrypt
 		qulonglong crypt_key = ToolBase::encryptionKey("setting entry '" + key + "'");
