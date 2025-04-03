@@ -2,6 +2,7 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QDir>
+#include <QtGlobal>
 #include "Exceptions.h"
 #include "Helper.h"
 
@@ -393,9 +394,9 @@ void ToolBase::printHelp() const
 	int max_name = 0;
     foreach(const ParameterData& data, parameters_)
     {
-        max_name = std::max(max_name, data.name.length() + typeToArgString(data.type).length());
+        max_name = qMax(max_name, data.name.length() + typeToArgString(data.type).length());
 	}
-	int offset = std::max(20, max_name + 5);
+    int offset = qMax(20, max_name + 5);
 
 	//print general info
     stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << QT_ENDL;

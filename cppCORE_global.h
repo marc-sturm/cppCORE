@@ -2,6 +2,7 @@
 #define CPPCORE_GLOBAL_H
 
 #include <QtCore/qglobal.h>
+#include <algorithm>
 
 #if defined(CPPCORE_LIBRARY)
 #  define CPPCORESHARED_EXPORT Q_DECL_EXPORT
@@ -43,5 +44,8 @@ QList<T> SET_TO_LIST(const QSet<T>& set)
     std::sort(list.begin(), list.end());
     return list;
 }
+
+#define SIZE_TO_INT(size_value) \
+(QT_VERSION >= QT_VERSION_CHECK(6, 0, 0) ? (static_cast<qsizetype>(size_value)) : (size_value))
 
 #endif // CPPCORE_GLOBAL_H

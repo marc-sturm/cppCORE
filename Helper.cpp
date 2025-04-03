@@ -123,10 +123,10 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 		}
 
 		//skip empty lines
-		if (skip_empty_lines && line.count()==0) continue;
+        if (skip_empty_lines && line.size()==0) continue;
 
 		//skip header lines
-		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char) continue;
+        if (skip_header_char!=QChar::Null && line.size()!=0 && line[0]==skip_header_char) continue;
 
 		output.append(line);
 	}

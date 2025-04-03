@@ -86,7 +86,7 @@ QString Settings::string(QString key, bool optional)
 	if (value.startsWith(crypt_prefix))
 	{
 		//remove prefix
-		value = value.mid(crypt_prefix.count()).trimmed();
+        value = value.mid(crypt_prefix.size()).trimmed();
 
 		//decrypt
 		qulonglong crypt_key = ToolBase::encryptionKey("setting entry '" + key + "'");
@@ -228,8 +228,17 @@ bool Settings::contains(QString key)
 	}
 
 	//check that the value is not empty
-	if (var.type()==QVariant::StringList) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
-	if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        if (var.metaType()==QVariant(QStringList()).metaType()) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
+        if (var.metaType()==QVariant(QMap<QString, QVariant>()).metaType()) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
+    #else
+        if (var.type()==QVariant::StringList) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
+        if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
+    #endif
+
+
+
+
 	return var.toString().trimmed()!="";
 }
 
