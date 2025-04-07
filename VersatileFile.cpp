@@ -255,57 +255,32 @@ void VersatileFile::addCommonHeaders(HttpHeaders& request_headers)
 
 ServerReply VersatileFile::sendHeadRequest()
 {
-    try
-    {
-        HttpHeaders add_headers;
-        addCommonHeaders(add_headers);
-        return HttpRequestHandler(proxy_).head(file_name_, add_headers);
-    }
-    catch (HttpException& e)
-    {
-        Log::error("An error while performing a HEAD request for the file '" + file_name_ + "': " + e.message());
-
-    }
-    return ServerReply();
+    HttpHeaders add_headers;
+    addCommonHeaders(add_headers);
+    return HttpRequestHandler(proxy_).head(file_name_, add_headers);
 }
 
 ServerReply VersatileFile::sendGetRequestText()
 {	
-    try
-    {
-        HttpHeaders add_headers;
-        addCommonHeaders(add_headers);
-        add_headers.insert("Connection", "keep-alive");
-        return HttpRequestHandler(proxy_).get(file_name_, add_headers);
-    }
-    catch (HttpException& e)
-    {
-        Log::error("An error while performing a GET request for the file '" + file_name_ + "': " + e.message());
-    }
-    return ServerReply();
+    HttpHeaders add_headers;
+    addCommonHeaders(add_headers);
+    add_headers.insert("Connection", "keep-alive");
+    return HttpRequestHandler(proxy_).get(file_name_, add_headers);
 }
 
 ServerReply VersatileFile::sendByteRangeRequestText(qint64 start, qint64 end)
 {
-    try
-    {
-        HttpHeaders add_headers;
-        add_headers.insert("Connection", "keep-alive");
-        addCommonHeaders(add_headers);
+    HttpHeaders add_headers;
+    add_headers.insert("Connection", "keep-alive");
+    addCommonHeaders(add_headers);
 
-        QByteArray range_values = "bytes=" + QString::number(start).toUtf8() + "-";
-        if (end>0)
-        {
-            range_values.append(QString::number(end).toUtf8());
-        }
-        add_headers.insert("Range", range_values);
-        return HttpRequestHandler(proxy_).get(file_name_, add_headers);
-    }
-    catch (HttpException& e)
+    QByteArray range_values = "bytes=" + QString::number(start).toUtf8() + "-";
+    if (end>0)
     {
-        Log::error("An error while performing a GET request for the file '" + file_name_ + "': " + e.message());
+        range_values.append(QString::number(end).toUtf8());
     }
-    return ServerReply();
+    add_headers.insert("Range", range_values);
+    return HttpRequestHandler(proxy_).get(file_name_, add_headers);
 }
 
 qint64 VersatileFile::getFileSize()
