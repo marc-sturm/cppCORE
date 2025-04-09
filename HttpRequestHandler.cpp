@@ -98,7 +98,7 @@ ServerReply HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
         request.setRawHeader(it.key(), it.value());
     }
     request.setRawHeader("User-Agent", "Qt NetworkAccess 1.3");
-    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
 
     ServerReply output;
     int retry_attempts = 5;

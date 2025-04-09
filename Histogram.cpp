@@ -105,7 +105,7 @@ int Histogram::binIndex(double val, bool ignore_bounds_errors) const
 
 	int index = floor ( (val-min_) / (max_-min_) * bins_.size());
 
-	return BasicStatistics::bound(index, 0, bins_.size()-1);
+    return BasicStatistics::bound(SIZE_TO_INT(index), SIZE_TO_INT(0), SIZE_TO_INT(bins_.size()-1));
 }
 
 
@@ -268,7 +268,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		xvaluestring = "[" + xvaluestring + "]";	//remove first ','
 		yvaluestring = "[" + yvaluestring.remove(0,1) + "]";
 
-		script.append("plt.hist(" + yvaluestring + ", bins=" + xvaluestring + ", rwidth = 0.8, " + (h.color_.count()>0 ? "color=" + h.color_ + ", " : "") + (BasicStatistics::isValidFloat(h.alpha_) ? "alpha=" + QString::number(h.alpha_) + "," : "") + " edgecolor='none', label = '" + h.label_ + "')");
+        script.append("plt.hist(" + yvaluestring + ", bins=" + xvaluestring + ", rwidth = 0.8, " + (h.color_.size()>0 ? "color=" + h.color_ + ", " : "") + (BasicStatistics::isValidFloat(h.alpha_) ? "alpha=" + QString::number(h.alpha_) + "," : "") + " edgecolor='none', label = '" + h.label_ + "')");
 	}
 	script.append("plt.legend(loc='upper right',fontsize=10)");
 

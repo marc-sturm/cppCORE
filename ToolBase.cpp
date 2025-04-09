@@ -2,6 +2,7 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QDir>
+#include <QtGlobal>
 #include "Exceptions.h"
 #include "Helper.h"
 
@@ -369,19 +370,19 @@ bool ToolBase::parseCommandLine()
 void ToolBase::printVersion() const
 {
 	QTextStream stream(stdout);
-	stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << endl;
-	stream << endl;
+    stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << QT_ENDL;
+    stream << QT_ENDL;
 }
 
 void ToolBase::printChangelog() const
 {
 	QTextStream stream(stdout);
-	stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << endl;
-	stream << endl;
+    stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << QT_ENDL;
+    stream << QT_ENDL;
 
 	foreach(const ChangeLogEntry& e, changelog_)
 	{
-		stream << e.date.toString("yyyy-MM-dd") << " " << e.text.trimmed() << endl;
+        stream << e.date.toString("yyyy-MM-dd") << " " << e.text.trimmed() << QT_ENDL;
 	}
 }
 
@@ -393,21 +394,21 @@ void ToolBase::printHelp() const
 	int max_name = 0;
     foreach(const ParameterData& data, parameters_)
     {
-        max_name = std::max(max_name, data.name.length() + typeToArgString(data.type).length());
+        max_name = qMax(max_name, data.name.length() + typeToArgString(data.type).length());
 	}
-	int offset = std::max(20, max_name + 5);
+    int offset = qMax(20, max_name + 5);
 
 	//print general info
-	stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << endl;
-	stream << "" << endl;
-	stream << description_ << endl;
+    stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << QT_ENDL;
+    stream << "" << QT_ENDL;
+    stream << description_ << QT_ENDL;
 	QStringList ext = description_extended_;
 	if (!ext.isEmpty())
 	{
-		stream << "" << endl;
+        stream << "" << QT_ENDL;
 		foreach(QString e, ext)
 		{
-			stream <<  e << endl;
+            stream <<  e << QT_ENDL;
 		}
 	}
 
@@ -420,19 +421,19 @@ void ToolBase::printHelp() const
 		//header
 		if (first_mandatory)
 		{
-			stream << "" << endl;
-			stream << "Mandatory parameters:" << endl;
+            stream << "" << QT_ENDL;
+            stream << "Mandatory parameters:" << QT_ENDL;
 			first_mandatory = false;
 		}
 
 		//standard output
         QString line_start = "  -" + data.name + " " + typeToArgString(data.type);
-		stream << line_start.leftJustified(offset, ' ') << data.desc << endl;
+        stream << line_start.leftJustified(offset, ' ') << data.desc << QT_ENDL;
 
 		//special handling of ENUM
 		if (data.type==ENUM)
 		{
-			stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << endl;
+            stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << QT_ENDL;
 		}
 	}
 
@@ -445,32 +446,32 @@ void ToolBase::printHelp() const
 		//header
 		if (first_optional)
 		{
-			stream << "" << endl;
-			stream << "Optional parameters:" << endl;
+            stream << "" << QT_ENDL;
+            stream << "Optional parameters:" << QT_ENDL;
 			first_optional = false;
 		}
 
 		//standard output
         QString line_start = "  -" + data.name + " " + typeToArgString(data.type);
-		stream << line_start.leftJustified(offset, ' ') << data.desc << endl;
-		stream << QString(offset, ' ') << "Default value: '" << data.default_value.toString() << "'" << endl;
+        stream << line_start.leftJustified(offset, ' ') << data.desc << QT_ENDL;
+        stream << QString(offset, ' ') << "Default value: '" << data.default_value.toString() << "'" << QT_ENDL;
 
 		//special handling of ENUM
 		if (data.type==ENUM)
 		{
-			stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << endl;
+            stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << QT_ENDL;
 		}
 	}
 
 	// print special parameters
-	stream << "" << endl;
-	stream << "Special parameters:" << endl;
-	stream << QString("  --help").leftJustified(offset, ' ') << "Shows this help and exits." << endl;
-	stream << QString("  --version").leftJustified(offset, ' ') << "Prints version and exits." << endl;
-	stream << QString("  --changelog").leftJustified(offset, ' ') << "Prints changeloge and exits." << endl;
-	stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Definition Xml file. The file name is the application name with the suffix '.tdx'." << endl;
-	stream << QString("  --settings [file]").leftJustified(offset, ' ') << "Settings override file (no other settings files are used)." << endl;
-	stream << "" << endl;
+    stream << "" << QT_ENDL;
+    stream << "Special parameters:" << QT_ENDL;
+    stream << QString("  --help").leftJustified(offset, ' ') << "Shows this help and exits." << QT_ENDL;
+    stream << QString("  --version").leftJustified(offset, ' ') << "Prints version and exits." << QT_ENDL;
+    stream << QString("  --changelog").leftJustified(offset, ' ') << "Prints changeloge and exits." << QT_ENDL;
+    stream << QString("  --tdx").leftJustified(offset, ' ') << "Writes a Tool Definition Xml file. The file name is the application name with the suffix '.tdx'." << QT_ENDL;
+    stream << QString("  --settings [file]").leftJustified(offset, ' ') << "Settings override file (no other settings files are used)." << QT_ENDL;
+    stream << "" << QT_ENDL;
 }
 
 void ToolBase::storeTDXml() const
@@ -480,19 +481,19 @@ void ToolBase::storeTDXml() const
 	//write to stream
 	QSharedPointer<QFile> out_file = Helper::openFileForWriting(filename);
 	QTextStream stream(out_file.data());
-	stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
-	stream << "<TDX version=\"1\">" << endl;
-	stream << "  <Tool name=\"" << QCoreApplication::applicationName() << "\" version=\"" << QCoreApplication::applicationVersion() << "\">" << endl;
-	stream << "    <Description>" << description_ << "</Description>" << endl;
+    stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << QT_ENDL;
+    stream << "<TDX version=\"1\">" << QT_ENDL;
+    stream << "  <Tool name=\"" << QCoreApplication::applicationName() << "\" version=\"" << QCoreApplication::applicationVersion() << "\">" << QT_ENDL;
+    stream << "    <Description>" << description_ << "</Description>" << QT_ENDL;
 	QStringList ext = description_extended_;
 	if (!ext.isEmpty())
 	{
-		stream << "    <ExtendedDescription>" << endl;
+        stream << "    <ExtendedDescription>" << QT_ENDL;
 		foreach(QString e, ext)
 		{
-			stream <<  e << endl;
+            stream <<  e << QT_ENDL;
 		}
-		stream << "    </ExtendedDescription>" << endl;
+        stream << "    </ExtendedDescription>" << QT_ENDL;
 	}
 
     foreach(const ParameterData& data, parameters_)
@@ -501,8 +502,8 @@ void ToolBase::storeTDXml() const
 		tag_name[0] = tag_name[0].toUpper();
 		tag_name.replace("list", "List");
 
-        stream << "    <" << tag_name << " name=\"" << data.name << "\">" << endl;
-		stream << "      <Description>" << data.desc << "</Description>" << endl;
+        stream << "    <" << tag_name << " name=\"" << data.name << "\">" << QT_ENDL;
+        stream << "      <Description>" << data.desc << "</Description>" << QT_ENDL;
 		switch (data.type)
 		{
 			case STRING:
@@ -510,7 +511,7 @@ void ToolBase::storeTDXml() const
 			case FLOAT:
 				if (data.optional)
 				{
-					stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << endl;
+                    stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << QT_ENDL;
 				}
 				break;
 			case INFILE:
@@ -518,24 +519,24 @@ void ToolBase::storeTDXml() const
 			case OUTFILE:
 				if (data.optional)
 				{
-					stream << "      <Optional />" << endl;
+                    stream << "      <Optional />" << QT_ENDL;
 				}
 				break;
 			case ENUM:
-				stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << endl;
+                stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << QT_ENDL;
 				foreach(const QString& value, data.options["values"].toStringList())
 				{
-					stream << "      <Value>" << value << "</Value>" << endl;
+                    stream << "      <Value>" << value << "</Value>" << QT_ENDL;
 				}
 				break;
 			case FLAG:
 			case NONE:
 				break;
 		}
-		stream << "    </" << tag_name << ">" << endl;
+        stream << "    </" << tag_name << ">" << QT_ENDL;
 	}
-	stream << "  </Tool>" << endl;
-	stream << "</TDX>" << endl;
+    stream << "  </Tool>" << QT_ENDL;
+    stream << "</TDX>" << QT_ENDL;
 }
 
 int ToolBase::execute()
@@ -717,47 +718,47 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(CommandLineParsingException& e)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << "Command line parsing exception: " << e.message() << endl;
-		stream << "Call this tool with the argument '--help' for help." << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << "Command line parsing exception: " << e.message() << QT_ENDL;
+        stream << "Call this tool with the argument '--help' for help." << QT_ENDL;
 		exit(1);
 	}
 	catch(ToolFailedException& e)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << e.message() << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << e.message() << QT_ENDL;
 		exit(1);
 	}
 	catch(ProgrammingException& e)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << "Programming exception: " << e.message() << endl;
-		stream << "Location             : " << e.file() << ":" << e.line() << endl;
-		stream << "This should not happen, please report the error to the developers!" << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << "Programming exception: " << e.message() << QT_ENDL;
+        stream << "Location             : " << e.file() << ":" << e.line() << QT_ENDL;
+        stream << "This should not happen, please report the error to the developers!" << QT_ENDL;
 		exit(1);
 	}
 	catch(Exception& e)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << "Exception: " << e.message() << endl;
-		stream << "Location : " << e.file() << ":" << e.line() << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << "Exception: " << e.message() << QT_ENDL;
+        stream << "Location : " << e.file() << ":" << e.line() << QT_ENDL;
 		exit(1);
 	}
 	catch(std::exception& e)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << "Exception: " << e.what() << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << "Exception: " << e.what() << QT_ENDL;
 		exit(1);
 	}
 	catch(...)
 	{
 		QTextStream stream(stderr);
-		stream << QCoreApplication::applicationName() << " " << version() << endl;
-		stream << "Unknown exception!" << endl;
+        stream << QCoreApplication::applicationName() << " " << version() << QT_ENDL;
+        stream << "Unknown exception!" << QT_ENDL;
 		exit(1);
 	}
 

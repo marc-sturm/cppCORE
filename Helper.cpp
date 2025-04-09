@@ -43,7 +43,7 @@ QString Helper::randomString(int length, const QString& chars)
 }
 
 
-QByteArray Helper::elapsedTime(QTime elapsed, bool only_seconds)
+QByteArray Helper::elapsedTime(QElapsedTimer elapsed, bool only_seconds)
 {
 	return elapsedTime(elapsed.elapsed(), only_seconds);
 }
@@ -104,7 +104,6 @@ bool Helper::isNumeric(QByteArray str)
 	return c_digit>0 && c_dot<=1;
 }
 
-
 QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_header_char, bool skip_empty_lines)
 {
 	QStringList output;
@@ -124,10 +123,10 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 		}
 
 		//skip empty lines
-		if (skip_empty_lines && line.count()==0) continue;
+        if (skip_empty_lines && line.size()==0) continue;
 
 		//skip header lines
-		if (skip_header_char!=QChar::Null && line.count()!=0 && line[0]==skip_header_char) continue;
+        if (skip_header_char!=QChar::Null && line.size()!=0 && line[0]==skip_header_char) continue;
 
 		output.append(line);
 	}
@@ -464,7 +463,7 @@ int Helper::executeCommand(QString command, QStringList args, QByteArrayList* ou
 {
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
-	process.start(command + " " + args.join(' '));
+    process.start(command, args);
 	bool success = process.waitForFinished(-1);
 
 	//set output

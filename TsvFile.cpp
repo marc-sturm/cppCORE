@@ -135,12 +135,12 @@ void TsvFile::load(QString filename, bool use_string_hash)
 		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 
 		//skip empty lines
-		if (line.count()==0) continue;
+        if (line.size()==0) continue;
 
 		//header lines
 		if (line[0]=='#')
 		{
-			if (line.count()>1 && line[1]=='#') //comment
+            if (line.size()>1 && line[1]=='#') //comment
 			{
 				addComment(line);
 			}

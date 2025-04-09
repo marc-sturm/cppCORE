@@ -4,7 +4,7 @@
 #include "cppCORE_global.h"
 #include <QString>
 #include <QList>
-#include <QPair>
+#include <utility>
 #include <QHash>
 
 ///Creates a line plot PNG image (needs Python in the path - and matplotlib extension).
@@ -12,7 +12,7 @@ class CPPCORESHARED_EXPORT ScatterPlot
 {
 public:
 	ScatterPlot();
-	void setValues(const QList< QPair<double,double> >& values, const QList< QString >& colors = QList< QString >());
+    void setValues(const QList< std::pair<double,double> >& values, const QList< QString >& colors = QList< QString >());
 	void convertChromToX();
 	void setXLabel(QString xlabel);
 	void setXRange(double xmin, double xmax);
@@ -32,7 +32,7 @@ public:
 
 protected:
 	//variables to store the plot data
-	QList< QPair<double,double> > points_;
+    QList< std::pair<double,double> > points_;
 	QList< double > vlines_;
 	QList< QString > colors_;
 	QHash<QString,QString> color_legend_;

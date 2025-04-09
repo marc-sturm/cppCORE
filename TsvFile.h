@@ -4,6 +4,7 @@
 #include "cppCORE_global.h"
 #include <QStringList>
 #include <QTextStream>
+#include <QHash>
 
 ///TSV file representation (row-wise)
 class CPPCORESHARED_EXPORT TsvFile

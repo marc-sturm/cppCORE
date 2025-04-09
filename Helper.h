@@ -3,7 +3,7 @@
 
 #include "cppCORE_global.h"
 #include "Exceptions.h"
-#include <QTime>
+#include <QElapsedTimer>
 #include <QString>
 #include <QFile>
 #include <QStringList>
@@ -24,7 +24,7 @@ public:
 	///Returns a random string.
 	static QString randomString(int length, const QString& chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 	///Returns the elapsed time as a human-readable string.
-	static QByteArray elapsedTime(QTime elapsed, bool only_seconds = false);
+    static QByteArray elapsedTime(QElapsedTimer elapsed, bool only_seconds = false);
 	///Returns the elapsed time as a human-readable string.
 	static QByteArray elapsedTime(int elapsed_ms, bool only_seconds = false);
 
@@ -51,7 +51,7 @@ public:
 		double result = str.trimmed().toDouble(&ok);
 		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to double" + (line.isEmpty() ? "" : "  - line: " + line));
 		return result;
-	}
+	}   
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForReading(QString file_name, bool stdin_if_empty=false);

@@ -32,7 +32,7 @@ void WorkerBase::deleteLater()
 void WorkerBase::processInternal()
 {
 	//start timer
-	QTime timer;
+    QElapsedTimer timer;
 	timer.start();
 
 	//process
