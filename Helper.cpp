@@ -465,7 +465,7 @@ int Helper::executeCommand(QString command, QStringList args, QByteArrayList* ou
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.start(command + " " + args.join(' '));
-	process.waitForFinished(-1);
+	bool success = process.waitForFinished(-1);
 
 	//set output
 	if (output!=nullptr)
@@ -475,7 +475,7 @@ int Helper::executeCommand(QString command, QStringList args, QByteArrayList* ou
 	}
 
 	//special case exit code handling
-	if (process.exitStatus()!=QProcess::NormalExit) return -1;
+	if (!success || process.exitStatus()!=QProcess::NormalExit) return -1;
 
 	return process.exitCode();
 }
