@@ -7,7 +7,7 @@ QT += network
 TEMPLATE = lib
 TARGET = cppCORE
 DEFINES += CPPCORE_LIBRARY
-DESTDIR = ../../bin/
+DESTDIR = ../../../../bin/
 
 #compose version string
 SVN_VER= \\\"$$system(cd .. && git describe --tags)\\\"
