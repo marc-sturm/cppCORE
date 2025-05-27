@@ -30,6 +30,7 @@ SOURCES += \
     CustomProxyService.cpp \
     Exceptions.cpp \
     HttpRequestHandler.cpp \
+    LoggingWorker.cpp \
     ProxyDataService.cpp \
     Settings.cpp \
     Log.cpp \
@@ -53,6 +54,7 @@ HEADERS += ToolBase.h \
     CustomProxyService.h \
     Exceptions.h \
     HttpRequestHandler.h \
+    LoggingWorker.h \
     ProxyDataService.h \
     Settings.h \
     Log.h \

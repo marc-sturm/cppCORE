@@ -4,6 +4,8 @@
 #include "cppCORE_global.h"
 #include <QString>
 #include <QElapsedTimer>
+#include <QThreadPool>
+#include "LoggingWorker.h"
 
 
 /**
@@ -66,6 +68,8 @@ protected:
 	QString log_file_name_;
 	///Status of log levels
 	int enabled_;
+    ///Thread pool to control writting logs into a file
+    QThreadPool thread_pool_;
 };
 
 #endif // LOG_H
