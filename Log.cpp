@@ -3,7 +3,6 @@
 #include "Helper.h"
 #include <QTextStream>
 #include <QCoreApplication>
-#include <QFile>
 #include <QStandardPaths>
 #include <QDir>
 
@@ -12,7 +11,10 @@ Log::Log()
 	, log_file_(false)
 	, log_file_name_()
 	, enabled_(LOG_PERFORMANCE|LOG_INFO|LOG_WARNING|LOG_ERROR)
+    , thread_pool_()
 {
+    thread_pool_.setMaxThreadCount(1);
+    thread_pool_.setExpiryTimeout(30000);
 }
 
 Log& Log::inst()
@@ -113,17 +115,11 @@ void Log::logMessage(LogLevel level, const QString& message)
 	}
 	//FILE
 	if (log_file_)
-	{
-
-		QString timestamp = Helper::dateTime("yyyy-MM-ddThh:mm:ss.zzz");
-		QString name = QCoreApplication::applicationName().replace(".exe", "");
-		QString message_sanitized = QString(message).replace("\t", " ").replace("\n", "");
-
+	{        
 		try
 		{
-			QSharedPointer<QFile> out_file = Helper::openFileForWriting(log_file_name_, false, true);
-			out_file->write((timestamp + "\t" + QString::number(QCoreApplication::applicationPid()) + "\t" + level_str + "\t" + message_sanitized).toUtf8() + "\n");
-			out_file->flush();
+            LoggingWorker* logging_worker = new LoggingWorker(log_file_name_, message, level_str);
+            thread_pool_.start(logging_worker);
 		}
 		catch(Exception& e)
 		{
