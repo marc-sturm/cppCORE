@@ -60,6 +60,7 @@ protected:
 	QString filename_;
 	char separator_;
 	char comment_;
+	QByteArray double_comment_;
 	VersatileFile file_;
 	QByteArray next_line_;
 	QByteArrayList comments_;

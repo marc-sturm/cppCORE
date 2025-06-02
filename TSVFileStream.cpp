@@ -6,6 +6,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	: filename_(filename)
 	, separator_(separator)
 	, comment_(comment)
+	, double_comment_(2, comment)
 	, file_(filename)
 	, line_(0)
 {
@@ -25,15 +26,14 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	}
 
 	//read comments and headers
-	QByteArray double_quote = QByteArray(2, comment);
-	next_line_ = double_quote;
+	next_line_ = double_comment_;
 	while(next_line_.startsWith(comment))
 	{
-		if (next_line_.startsWith(double_quote))
+		if (next_line_.startsWith(double_comment_))
 		{
-			if (next_line_.trimmed()!=double_quote)
+			if (next_line_.trimmed()!=double_comment_ && header_.isEmpty())
 			{
-				comments_.append(next_line_);
+				comments_ << next_line_;
 			}
 		}
 		else if (next_line_.startsWith(comment))
@@ -75,10 +75,8 @@ QByteArrayList TSVFileStream::readLine()
 			return QByteArrayList();
 		}
 		QByteArrayList parts = next_line_.split(separator_);
-		if (parts.count()!=columns())
-		{
-			THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line 1 of file " + filename_);
-		}
+		if (parts.count()!=columns()) THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line 1: " + next_line_);
+
 		next_line_ = QByteArray();
 		return parts;
 	}
@@ -88,15 +86,16 @@ QByteArrayList TSVFileStream::readLine()
 	while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 	++line_;
 
-	if (line.isEmpty())
+	if (line.isEmpty()) return QByteArrayList();
+
+	if (line.startsWith(double_comment_)) //comments between lines are ignored
 	{
-		return QByteArrayList();
+		return readLine();
 	}
+
 	QByteArrayList parts = line.split(separator_);
-	if (parts.count()!=columns())
-	{
-		THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line " + QString::number(line_) + " of file " + filename_);
-	}
+	if (parts.count()!=columns()) THROW(FileParseException, "Expected " + QString::number(columns()) + " columns, but got " + QString::number(parts.count()) + " columns in line " + QString::number(line_) + ": " + line);
+
 	return parts;
 }
 
