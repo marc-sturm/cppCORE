@@ -5,6 +5,7 @@
 #include <QString>
 #include <QElapsedTimer>
 #include <QThreadPool>
+#include <QMutex>
 #include "LoggingWorker.h"
 
 
@@ -70,6 +71,8 @@ protected:
 	int enabled_;
     ///Thread pool to control writting logs into a file
     QThreadPool thread_pool_;
+    ///Mutex for the situation when the server starts a new log file
+    mutable QMutex log_file_name_mutex_;
 };
 
 #endif // LOG_H
