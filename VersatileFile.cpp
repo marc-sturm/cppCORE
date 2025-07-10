@@ -1,302 +1,339 @@
 #include "VersatileFile.h"
-#include "Helper.h"
-#include <QUrl>
-#include <QFileInfo>
-#include <QDir>
-#include <QTemporaryFile>
 #include "CustomProxyService.h"
-#include "Log.h"
+#include "Helper.h"
 
-VersatileFile::VersatileFile(QString file_name)
-	: proxy_(QNetworkProxy::NoProxy)
-	, file_name_(file_name)
-	, cursor_position_(0)
+VersatileFile::VersatileFile(const QString& url)
+    : file_name_(url)
+    , proxy_(QNetworkProxy::NoProxy)
 {
-    if (isLocal())
-	{
-		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-	}
-	else
+
+    if (!isLocal())
     {
         //set a proxy, if custom proxy settings have been provided
         if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
         {
             proxy_ = CustomProxyService::getProxy();
+            net_mgr_.setProxy(proxy_);
         }
-
-        file_size_ = getFileSize();
-	}
+        checkRemoteFile();
+    }
 }
 
 VersatileFile::~VersatileFile()
 {
+    close();
 }
 
 bool VersatileFile::open(QIODevice::OpenMode mode)
 {
-	if (isLocal())
-	{
-		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-		local_source_.data()->open(mode);
-		return local_source_.data()->isOpen();
-	}
-	cursor_position_ = 0;
+    if (isLocal())
+    {
+        local_file_ = QSharedPointer<QFile>(new QFile(file_name_));
+        return local_file_.data()->open(mode);
+    }
 
-    return true;
+    cursor_position_ = 0;
+    buffer_.clear();
+    return exists();
 }
 
-bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
+bool VersatileFile::open(FILE* f, QIODevice::OpenMode flags)
 {
-	if (isLocal())
-	{
-		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-		local_source_.data()->open(f, ioFlags);
-		return local_source_.data()->isOpen();
-	}
+    if (isLocal())
+    {
+        local_file_ = QSharedPointer<QFile>(new QFile(file_name_));
+        return local_file_.data()->open(f, flags);
+    }
 
-	return false;
-}
-
-QIODevice::OpenMode VersatileFile::openMode() const
-{
-	if (isLocal()) return local_source_.data()->openMode();
-    return QFile::ReadWrite;
-}
-
-bool VersatileFile::isOpen() const
-{
-	if (isLocal()) return local_source_.data()->isOpen();
-    return true;
+    cursor_position_ = 0;
+    buffer_.clear();
+    return exists();
 }
 
 bool VersatileFile::isReadable() const
 {
-	if (isLocal())
-	{
-		if (QFileInfo(local_source_.data()->fileName()).isDir())
-		{
-			return QDir(local_source_.data()->fileName()).isReadable();
-		}
-		else
-		{
-			if (!local_source_->isOpen()) local_source_->open(QIODevice::ReadOnly);
-			return local_source_.data()->isReadable();
-		}
-	}
-
-	return file_size_ > 0;
-}
-
-QByteArray VersatileFile::read(qint64 maxlen)
-{
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->read(maxlen);
-
-	qint64 end = cursor_position_ + maxlen;
-	if (end > file_size_) end = file_size_;
-
-    QByteArray response = sendByteRangeRequestText(cursor_position_, end).body;
-	cursor_position_ = cursor_position_ + response.length() - 1;
-	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
-	return response;
-}
-
-QByteArray VersatileFile::readAll()
-{
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->readAll();
-
-    QByteArray response = sendGetRequestText().body;
-	cursor_position_ = cursor_position_ + response.length();
-	if (cursor_position_ > file_size_) cursor_position_ = file_size_;
-
-	return response;
-}
-
-QByteArray VersatileFile::readLine(qint64 maxlen)
-{
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->readLine(maxlen);
-
-	if (readline_pointer_.isNull())
-	{
-		QTemporaryFile temp_file;
-        if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
-        QTemporaryFile temp_gz_file;
-        if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
-
-        QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
-        if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
-        buffer_file.data()->write(sendGetRequestText().body);
-        buffer_file.data()->close();
-
-		file_size_ = QFileInfo(temp_file.fileName()).size();
-        QString src_file = temp_file.fileName();
-
-		// Special handling of *.vcf.gz files: they need to be unzipped
-		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
-		{
-            gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
-			if(!gz_file)
-			{
-				THROW(FileAccessException, "Could not open GZ file!");
-			}
-
-            QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
-            if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
-
-			const int buffer_size = 1048576; //1MB buffer
-			char* gz_buffer = new char[buffer_size];
-			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
-			{
-                gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
-			}
-			gzclose(gz_file);
-			gz_buffer_file.data()->close();
-            src_file = temp_gz_file.fileName();
-		}
-        readline_pointer_ = Helper::openFileForReading(src_file);
-	}
-
-	QByteArray line = readline_pointer_.data()->readLine(maxlen);
-	cursor_position_ = readline_pointer_.data()->pos();
-
-	return line;
-}
-
-bool VersatileFile::atEnd() const
-{
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->atEnd();
-	return (cursor_position_ >= file_size_);
-}
-
-bool VersatileFile::exists()
-{
-	if (!local_source_.isNull()) return local_source_.data()->exists();
-
-	try
-    {
-        ServerReply reply = sendHeadRequest();
-        return reply.status_code != 404;
-	}
-	catch(Exception& e)
-	{
-		return false;
-	}
+    if (isLocal()) return QFile::exists(file_name_);
+    return file_exists_;
 }
 
 void VersatileFile::close()
 {
-	checkIfOpen();
-	if (isLocal())
-	{
-		local_source_.data()->close();
-	}
+    if (isLocal() && local_file_)
+    {
+        local_file_->close();
+        return;
+    }
+
+    if (zstream_initialized_)
+    {
+        inflateEnd(&zstream_);
+        zstream_initialized_ = false;
+    }
+
+    buffer_.clear();
+    decompressed_buffer_.clear();
+    decompressed_buffer_pos_ = 0;
+    cursor_position_ = 0;
+    remote_position_ = 0;
+    remote_gz_finished_ = false;
+}
+
+QByteArray VersatileFile::readAll()
+{
+    if (isLocal())
+    {
+        return local_file_.data()->readAll();
+    }
+
+    QNetworkRequest request((QUrl(file_name_)));
+    QNetworkReply* reply = net_mgr_.get(request);
+
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    QByteArray data;
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        data = reply->readAll();
+        cursor_position_ += data.size();
+    }
+    reply->deleteLater();
+    return data;
+}
+
+QByteArray VersatileFile::read(qint64 maxlen)
+{
+    if (isLocal()) return local_file_.data()->read(maxlen);
+
+    if (maxlen <= 0) maxlen = CHUNK_SIZE;
+
+    QByteArray result;
+    while (result.size() < maxlen)
+    {
+        qint64 to_read = qMin(CHUNK_SIZE, maxlen - result.size());
+        QByteArray chunk = httpRangeRequest(cursor_position_, cursor_position_ + to_read - 1);
+        if (chunk.isEmpty()) break;
+
+        result.append(chunk);
+        cursor_position_ += chunk.size();
+    }
+
+    return result;
+}
+
+QByteArray VersatileFile::readLine(qint64 maxlen)
+{
+    if (isLocal())
+    {
+        QByteArray line = local_file_.data()->readLine(maxlen);
+        cursor_position_ += line.size();
+        return line;
+    }
+
+    // GZ compressed remote file
+    if (file_name_.endsWith(".gz"))
+    {
+        if (!zstream_initialized_)
+        {
+            memset(&zstream_, 0, sizeof(zstream_));
+            if (inflateInit2(&zstream_, 16 + MAX_WBITS) != Z_OK) return QByteArray();
+            zstream_initialized_ = true;
+        }
+
+        while (true)
+        {
+            int newline_index = decompressed_buffer_.indexOf('\n', decompressed_buffer_pos_);
+            if (newline_index != -1)
+            {
+                int line_length = newline_index - decompressed_buffer_pos_ + 1;
+                if (maxlen > 0) line_length = qMin(line_length, (int)maxlen);
+
+                QByteArray line = decompressed_buffer_.mid(decompressed_buffer_pos_, line_length);
+                decompressed_buffer_pos_ += line_length;
+                cursor_position_ += line.size();
+                return line;
+            }
+
+            if (remote_gz_finished_)
+            {
+                if (decompressed_buffer_pos_ >= decompressed_buffer_.size()) return QByteArray();
+
+                QByteArray line = decompressed_buffer_.mid(decompressed_buffer_pos_);
+                cursor_position_ += line.size();
+                decompressed_buffer_pos_ = decompressed_buffer_.size();
+                return line;
+            }
+
+            if (decompressed_buffer_pos_ > decompressed_buffer_.size() / 2)
+            {
+                decompressed_buffer_ = decompressed_buffer_.mid(decompressed_buffer_pos_);
+                decompressed_buffer_pos_ = 0;
+            }
+
+            qint64 end = qMin(remote_position_ + CHUNK_SIZE - 1, size() - 1);
+            QByteArray compressed_chunk = httpRangeRequest(remote_position_, end);
+            if (compressed_chunk.isEmpty())
+            {
+                remote_gz_finished_ = true;
+                continue;
+            }
+
+            remote_position_ += compressed_chunk.size();
+
+            QByteArray out;
+            out.resize(1024 * 1024);
+            zstream_.next_in = reinterpret_cast<Bytef*>(compressed_chunk.data());
+            zstream_.avail_in = compressed_chunk.size();
+
+            while (zstream_.avail_in > 0)
+            {
+                if (out.size() - zstream_.total_out < 1024) out.resize(out.size() * 2);
+
+                zstream_.next_out = reinterpret_cast<Bytef*>(out.data()) + zstream_.total_out;
+                zstream_.avail_out = out.size() - zstream_.total_out;
+
+                int ret = inflate(&zstream_, Z_NO_FLUSH);
+                if (ret == Z_STREAM_END)
+                {
+                    remote_gz_finished_ = true;
+                    break;
+                }
+                if (ret != Z_OK) break;
+            }
+
+            out.resize(zstream_.total_out);
+            decompressed_buffer_.append(out);
+        }
+    }
+
+    // Regular remote text file
+    while (true)
+    {
+        int newline_index = buffer_.indexOf('\n', buffer_read_pos_);
+        if (newline_index != -1)
+        {
+            int line_length = newline_index - buffer_read_pos_ + 1;
+            if (maxlen > 0) line_length = qMin(line_length, (int)maxlen);
+
+            QByteArray line = buffer_.mid(buffer_read_pos_, line_length);
+            buffer_read_pos_ += line.size();
+            cursor_position_ = remote_position_ - (buffer_.size() - buffer_read_pos_);
+            return line;
+        }
+
+        if (remote_position_ >= file_size_)
+        {
+            if (buffer_read_pos_ >= buffer_.size()) return QByteArray();
+
+            QByteArray leftover = buffer_.mid(buffer_read_pos_);
+            buffer_read_pos_ = buffer_.size();
+            cursor_position_ = remote_position_;
+            return leftover;
+        }
+
+        if (buffer_read_pos_ > buffer_.size() / 2)
+        {
+            buffer_ = buffer_.mid(buffer_read_pos_);
+            buffer_read_pos_ = 0;
+        }
+
+        qint64 end = qMin(remote_position_ + CHUNK_SIZE - 1, file_size_ - 1);
+        QByteArray chunk = httpRangeRequest(remote_position_, end);
+        if (chunk.isEmpty()) return QByteArray();
+
+        remote_position_ += chunk.size();
+        buffer_.append(chunk);
+    }
+}
+
+bool VersatileFile::atEnd() const
+{
+    if (isLocal()) return local_file_.data()->atEnd();
+
+    bool no_more_remote_data = (file_size_ != -1 && remote_position_ >= file_size_);
+    bool buffer_consumed = (buffer_read_pos_ >= buffer_.size());
+
+    return (no_more_remote_data && buffer_consumed) || (cursor_position_ >= (file_size_));
+}
+
+bool VersatileFile::exists()
+{
+    if (isLocal()) return QFile::exists(file_name_);
+
+    checkRemoteFile();
+    return file_exists_;
 }
 
 qint64 VersatileFile::pos() const
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->pos();
-	return cursor_position_;
+    return cursor_position_;
 }
 
 bool VersatileFile::seek(qint64 pos)
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->seek(pos);
+    if (isLocal()) return local_file_.data()->seek(pos);
 
-	cursor_position_ = pos;
-	if (cursor_position_ >= file_size_) cursor_position_ = file_size_;
-	return cursor_position_ <= file_size_;
+    if (pos < 0 || (file_size_ != -1 && pos > file_size_)) return false;
+
+    cursor_position_ = pos;
+    remote_position_ = pos;
+    buffer_.clear();
+    buffer_read_pos_ = 0;
+    return true;
 }
 
 qint64 VersatileFile::size()
 {
-	if (isLocal()) return local_source_.data()->size();
-	checkIfOpen();
-	return getFileSize();
+    if (isLocal()) return local_file_.data()->size();
+    if (file_size_ == -1) exists();
+    return file_size_;
 }
 
 QString VersatileFile::fileName() const
 {
-	return file_name_;
-}
-
-void VersatileFile::checkIfOpen() const
-{
-	if (isLocal())
-	{
-		if (local_source_.isNull()) THROW(FileAccessException, "Local file is not set!");
-		if (!local_source_.data()->isOpen()) THROW(FileAccessException, "Local file is not open!");
-	}	
-}
-
-void VersatileFile::checkResponse(QByteArray& response) const
-{
-	QByteArray const http_version = "HTTP/1.1 ";
-	if (response.isEmpty()) THROW(FileAccessException, "Empty response from the server!");
-	int start_pos = response.toLower().indexOf(http_version.toLower());
-	int response_code = response.mid(start_pos + http_version.length(), 3).toInt();
-	if ((response_code != 200) && (response_code != 206)) THROW(FileAccessException, "Server replied with the code " + QString::number(response_code));
+    return file_name_;
 }
 
 bool VersatileFile::isLocal() const
 {
-	return !Helper::isHttpUrl(file_name_);
+    return !Helper::isHttpUrl(file_name_);
 }
 
-void VersatileFile::addCommonHeaders(HttpHeaders& request_headers)
+QByteArray VersatileFile::httpRangeRequest(qint64 start, qint64 end)
 {
-    request_headers.insert("User-Agent", "GSvar");
-    request_headers.insert("X-Custom-User-Agent", "GSvar");
-}
+    QNetworkRequest request((QUrl(file_name_)));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    request.setRawHeader("Range", "bytes=" + QByteArray::number(start) + "-" + QByteArray::number(end));
 
-ServerReply VersatileFile::sendHeadRequest()
-{
-    HttpHeaders add_headers;
-    addCommonHeaders(add_headers);
-    return HttpRequestHandler(proxy_).head(file_name_, add_headers);
-}
+    QNetworkReply* reply = net_mgr_.get(request);
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
 
-ServerReply VersatileFile::sendGetRequestText()
-{	
-    HttpHeaders add_headers;
-    addCommonHeaders(add_headers);
-    add_headers.insert("Connection", "keep-alive");
-    return HttpRequestHandler(proxy_).get(file_name_, add_headers);
-}
-
-ServerReply VersatileFile::sendByteRangeRequestText(qint64 start, qint64 end)
-{
-    HttpHeaders add_headers;
-    add_headers.insert("Connection", "keep-alive");
-    addCommonHeaders(add_headers);
-
-    QByteArray range_values = "bytes=" + QString::number(start).toUtf8() + "-";
-    if (end>0)
+    QByteArray data;
+    if (reply->error() == QNetworkReply::NoError)
     {
-        range_values.append(QString::number(end).toUtf8());
+        data = reply->readAll();
     }
-    add_headers.insert("Range", range_values);
-    return HttpRequestHandler(proxy_).get(file_name_, add_headers);
+    reply->deleteLater();
+    return data;
 }
 
-qint64 VersatileFile::getFileSize()
+void VersatileFile::checkRemoteFile()
 {
-	if (exists())
-	{        
-        ServerReply reply = sendHeadRequest();
-        foreach(const QByteArray& item, reply.headers.keys())
-        {
-            if (item.toLower() == "content-length")
-            {
-                return reply.headers[item].toLongLong();
-            }
-        }
-	}
+    QNetworkRequest request((QUrl(file_name_)));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
 
-	return 0;
+    QNetworkReply* reply = net_mgr_.head(request);
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    file_exists_ = (reply->error() == QNetworkReply::NoError);
+    if (file_exists_ && file_size_ == -1)
+    {
+        file_size_ = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    }
+    reply->deleteLater();
 }
-
