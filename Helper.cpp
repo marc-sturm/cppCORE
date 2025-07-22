@@ -131,7 +131,13 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
 	QTextStream stream(file.data());
-	stream.setCodec("UTF-8");
+
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    stream.setEncoding(QStringConverter::Utf8);
+    #else
+    stream.setCodec("UTF-8");
+    #endif
+
 	foreach(QString line, lines)
 	{
 		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
