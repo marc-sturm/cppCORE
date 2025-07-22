@@ -1,5 +1,4 @@
 #include "LoggingWorker.h"
-#include <QCoreApplication>
 
 LoggingWorker::LoggingWorker(QString file_name, QString message, QString level_str)
     : QRunnable()

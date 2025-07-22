@@ -4,11 +4,14 @@
 #include "cppCORE_global.h"
 #include "Exceptions.h"
 #include <QElapsedTimer>
+#include <QString>
 #include <QFile>
 #include <QStringList>
 #include <QDebug>
 #include <QSharedPointer>
 #include "VersatileFile.h"
+#include "VersatileTextStream.h"
+#include "Settings.h"
 
 ///Auxilary helper functions class.
 class CPPCORESHARED_EXPORT Helper
