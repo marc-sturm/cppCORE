@@ -3,32 +3,23 @@
 
 #include "cppCORE_global.h"
 #include "VersatileFile.h"
+#include <QTextStream>
 
-//Text stream wrapper around VersatileFile, i.e. it returns QString instead of QByteArray.
-//Note: It is assumed that special caracters is encoded using UTF8 encoding.
 class CPPCORESHARED_EXPORT VersatileTextStream
 {
 public:
-	VersatileTextStream(QString file_name);
+	VersatileTextStream(const QString &file_name);
+	~VersatileTextStream();
 
-	bool atEnd() const
-	{
-		return file_.atEnd();
-	}
-
-	QString readLine(bool trim_line_endings = true)
-	{
-		return QString::fromUtf8(file_.readLine(trim_line_endings));
-	}
-
-	VersatileFile::Mode mode()
-	{
-		return file_.mode();
-	}
+	bool atEnd();
+	QString readLine(qint64 maxlen = 0);
 
 private:
+	bool isLocal();
+	QTextStream stream_;
+	QSharedPointer<VersatileFile> remote_file_;
+	QSharedPointer<QFile> local_file_;
 	QString file_name_;
-	VersatileFile file_;
 };
 
 #endif // VERSATILETEXTSTREAM_H

@@ -7,20 +7,23 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	, separator_(separator)
 	, comment_(comment)
 	, double_comment_(2, comment)
+	, file_(filename)
 	, line_(0)
 {
-	//set file
+	//open
+	bool open_status = true;
 	if (filename.isEmpty())
 	{
-		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename, stdin));
+		open_status = file_.open(stdin, QFile::ReadOnly | QFile::Text);
 	}
 	else
 	{
-		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename));
+		open_status = file_.open(QFile::ReadOnly | QFile::Text);
 	}
-
-	//open
-	file_->open(QFile::ReadOnly | QFile::Text, true);
+	if (!open_status)
+	{
+		THROW(FileAccessException, "Could not open file for reading: '" + filename + "'!");
+	}
 
 	//read comments and headers
 	next_line_ = double_comment_;
@@ -38,12 +41,13 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 			header_ = next_line_.mid(1).split(separator);
 		}
 
-		next_line_ = file_->readLine(true);
+		next_line_ = file_.readLine();
+		while (next_line_.endsWith('\n') || next_line_.endsWith('\r')) next_line_.chop(1);
 		++line_;
 	}
 
 	//no first line
-	if (file_->atEnd() && next_line_.isEmpty()) next_line_ = QByteArray();
+	if (file_.atEnd() && next_line_.isEmpty()) next_line_ = QByteArray();
 
 	//determine number of columns if no header is present
 	if (header_.isEmpty())
@@ -57,6 +61,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 
 TSVFileStream::~TSVFileStream()
 {
+	file_.close();
 }
 
 QByteArrayList TSVFileStream::readLine()
@@ -77,7 +82,8 @@ QByteArrayList TSVFileStream::readLine()
 	}
 
 	//handle second to last content line
-	QByteArray line = file_->readLine(true);
+	QByteArray line = file_.readLine();
+	while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 	++line_;
 
 	if (line.isEmpty()) return QByteArrayList();

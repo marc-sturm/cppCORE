@@ -5,7 +5,6 @@
 #include <QtGlobal>
 #include "Exceptions.h"
 #include "Helper.h"
-#include "Settings.h"
 
 ToolBase::ToolBase(int& argc, char *argv[])
 	: QCoreApplication(argc, argv)
@@ -181,7 +180,7 @@ bool ToolBase::parseCommandLine()
                 return false;
             }
         }
-	}
+    }
 
 	//special parameters
 	if(args.contains("--help") || args.contains("--h") || args.contains("-help"))
@@ -363,7 +362,7 @@ bool ToolBase::parseCommandLine()
 		{
             THROW(CommandLineParsingException, "Mandatory parameter '" + data.name + "' not given.");
 		}
-	}
+    }
 
 	return true;
 }
@@ -482,7 +481,6 @@ void ToolBase::storeTDXml() const
 	//write to stream
 	QSharedPointer<QFile> out_file = Helper::openFileForWriting(filename);
 	QTextStream stream(out_file.data());
-	stream.setCodec("UTF-8");
     stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << QT_ENDL;
     stream << "<TDX version=\"1\">" << QT_ENDL;
     stream << "  <Tool name=\"" << QCoreApplication::applicationName() << "\" version=\"" << QCoreApplication::applicationVersion() << "\">" << QT_ENDL;
