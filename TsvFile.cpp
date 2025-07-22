@@ -1,6 +1,7 @@
 #include "TsvFile.h"
 #include "Exceptions.h"
 #include "Helper.h"
+#include "VersatileTextStream.h"
 
 TsvFile::TsvFile()
 {
@@ -131,11 +132,9 @@ void TsvFile::load(QString filename, bool use_string_hash)
 	while (!stream.atEnd())
 	{
 		QString line = stream.readLine();
-		//remove line ends
-		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
 
 		//skip empty lines
-        if (line.size()==0) continue;
+		if (line.isEmpty()) continue;
 
 		//header lines
 		if (line[0]=='#')
@@ -187,6 +186,11 @@ QString TsvFile::toString() const
 {
 	QString output;
 	QTextStream stream(&output);
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    stream.setEncoding(QStringConverter::Utf8);
+    #else
+    stream.setCodec("UTF-8");
+    #endif
 	toStream(stream);
 
 	return output;
