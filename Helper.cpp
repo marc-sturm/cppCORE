@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QCoreApplication>
 #include <QProcess>
+#include <VersatileTextStream.h>
 
 void Helper::randomInit()
 {
@@ -110,20 +111,13 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 	VersatileTextStream stream(file_name);
 	while (!stream.atEnd())
 	{
-		QString line = stream.readLine();
+		QString line = stream.readLine(true);
 
 		//remove newline or trim
-		if (trim_lines)
-		{
-			line = line.trimmed();
-		}
-		else
-		{
-			while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
-		}
+		if (trim_lines) line = line.trimmed();
 
 		//skip empty lines
-        if (skip_empty_lines && line.size()==0) continue;
+		if (skip_empty_lines && line.isEmpty()) continue;
 
 		//skip header lines
         if (skip_header_char!=QChar::Null && line.size()!=0 && line[0]==skip_header_char) continue;
@@ -137,6 +131,7 @@ QStringList Helper::loadTextFile(QString file_name, bool trim_lines, QChar skip_
 void Helper::storeTextFile(QSharedPointer<QFile> file, const QStringList& lines)
 {
 	QTextStream stream(file.data());
+	stream.setCodec("UTF-8");
 	foreach(QString line, lines)
 	{
 		while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
@@ -390,15 +385,17 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 
 QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
 {
-	QSharedPointer<VersatileFile> file(new VersatileFile(file_name));
+	QSharedPointer<VersatileFile> file;
 	if (stdin_if_empty && file_name=="")
 	{
-		file->open(stdin, QFile::ReadOnly | QIODevice::Text);
+		file = QSharedPointer<VersatileFile>(new VersatileFile(file_name, stdin));
 	}
-	else if (!file->open(QFile::ReadOnly | QIODevice::Text))
+	else
 	{
-		THROW(FileAccessException, "Could not open file for reading: '" + file_name + "'!");
+		file = QSharedPointer<VersatileFile>(new VersatileFile(file_name));
 	}
+
+	file->open(QFile::ReadOnly | QIODevice::Text, true);
 
 	return file;
 }
