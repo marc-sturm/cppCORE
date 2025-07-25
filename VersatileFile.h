@@ -30,9 +30,7 @@ public:
 
 	///Open file. Returns false if file could not be opened. Open mode is only used in LOCAL mode.
 	///Note: Use QIODevice::Text in addition to the read/write mode for text files!
-	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);
-
-    bool open(FILE *f, QIODevice::OpenMode flags);
+	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);    
 
 	///Returns the open mode (for local files).
 	QIODevice::OpenMode openMode() const;

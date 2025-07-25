@@ -100,23 +100,6 @@ bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 	return opened;
 }
 
-bool VersatileFile::open(FILE* f, QIODeviceBase::OpenMode flags)
-{
-    bool opened = true;
-    if (mode_==LOCAL)
-    {
-        local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-        opened = local_source_.data()->open(f, flags);
-        is_open_ = opened;
-        return opened;
-    }
-
-    cursor_position_ = 0;
-    buffer_.clear();
-    is_open_ = exists();
-    return exists();
-}
-
 QIODevice::OpenMode VersatileFile::openMode() const
 {
 	if (mode_==LOCAL) return local_source_.data()->openMode();
@@ -336,20 +319,20 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
                 int line_length = newline_index - buffer_read_pos_ + 1;
                 if (maxlen > 0) line_length = qMin(line_length, (int)maxlen);
 
-                QByteArray line = buffer_.mid(buffer_read_pos_, line_length);
-                buffer_read_pos_ += line.size();
+                output = buffer_.mid(buffer_read_pos_, line_length);
+                buffer_read_pos_ += output.size();
                 cursor_position_ = remote_position_ - (buffer_.size() - buffer_read_pos_);
-                return line;
+                break;
             }
 
             if (remote_position_ >= file_size_)
             {
                 if (buffer_read_pos_ >= buffer_.size()) return QByteArray();
 
-                QByteArray leftover = buffer_.mid(buffer_read_pos_);
+                output = buffer_.mid(buffer_read_pos_);
                 buffer_read_pos_ = buffer_.size();
                 cursor_position_ = remote_position_;
-                return leftover;
+                break;
             }
 
             if (buffer_read_pos_ > buffer_.size() / 2)
@@ -365,10 +348,6 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
             remote_position_ += chunk.size();
             buffer_.append(chunk);
         }
-
-
-
-
 	}
 
     while (trim_line_endings && (output.endsWith('\n') || output.endsWith('\r')))
