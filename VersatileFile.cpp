@@ -89,6 +89,7 @@ bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 	else
 	{
 		cursor_position_ = 0;
+        buffer_.clear();
 	}
 
 	//throw exception if requested by user
@@ -97,6 +98,23 @@ bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 	is_open_ = opened;
 
 	return opened;
+}
+
+bool VersatileFile::open(FILE* f, QIODeviceBase::OpenMode flags)
+{
+    bool opened = true;
+    if (mode_==LOCAL)
+    {
+        local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
+        opened = local_source_.data()->open(f, flags);
+        is_open_ = opened;
+        return opened;
+    }
+
+    cursor_position_ = 0;
+    buffer_.clear();
+    is_open_ = exists();
+    return exists();
 }
 
 QIODevice::OpenMode VersatileFile::openMode() const
