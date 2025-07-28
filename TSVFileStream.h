@@ -22,7 +22,7 @@ public:
 	///Returns if the stream is at the end.
 	bool atEnd() const
 	{
-		return file_.atEnd() && next_line_.isNull();
+		return file_->atEnd() && next_line_.isNull();
 	}
 
 	///Returns the current line, split to columns. Note: Empty lines are returned as an empty array.
@@ -61,7 +61,7 @@ protected:
 	char separator_;
 	char comment_;
 	QByteArray double_comment_;
-	VersatileFile file_;
+	QSharedPointer<VersatileFile> file_;
 	QByteArray next_line_;
 	QByteArrayList comments_;
 	QByteArrayList header_;

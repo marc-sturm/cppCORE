@@ -13,8 +13,6 @@ Log::Log()
 	, enabled_(LOG_PERFORMANCE|LOG_INFO|LOG_WARNING|LOG_ERROR)
     , thread_pool_()
 {
-    thread_pool_.setMaxThreadCount(1);
-    thread_pool_.setExpiryTimeout(30000);
 }
 
 Log& Log::inst()
@@ -30,7 +28,8 @@ void Log::setCMDEnabled(bool enabled)
 
 void Log::setFileEnabled(bool enabled)
 {
-	//use default log file location if unset
+    inst().log_file_name_mutex_.lock();
+    //use default log file location if unset
 	if (inst().log_file_name_=="")
 	{
 		//determine and create data path
@@ -42,19 +41,26 @@ void Log::setFileEnabled(bool enabled)
 		//set log file
 		inst().log_file_name_ = path + QDir::separator() + QCoreApplication::applicationName() + ".log";
 	}
-
+    inst().log_file_name_mutex_.unlock();
 	inst().log_file_ = enabled;
 }
 
 void Log::setFileName(QString filename)
 {
-	inst().log_file_name_ = filename;
+    inst().log_file_name_mutex_.lock();
+    inst().log_file_name_ = filename;
+    inst().log_file_name_mutex_.unlock();
 	inst().log_file_ = true;
+    inst().thread_pool_.setMaxThreadCount(1);
+    inst().thread_pool_.setExpiryTimeout(30000);
 }
 
 QString Log::fileName()
 {
-	return inst().log_file_name_;
+    inst().log_file_name_mutex_.lock();
+    QString current_file_name = inst().log_file_name_;
+    inst().log_file_name_mutex_.unlock();
+    return current_file_name;
 }
 
 void Log::enableLogLevels(int enabled)
@@ -118,13 +124,13 @@ void Log::logMessage(LogLevel level, const QString& message)
 	{        
 		try
 		{
-            LoggingWorker* logging_worker = new LoggingWorker(log_file_name_, message, level_str);
-            thread_pool_.start(logging_worker);
+            LoggingWorker* logging_worker = new LoggingWorker(fileName(), message, level_str);
+            inst().thread_pool_.start(logging_worker);
 		}
 		catch(Exception& e)
 		{
 			QTextStream stream(stderr);
-            stream << levelString(LOG_ERROR) << ": Could not write to log file " << log_file_name_ << ": " << e.message() << QT_ENDL;
+            stream << levelString(LOG_ERROR) << ": Could not write to log file " << fileName() << ": " << e.message() << QT_ENDL;
 
 			throw e;
 		}

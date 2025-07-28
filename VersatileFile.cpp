@@ -10,11 +10,28 @@
 VersatileFile::VersatileFile(QString file_name)
 	: proxy_(QNetworkProxy::NoProxy)
 	, file_name_(file_name)
+	, file_stream_pointer_(nullptr)
+	, is_open_(false)
 	, cursor_position_(0)
 {
-    if (isLocal())
+	//determine non-default mode
+	if (Helper::isHttpUrl(file_name_))
+	{
+		mode_ = URL;
+	}
+	else if (file_name_.toLower().endsWith(".gz"))
+	{
+		mode_ = LOCAL_GZ;
+	}
+
+	//init members depending on mode
+	if (mode_==LOCAL)
 	{
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		//norhing to do her - see open method
 	}
 	else
     {
@@ -28,59 +45,93 @@ VersatileFile::VersatileFile(QString file_name)
 	}
 }
 
+VersatileFile::VersatileFile(QString file_name, FILE* f)
+	: proxy_(QNetworkProxy::NoProxy)
+	, file_name_(file_name)
+	, file_stream_pointer_(f)
+	, cursor_position_(0)
+{
+	local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
+}
+
 VersatileFile::~VersatileFile()
 {
+	close();
 }
 
-bool VersatileFile::open(QIODevice::OpenMode mode)
+bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 {
-	if (isLocal())
+	if (mode!=QFile::ReadOnly && mode!=(QFile::ReadOnly|QFile::Text))
 	{
-		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-		local_source_.data()->open(mode);
-		return local_source_.data()->isOpen();
-	}
-	cursor_position_ = 0;
-
-    return true;
-}
-
-bool VersatileFile::open(FILE* f, QIODevice::OpenMode ioFlags)
-{
-	if (isLocal())
-	{
-		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
-		local_source_.data()->open(f, ioFlags);
-		return local_source_.data()->isOpen();
+		THROW(ProgrammingException, "Invalid open mode '" + QString::number(mode) + "' in !");
 	}
 
-	return false;
+	bool opened = true;
+	if (mode_==LOCAL)
+	{
+		if (file_stream_pointer_!=nullptr)
+		{
+			opened = local_source_.data()->open(file_stream_pointer_, mode);
+		}
+		else
+		{
+			opened = local_source_.data()->open(mode);
+		}
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		QByteArray filename = file_name_.toUtf8();
+		gz_stream_ = gzopen(filename.data(), "rb"); //read binary: always open in binary mode because Windows and Mac open in text mode
+		if (!gz_stream_) opened = false;
+		gz_buffer_ = new char[gz_buffer_size_];
+		gzbuffer(gz_stream_, gz_buffer_size_internal_);
+	}
+	else
+	{
+		cursor_position_ = 0;
+	}
+
+	//throw exception if requested by user
+	if (!opened && throw_on_error) THROW(FileAccessException, "Could not open file '" + file_name_ + "'");
+
+	is_open_ = opened;
+
+	return opened;
 }
 
 QIODevice::OpenMode VersatileFile::openMode() const
 {
-	if (isLocal()) return local_source_.data()->openMode();
-    return QFile::ReadWrite;
+	if (mode_==LOCAL) return local_source_.data()->openMode();
+	return QFile::ReadOnly;
 }
 
-bool VersatileFile::isOpen() const
+void VersatileFile::setGzBufferSize(int bytes)
 {
-	if (isLocal()) return local_source_.data()->isOpen();
-    return true;
+	if (isOpen()) THROW(ProgrammingException, "setGzBufferSize cannot be used after opening the file!");
+
+	gz_buffer_size_ = bytes;
+}
+
+void VersatileFile::setGzBufferSizeInternal(int bytes)
+{
+	if (isOpen()) THROW(ProgrammingException, "setGzBufferSize cannot be used after opening the file!");
+
+	gz_buffer_size_internal_ = bytes;
 }
 
 bool VersatileFile::isReadable() const
 {
-	if (isLocal())
+	if (mode_==LOCAL || mode_==LOCAL_GZ)
 	{
-		if (QFileInfo(local_source_.data()->fileName()).isDir())
+		if (QFileInfo(file_name_).isDir())
 		{
-			return QDir(local_source_.data()->fileName()).isReadable();
+			return QDir(file_name_).isReadable();
 		}
 		else
 		{
-			if (!local_source_->isOpen()) local_source_->open(QIODevice::ReadOnly);
-			return local_source_.data()->isReadable();
+			QFile f(file_name_);
+			if (!f.open(QFile::ReadOnly)) return false;
+			return f.isReadable();
 		}
 	}
 
@@ -89,8 +140,16 @@ bool VersatileFile::isReadable() const
 
 QByteArray VersatileFile::read(qint64 maxlen)
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->read(maxlen);
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->read(maxlen);
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		THROW(NotImplementedException, "VersatileFile::read is not implemented for GZ files!");
+	}
 
 	qint64 end = cursor_position_ + maxlen;
 	if (end > file_size_) end = file_size_;
@@ -103,8 +162,21 @@ QByteArray VersatileFile::read(qint64 maxlen)
 
 QByteArray VersatileFile::readAll()
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->readAll();
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->readAll();
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		QByteArray output;
+		while (!atEnd())
+		{
+			output.append(readLine());
+		}
+		return output;
+	}
 
     QByteArray response = sendGetRequestText().body;
 	cursor_position_ = cursor_position_ + response.length();
@@ -113,67 +185,110 @@ QByteArray VersatileFile::readAll()
 	return response;
 }
 
-QByteArray VersatileFile::readLine(qint64 maxlen)
+QByteArray VersatileFile::readLine(bool trim_line_endings)
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->readLine(maxlen);
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
 
-	if (readline_pointer_.isNull())
+	QByteArray output;
+
+	if (mode_==LOCAL)
 	{
-		QTemporaryFile temp_file;
-        if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
-        QTemporaryFile temp_gz_file;
-        if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
+		output = local_source_.data()->readLine();
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		// get next line
+		char* char_array = gzgets(gz_stream_, gz_buffer_, gz_buffer_size_);
 
-        QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
-        if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
-        buffer_file.data()->write(sendGetRequestText().body);
-        buffer_file.data()->close();
-
-		file_size_ = QFileInfo(temp_file.fileName()).size();
-        QString src_file = temp_file.fileName();
-
-		// Special handling of *.vcf.gz files: they need to be unzipped
-		if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".vcf.gz"))
+		//handle errors like truncated GZ file
+		if (char_array==nullptr)
 		{
-            gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
-			if(!gz_file)
+			int error_no = Z_OK;
+			QByteArray error_message = gzerror(gz_stream_, &error_no);
+			if (error_no!=Z_OK && error_no!=Z_STREAM_END)
 			{
-				THROW(FileAccessException, "Could not open GZ file!");
+				THROW(FileParseException, "Error while reading file '" + file_name_ + "': " + error_message);
 			}
-
-            QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
-            if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
-
-			const int buffer_size = 1048576; //1MB buffer
-			char* gz_buffer = new char[buffer_size];
-			while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
-			{
-                gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
-			}
-			gzclose(gz_file);
-			gz_buffer_file.data()->close();
-            src_file = temp_gz_file.fileName();
 		}
-        readline_pointer_ = Helper::openFileForReading(src_file);
+
+		output = QByteArray(char_array);
+	}
+	else
+	{
+		if (readline_pointer_.isNull())
+		{
+			QTemporaryFile temp_file;
+			if (!temp_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for remote data!");
+			QTemporaryFile temp_gz_file;
+			if (!temp_gz_file.open()) THROW(FileAccessException, "Could not initiate a temporary file for compressed data!");
+
+			QSharedPointer<QFile> buffer_file(new QFile(temp_file.fileName()));
+			if (!buffer_file.data()->open(QIODevice::WriteOnly)) THROW(FileAccessException, "Could not open a temporary file for remote data: " + temp_file.fileName());
+			buffer_file.data()->write(sendGetRequestText().body);
+			buffer_file.data()->close();
+
+			file_size_ = QFileInfo(temp_file.fileName()).size();
+			QString src_file = temp_file.fileName();
+
+			//.gz files need to be unzipped
+			if (QUrl(file_name_.toLower()).toString(QUrl::RemoveQuery).endsWith(".gz"))
+			{
+				gzFile gz_file = gzopen(temp_file.fileName().toUtf8(), "rb");
+				if(!gz_file)
+				{
+					THROW(FileAccessException, "Could not open GZ file!");
+				}
+
+				QSharedPointer<QFile> gz_buffer_file(new QFile(temp_gz_file.fileName()));
+				if (!gz_buffer_file.data()->open(QIODevice::WriteOnly|QIODevice::Append)) THROW(FileAccessException, "Could not open a temporary file for compressed data: " + temp_gz_file.fileName());
+
+				const int buffer_size = 1048576; //1MB buffer
+				char* gz_buffer = new char[buffer_size];
+				while(int read_bytes =  gzread (gz_file, gz_buffer, buffer_size))
+				{
+					gz_buffer_file.data()->write(QByteArray(gz_buffer, read_bytes));
+				}
+				gzclose(gz_file);
+				gz_buffer_file.data()->close();
+				src_file = temp_gz_file.fileName();
+			}
+			readline_pointer_ = Helper::openFileForReading(src_file);
+		}
+
+		output = readline_pointer_.data()->readLine();
+		cursor_position_ = readline_pointer_.data()->pos();
 	}
 
-	QByteArray line = readline_pointer_.data()->readLine(maxlen);
-	cursor_position_ = readline_pointer_.data()->pos();
+	while (trim_line_endings && (output.endsWith('\n') || output.endsWith('\r')))
+	{
+		output.chop(1);
+	}
 
-	return line;
+	return output;
 }
 
 bool VersatileFile::atEnd() const
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->atEnd();
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->atEnd();
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		return gzeof(gz_stream_);
+	}
+
 	return (cursor_position_ >= file_size_);
 }
 
 bool VersatileFile::exists()
 {
-	if (!local_source_.isNull()) return local_source_.data()->exists();
+	if (mode_==LOCAL || mode_==LOCAL_GZ)
+	{
+		return QFile(file_name_).exists();
+	}
 
 	try
     {
@@ -188,24 +303,56 @@ bool VersatileFile::exists()
 
 void VersatileFile::close()
 {
-	checkIfOpen();
-	if (isLocal())
+	if (mode_==LOCAL)
 	{
 		local_source_.data()->close();
 	}
+	else if (mode_==LOCAL_GZ)
+	{
+		if (gz_stream_!=nullptr)
+		{
+			gzclose(gz_stream_);
+			gz_stream_ = nullptr;
+		}
+
+		if (gz_buffer_!=nullptr)
+		{
+			delete gz_buffer_;
+			gz_buffer_ = nullptr;
+		}
+	}
+
+	is_open_ = false;
 }
 
 qint64 VersatileFile::pos() const
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->pos();
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->pos();
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		THROW(NotImplementedException, "VersatileFile::pos is not implemented for GZ files!");
+	}
+
 	return cursor_position_;
 }
 
 bool VersatileFile::seek(qint64 pos)
 {
-	checkIfOpen();
-	if (isLocal()) return local_source_.data()->seek(pos);
+	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->seek(pos);
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		THROW(NotImplementedException, "VersatileFile::seek is not implemented for GZ files!");
+	}
 
 	cursor_position_ = pos;
 	if (cursor_position_ >= file_size_) cursor_position_ = file_size_;
@@ -214,23 +361,23 @@ bool VersatileFile::seek(qint64 pos)
 
 qint64 VersatileFile::size()
 {
-	if (isLocal()) return local_source_.data()->size();
-	checkIfOpen();
-	return getFileSize();
+    //if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+
+	if (mode_==LOCAL)
+	{
+		return local_source_.data()->size();
+	}
+	else if (mode_==LOCAL_GZ)
+	{
+		THROW(NotImplementedException, "VersatileFile::size is not implemented for GZ files!");
+	}
+
+	return file_size_;
 }
 
 QString VersatileFile::fileName() const
 {
 	return file_name_;
-}
-
-void VersatileFile::checkIfOpen() const
-{
-	if (isLocal())
-	{
-		if (local_source_.isNull()) THROW(FileAccessException, "Local file is not set!");
-		if (!local_source_.data()->isOpen()) THROW(FileAccessException, "Local file is not open!");
-	}	
 }
 
 void VersatileFile::checkResponse(QByteArray& response) const
@@ -240,11 +387,6 @@ void VersatileFile::checkResponse(QByteArray& response) const
 	int start_pos = response.toLower().indexOf(http_version.toLower());
 	int response_code = response.mid(start_pos + http_version.length(), 3).toInt();
 	if ((response_code != 200) && (response_code != 206)) THROW(FileAccessException, "Server replied with the code " + QString::number(response_code));
-}
-
-bool VersatileFile::isLocal() const
-{
-	return !Helper::isHttpUrl(file_name_);
 }
 
 void VersatileFile::addCommonHeaders(HttpHeaders& request_headers)
