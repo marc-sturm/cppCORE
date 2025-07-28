@@ -4,9 +4,15 @@
 #include "cppCORE_global.h"
 #include <QNetworkProxy>
 #include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QEventLoop>
+#include <QSharedPointer>
+#include <QByteArray>
+#include <QObject>
 #include <zlib.h>
 #include "Exceptions.h"
-#include "HttpRequestHandler.h"
 
 //File class that can handle plain text files, gzipped text files and URLs
 class CPPCORESHARED_EXPORT VersatileFile
@@ -24,7 +30,8 @@ public:
 
 	///Open file. Returns false if file could not be opened. Open mode is only used in LOCAL mode.
 	///Note: Use QIODevice::Text in addition to the read/write mode for text files!
-	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);
+	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);    
+
 	///Returns the open mode (for local files).
 	QIODevice::OpenMode openMode() const;
 	///Returns the mode.
@@ -44,7 +51,7 @@ public:
 
 	QByteArray read(qint64 maxlen = 0);
 	QByteArray readAll();
-	QByteArray readLine(bool trim_line_endings = false);
+    QByteArray readLine(bool trim_line_endings = false);
 
 	bool atEnd() const;
 	bool exists();
@@ -57,6 +64,7 @@ public:
 	QString fileName() const;
 
 private:
+    QNetworkAccessManager net_mgr_;
     QNetworkProxy proxy_;
 	QString file_name_;
 	FILE* file_stream_pointer_;
@@ -72,19 +80,28 @@ private:
 	char* gz_buffer_ = nullptr;
 	gzFile gz_stream_ = nullptr;
 
-	//members for URL mode
-	qint64 file_size_;
-	qint64 cursor_position_;
+    //members for URL mode
+    QByteArray buffer_;
+    qint64 cursor_position_ = 0; // position in a VersatileFile, as if we are reading QFile
+    qint64 remote_position_ = 0; // where we are in the remote file while we read and save its content into a buffer)
+    qint64 buffer_read_pos_ = 0; // position within the read buffer
 	QSharedPointer<QFile> readline_pointer_;
 
-	void checkResponse(QByteArray& response) const;
-    void addCommonHeaders(HttpHeaders &request_headers);
+    //members for all modes
+    qint64 file_size_ = -1;
+    bool file_exists_ = false;
 
-    ServerReply sendHeadRequest();
-    ServerReply sendGetRequestText();
-    ServerReply sendByteRangeRequestText(qint64 start, qint64 end);
+    //members for remote decompression
+    static constexpr qint64 CHUNK_SIZE = 200 * 1024 * 1024; // 200Mb
+    z_stream zstream_ = {};
+    bool zstream_initialized_ = false;
+    bool remote_gz_finished_ = false;
+    QByteArray decompressed_buffer_;
+    qint64 decompressed_buffer_pos_ = 0;
 
-	qint64 getFileSize();
+
+    QByteArray httpRangeRequest(qint64 start, qint64 end);
+    void checkRemoteFile();
 };
 
 
