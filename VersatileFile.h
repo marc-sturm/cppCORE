@@ -92,7 +92,7 @@ private:
     bool file_exists_ = false;
 
     //members for remote decompression
-    static constexpr qint64 CHUNK_SIZE = 200 * 1024 * 1024; // 200Mb
+    static constexpr qint64 chunkSize() { return 200 * 1024 * 1024; } // 200Mb
     z_stream zstream_ = {};
     bool zstream_initialized_ = false;
     bool remote_gz_finished_ = false;

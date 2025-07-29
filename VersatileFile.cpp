@@ -155,7 +155,7 @@ QByteArray VersatileFile::read(qint64 maxlen)
     QByteArray result;
     while (result.size() < maxlen)
     {
-        qint64 to_read = qMin(CHUNK_SIZE, maxlen - result.size());
+        qint64 to_read = qMin(chunkSize(), maxlen - result.size());
         QByteArray chunk = httpRangeRequest(cursor_position_, cursor_position_ + to_read - 1);
         if (chunk.isEmpty()) break;
 
@@ -274,7 +274,7 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
                     decompressed_buffer_pos_ = 0;
                 }
 
-                qint64 end = qMin(remote_position_ + CHUNK_SIZE - 1, size() - 1);
+                qint64 end = qMin(remote_position_ + chunkSize() - 1, size() - 1);
                 QByteArray compressed_chunk = httpRangeRequest(remote_position_, end);
                 if (compressed_chunk.isEmpty())
                 {
@@ -342,7 +342,7 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
                     buffer_read_pos_ = 0;
                 }
 
-                qint64 end = qMin(remote_position_ + CHUNK_SIZE - 1, file_size_ - 1);
+                qint64 end = qMin(remote_position_ + chunkSize() - 1, file_size_ - 1);
                 QByteArray chunk = httpRangeRequest(remote_position_, end);
                 if (chunk.isEmpty()) return QByteArray();
 
