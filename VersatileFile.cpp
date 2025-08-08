@@ -3,9 +3,7 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
-#include <QTemporaryFile>
 #include "CustomProxyService.h"
-#include "Log.h"
 
 VersatileFile::VersatileFile(QString file_name)
 	: proxy_(QNetworkProxy::NoProxy)
