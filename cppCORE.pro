@@ -7,7 +7,10 @@ QT += network
 TEMPLATE = lib
 TARGET = cppCORE
 DEFINES += CPPCORE_LIBRARY
-DESTDIR = ../../bin/
+
+include("../qt_compatibility.pri")
+
+DESTDIR = $$DEST_DIR_PATH_PART/bin/
 
 #compose version string
 SVN_VER= \\\"$$system(cd .. && git describe --tags)\\\"
