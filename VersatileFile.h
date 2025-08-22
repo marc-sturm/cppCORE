@@ -14,7 +14,8 @@
 #include <zlib.h>
 #include "Exceptions.h"
 
-//File class that can handle plain text files, gzipped text files and URLs
+//File class that can handle plain text files, gzipped text files and URLs.
+//If you need QString output with proper handling of the encoding, use VersatileTextStream.
 class CPPCORESHARED_EXPORT VersatileFile
     : public QObject
 {
@@ -22,9 +23,7 @@ class CPPCORESHARED_EXPORT VersatileFile
 
 public:
 	///Constructor for local file, local gzipped file or URL
-	VersatileFile(QString file_name);
-	///Constructor for stdin/stderr
-	VersatileFile(QString file_name, FILE* f);
+	VersatileFile(QString file_name, bool stdin_if_empty = false);
 	///Destructor. Calls close() to frees all resources.
 	~VersatileFile();
 

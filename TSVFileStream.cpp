@@ -20,7 +20,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	}
 
 	//open
-	file_->open(QFile::ReadOnly | QFile::Text, true);
+	file_->open(QFile::ReadOnly | QFile::Text);
 
 	//read comments and headers
 	next_line_ = double_comment_;

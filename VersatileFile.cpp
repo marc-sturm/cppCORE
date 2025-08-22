@@ -5,7 +5,7 @@
 #include <QDir>
 #include "CustomProxyService.h"
 
-VersatileFile::VersatileFile(QString file_name)
+VersatileFile::VersatileFile(QString file_name, bool stdin_if_empty)
 	: proxy_(QNetworkProxy::NoProxy)
 	, file_name_(file_name)
 	, file_stream_pointer_(nullptr)
@@ -26,6 +26,10 @@ VersatileFile::VersatileFile(QString file_name)
 	if (mode_==LOCAL)
 	{
 		local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
+		if (file_name=="" && stdin_if_empty)
+		{
+			file_stream_pointer_ = stdin;
+		}
 	}
 	else if (mode_==LOCAL_GZ)
 	{
@@ -41,15 +45,6 @@ VersatileFile::VersatileFile(QString file_name)
         }
         checkRemoteFile();
 	}
-}
-
-VersatileFile::VersatileFile(QString file_name, FILE* f)
-	: proxy_(QNetworkProxy::NoProxy)
-	, file_name_(file_name)
-	, file_stream_pointer_(f)
-	, cursor_position_(0)
-{
-	local_source_ = QSharedPointer<QFile>(new QFile(file_name_));
 }
 
 VersatileFile::~VersatileFile()

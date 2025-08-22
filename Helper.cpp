@@ -387,23 +387,6 @@ QSharedPointer<QFile> Helper::openFileForReading(QString file_name, bool stdin_i
 	return file;
 }
 
-QSharedPointer<VersatileFile> Helper::openVersatileFileForReading(QString file_name, bool stdin_if_empty)
-{
-	QSharedPointer<VersatileFile> file;
-	if (stdin_if_empty && file_name=="")
-	{
-		file = QSharedPointer<VersatileFile>(new VersatileFile(file_name, stdin));
-	}
-	else
-	{
-		file = QSharedPointer<VersatileFile>(new VersatileFile(file_name));
-	}
-
-	file->open(QFile::ReadOnly | QIODevice::Text, true);
-
-	return file;
-}
-
 QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_if_file_empty, bool append)
 {
 	QSharedPointer<QFile> file(new QFile(file_name));

@@ -6,6 +6,7 @@
 #include "Exceptions.h"
 #include "Helper.h"
 #include "Settings.h"
+#include "VersatileFile.h"
 
 ToolBase::ToolBase(int& argc, char *argv[])
 	: QCoreApplication(argc, argv)

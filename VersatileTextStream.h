@@ -9,7 +9,7 @@
 class CPPCORESHARED_EXPORT VersatileTextStream
 {
 public:
-	VersatileTextStream(QString file_name);
+	VersatileTextStream(QString file_name, bool stdin_if_empty=false);
 
 	bool atEnd() const
 	{
