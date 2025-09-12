@@ -11,7 +11,7 @@
 #include <QSharedPointer>
 #include <QByteArray>
 #include <QObject>
-#include <zlib.h>
+#include <zlib.h> //TODO Marc try libdeflate instead of zlib
 #include "Exceptions.h"
 
 //File class that can handle plain text files, gzipped text files and URLs.
