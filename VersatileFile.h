@@ -34,7 +34,7 @@ public:
 	///Returns the open mode (for local files).
 	QIODevice::OpenMode openMode() const;
 	///Returns the mode.
-	enum Mode { LOCAL, LOCAL_GZ, URL};
+	enum Mode { LOCAL, LOCAL_GZ, URL, URL_GZ};
 	Mode mode() const
 	{
 		return mode_;
@@ -98,8 +98,9 @@ private:
     QByteArray decompressed_buffer_;
     qint64 decompressed_buffer_pos_ = 0;
 
-
+	//gets a chunk from the remote file. Note: start and end are 0-based!
     QByteArray httpRangeRequest(qint64 start, qint64 end);
+	//cecks if remote file exists and gets the file size from the header
     void checkRemoteFile();
 };
 
