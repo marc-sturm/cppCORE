@@ -4,7 +4,6 @@
 #include "cppCORE_global.h"
 #include <QSettings>
 #include <QStringList>
-#include <QCoreApplication>
 
 
 ///Application settings handler

@@ -1,8 +1,6 @@
 #include "ToolBase.h"
 #include <QTextStream>
 #include <QTimer>
-#include <QDir>
-#include <QtGlobal>
 #include "Exceptions.h"
 #include "Helper.h"
 #include "Settings.h"

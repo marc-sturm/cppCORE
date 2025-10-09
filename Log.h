@@ -6,7 +6,6 @@
 #include <QElapsedTimer>
 #include <QThreadPool>
 #include <QMutex>
-#include "LoggingWorker.h"
 
 
 /**

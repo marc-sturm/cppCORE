@@ -1,5 +1,4 @@
 #include "VersatileTextStream.h"
-#include "Helper.h"
 
 VersatileTextStream::VersatileTextStream(QString file_name, bool stdin_if_empty)
 	: file_name_(file_name)

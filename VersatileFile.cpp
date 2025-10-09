@@ -4,6 +4,8 @@
 #include <QFileInfo>
 #include <QDir>
 #include "CustomProxyService.h"
+#include <QEventLoop>
+#include <QNetworkReply>
 
 VersatileFile::VersatileFile(QString file_name, bool stdin_if_empty)
 	: proxy_(QNetworkProxy::NoProxy)

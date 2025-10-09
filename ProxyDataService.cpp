@@ -1,12 +1,10 @@
 #include "ProxyDataService.h"
 #include "Settings.h"
 #include "Exceptions.h"
-
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QThread>
 #include <QTimer>
-
+#include <QEventLoop>
 
 ProxyDataService::ProxyDataService()
 {

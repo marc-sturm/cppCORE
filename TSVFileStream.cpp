@@ -1,6 +1,5 @@
 #include "TSVFileStream.h"
 #include "Helper.h"
-#include <QStringList>
 
 TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	: filename_(filename)

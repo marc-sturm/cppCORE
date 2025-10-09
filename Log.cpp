@@ -1,6 +1,7 @@
 #include "Log.h"
 #include "Exceptions.h"
 #include "Helper.h"
+#include "LoggingWorker.h"
 #include <QTextStream>
 #include <QCoreApplication>
 #include <QStandardPaths>

@@ -6,7 +6,6 @@
 #include <QString>
 #include <QSslError>
 #include <QNetworkAccessManager>
-#include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QHttpMultiPart>
 

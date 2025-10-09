@@ -1,12 +1,11 @@
 #include "SimpleCrypt.h"
 #include <QByteArray>
-#include <QtDebug>
-#include <QtGlobal>
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QDataStream>
 #include <QIODevice>
 #include <QRandomGenerator>
+#include <QDebug>
 
 SimpleCrypt::SimpleCrypt():
     m_key(0),

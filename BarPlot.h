@@ -3,7 +3,6 @@
 
 #include "cppCORE_global.h"
 #include <QString>
-#include <QVector>
 #include <QHash>
 
 class CPPCORESHARED_EXPORT BarPlot

@@ -4,7 +4,6 @@
 #include "cppCORE_global.h"
 #include <QRunnable>
 #include <QString>
-#include <Helper.h>
 
 /// This class writes logging statements in a separate thread. It should help to avoid
 /// the situation when the main thread hangs, if there is a problem with IO (due to

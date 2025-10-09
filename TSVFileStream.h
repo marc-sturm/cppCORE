@@ -2,7 +2,6 @@
 #define TSVFILESTREAM_H
 
 #include "cppCORE_global.h"
-#include "Exceptions.h"
 #include <QVector>
 #include "VersatileFile.h"
 

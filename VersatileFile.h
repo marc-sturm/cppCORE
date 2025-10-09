@@ -5,14 +5,10 @@
 #include <QNetworkProxy>
 #include <QFile>
 #include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QEventLoop>
 #include <QSharedPointer>
 #include <QByteArray>
 #include <QObject>
 #include <zlib.h> //TODO Marc try libdeflate instead of zlib
-#include "Exceptions.h"
 
 //File class that can handle plain text files, gzipped text files and URLs.
 //If you need QString output with proper handling of the encoding, use VersatileTextStream.

@@ -1,6 +1,4 @@
 #include "FileWatcher.h"
-#include <QTimer>
-#include <QStringList>
 
 FileWatcher::FileWatcher(QObject* parent)
 	: QObject(parent)

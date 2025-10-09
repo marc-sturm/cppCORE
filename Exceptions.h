@@ -3,8 +3,7 @@
 
 #include "cppCORE_global.h"
 #include <QString>
-#include <QDebug>
-
+#include <QMap>
 enum class ExceptionType
 {
 	CRITIAL, //a critical problem.

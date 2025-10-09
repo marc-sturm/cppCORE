@@ -1,13 +1,9 @@
 #include "HttpRequestHandler.h"
 #include "Exceptions.h"
 #include "Settings.h"
-#include "Helper.h"
 
 #include <QEventLoop>
 #include <QNetworkProxy>
-#include <QAuthenticator>
-#include <QFile>
-#include <QPointer>
 #include <QHttpMultiPart>
 #include "CustomProxyService.h"
 

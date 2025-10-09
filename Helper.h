@@ -6,7 +6,6 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QStringList>
-#include <QDebug>
 #include <QSharedPointer>
 
 ///Auxilary helper functions class.
