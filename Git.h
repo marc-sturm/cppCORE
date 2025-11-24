@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QHash>
+#include <QProcess>
 #include "cppCORE_global.h"
 
 enum class GitStatus
@@ -40,6 +41,8 @@ public:
 
 protected:
 	static QString gitExe();
+	//Throws an exception after a command has failed
+	static void throwException(QProcess& process);
 
 	Git() = delete;
 };

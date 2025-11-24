@@ -1,8 +1,6 @@
 #include "Git.h"
 #include "Settings.h"
 #include "Exceptions.h"
-
-#include <QProcess>
 #include <QFileInfo>
 
 bool Git::isRepo(QString dir)
@@ -16,9 +14,8 @@ QHash<QString, GitStatus> Git::status(QString dir)
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.start(gitExe(), QStringList() << "-C"  << dir << "status" << "--porcelain");
-	bool success = process.waitForFinished(-1);
+	if (!process.waitForFinished(-1)) throwException(process);
 	QStringList text = QString(process.readAll()).split("\n");
-	if (!success) THROW(Exception, "Calling 'git status' failed:\n"+text.join("\n"));
 
 	//convert git status lines to hash
 	QHash<QString, GitStatus> output;
@@ -72,15 +69,13 @@ bool Git::pullAvailable(QString dir)
 	QProcess process;
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.start(git_exe, QStringList() << "-C"  << dir << "remote" << "update");
-	bool success = process.waitForFinished(-1);
+	if (!process.waitForFinished(-1)) throwException(process);
 	QByteArrayList output = process.readAll().split('\n');
-	if (!success) THROW(Exception, "Calling 'git remote update' failed:\n"+output.join("\n"));
 
 	//get status
 	process.start(git_exe, QStringList() << "-C"  << dir << "status" << "-u" << "no");
-	success = process.waitForFinished(-1);
+	if (!process.waitForFinished(-1)) throwException(process);
 	output = process.readAll().split('\n');
-	if (!success) THROW(Exception, "Calling 'git status' failed:\n"+output.join("\n"));
 
 	//check status
 	foreach(const QByteArray& line, output)
@@ -95,10 +90,8 @@ bool Git::pushAvailable(QString dir)
 	//get status
 	QProcess process;
 	process.start(gitExe(), QStringList() << "-C"  << dir << "status" << "-u" << "no");
-	bool success = process.waitForFinished(-1);
+	if (!process.waitForFinished(-1)) throwException(process);
 	QByteArrayList output = process.readAll().split('\n');
-	if (!success) THROW(Exception, "Calling 'git status' failed:\n"+output.join("\n"));
-
 
 	//check status
 	foreach(const QByteArray& line, output)
@@ -116,11 +109,7 @@ QByteArray Git::pull(QString dir)
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.setWorkingDirectory(dir);
 	process.start(git_exe, QStringList() << "pull" << "--recurse-submodules");
-	if (!process.waitForFinished(-1))
-	{
-		QByteArray output = process.readAll();
-		THROW(Exception, "Could not execute 'git pull':\n" + output);
-	}
+	if (!process.waitForFinished(-1)) throwException(process);
 	return process.readAll();
 }
 
@@ -132,11 +121,7 @@ QByteArray Git::push(QString dir)
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.setWorkingDirectory(dir);
 	process.start(git_exe, QStringList() << "push");
-	if (!process.waitForFinished(-1))
-	{
-		QByteArray output = process.readAll();
-		THROW(Exception, "Could not execute 'git pull':\n" + output);
-	}
+	if (!process.waitForFinished(-1)) throwException(process);
 	return process.readAll();
 }
 
@@ -148,10 +133,7 @@ QByteArray Git::branch(QString dir)
 	process.setProcessChannelMode(QProcess::MergedChannels);
 	process.setWorkingDirectory(dir);
 	process.start(git_exe, QStringList() << "branch");
-	if (!process.waitForFinished(-1))
-	{
-		THROW(Exception, "Could not execute 'git pull':\n" + process.readAll());
-	}
+	if (!process.waitForFinished(-1)) throwException(process);
 
 	QByteArrayList lines = process.readAll().split('\n');
 	foreach(QByteArray line, lines)
@@ -175,4 +157,9 @@ QString Git::gitExe()
 	if (exe=="") THROW(InformationMissingException, "Git executable not found in settings!");
 
 	return exe;
+}
+
+void Git::throwException(QProcess& process)
+{
+	THROW(Exception, "Could not execute '"+process.program() + " " + process.arguments().join(" ")+"'\n\nERROR:\n" + process.errorString() + "\nOutput:\n"+process.readAll());
 }
