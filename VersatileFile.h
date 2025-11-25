@@ -92,16 +92,16 @@ private:
 
     //members for remote decompression
     static constexpr qint64 chunkSize() { return 200 * 1024 * 1024; } // 200Mb
-    z_stream zstream_ = {};
-    bool zstream_initialized_ = false;
+
     bool remote_gz_finished_ = false;
     QByteArray decompressed_buffer_;
     qint64 decompressed_buffer_pos_ = 0;
 
-	//gets a chunk from the remote file. Note: start and end are 0-based!
+    //gets a chunk from the remote file
     QByteArray httpRangeRequest(qint64 start, qint64 end);
-	//cecks if remote file exists and gets the file size from the header
+    //checks if remote file exists and gets the file size from the header
     void checkRemoteFile();
+    QByteArray decompressGzip(const QByteArray &compressed);
 };
 
 

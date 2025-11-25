@@ -33,7 +33,7 @@ VersatileFile::VersatileFile(QString file_name, bool stdin_if_empty)
 	}
 	else if (mode_==LOCAL_GZ)
 	{
-		//northing to do her - see open method
+        //nothing to do here - see open method
 	}
 	else
     {
@@ -75,7 +75,7 @@ bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 	{
 		gz_stream_ = gzopen(file_name_.toUtf8().data(), "rb"); //read binary: always open in binary mode because Windows and Mac open in text mode
 		if (!gz_stream_) opened = false;
-		gz_buffer_ = new char[gz_buffer_size_];
+        gz_buffer_ = new char[gz_buffer_size_];
 		gzbuffer(gz_stream_, gz_buffer_size_internal_);
 	}
 	else
@@ -145,7 +145,7 @@ QByteArray VersatileFile::read(qint64 maxlen)
 		THROW(NotImplementedException, "VersatileFile::read is not implemented for GZ files!");
 	}
 
-	//TODO Alexandr: handle URL/URL_GZ
+    // regular remote file (URL mode)
     QByteArray result;
     while (result.size() < maxlen)
     {
@@ -159,12 +159,18 @@ QByteArray VersatileFile::read(qint64 maxlen)
 		remote_position_ += chunk.size();
     }
 
+    // remote file is a compressed file
+    if (mode_==URL_GZ)
+    {
+        return decompressGzip(result);
+    }
+
     return result;
 }
 
 QByteArray VersatileFile::readAll()
 {
-	if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
+    if (!is_open_) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on not open file '" + file_name_ + "!");
 
 	if (mode_==LOCAL)
 	{
@@ -174,13 +180,13 @@ QByteArray VersatileFile::readAll()
 	{
 		QByteArray output;
 		while (!atEnd())
-		{
-			output.append(readLine());
+        {
+            output.append(readLine());
 		}
 		return output;
 	}
 
-	//TODO Alexandr: handle URL/URL_GZ
+    // regular remote file (URL mode)
     QNetworkRequest request((QUrl(file_name_)));
     QNetworkReply* reply = net_mgr_.get(request);
 
@@ -195,6 +201,16 @@ QByteArray VersatileFile::readAll()
         cursor_position_ += data.size();
     }
     reply->deleteLater();
+
+    // remote file is a compressed file
+    if (mode_==URL_GZ)
+    {
+        remote_gz_finished_ = true;
+        QByteArray output = decompressGzip(data);
+        decompressed_buffer_pos_ = output.size();
+        return output;
+    }
+
     return data;
 }
 
@@ -212,7 +228,7 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 	}
 	else if (mode_==LOCAL_GZ)
 	{
-		// get next line
+        // get next line
 		char* char_array = gzgets(gz_stream_, gz_buffer_, gz_buffer_size_);
 
 		//handle errors like truncated GZ file
@@ -226,17 +242,10 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 			}
 		}
 
-		output = QByteArray(char_array);
+        output = QByteArray(char_array);
 	}
 	else if (mode_==URL_GZ)
 	{
-		if (!zstream_initialized_)
-		{
-			memset(&zstream_, 0, sizeof(zstream_));
-			if (inflateInit2(&zstream_, 16 + MAX_WBITS) != Z_OK) return QByteArray();
-			zstream_initialized_ = true;
-		}
-
 		while (true)
 		{
 			int newline_index = decompressed_buffer_.indexOf('\n', decompressed_buffer_pos_);
@@ -245,7 +254,7 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 				int line_length = newline_index - decompressed_buffer_pos_ + 1;
 				if (maxlen > 0) line_length = qMin(line_length, (int)maxlen);
 
-				output = decompressed_buffer_.mid(decompressed_buffer_pos_, line_length);
+				output = decompressed_buffer_.mid(decompressed_buffer_pos_, line_length);                
 				decompressed_buffer_pos_ += line_length;
 				cursor_position_ += output.size();
 				break;
@@ -261,16 +270,7 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 				break;
 			}
 
-			/*
-			if (decompressed_buffer_pos_ > decompressed_buffer_.size() / 2)
-			{
-				decompressed_buffer_ = decompressed_buffer_.mid(decompressed_buffer_pos_);
-				decompressed_buffer_pos_ = 0;
-			}
-			*/
-
-			qint64 end = qMin(remote_position_ + chunkSize() - 1, size() - 1);
-			//qDebug() << __FILE__ << __LINE__ << remote_position_ << end;
+			qint64 end = qMin(remote_position_ + chunkSize() - 1, size() - 1);			
 			QByteArray compressed_chunk = httpRangeRequest(remote_position_, end);
 			if (compressed_chunk.isEmpty())
 			{
@@ -278,31 +278,8 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 				continue;
 			}
 
-			remote_position_ += compressed_chunk.size();
-
-			QByteArray out;
-			out.resize(1024 * 1024);
-			zstream_.next_in = reinterpret_cast<Bytef*>(compressed_chunk.data());
-			zstream_.avail_in = compressed_chunk.size();
-
-			while (zstream_.avail_in > 0)
-			{
-				if (out.size() - zstream_.total_out < 1024) out.resize(out.size() * 2);
-
-				zstream_.next_out = reinterpret_cast<Bytef*>(out.data()) + zstream_.total_out;
-				zstream_.avail_out = out.size() - zstream_.total_out;
-
-				int ret = inflate(&zstream_, Z_NO_FLUSH);
-				if (ret == Z_STREAM_END)
-				{
-					remote_gz_finished_ = true;
-					break;
-				}
-				if (ret != Z_OK) break;
-			}
-
-			out.resize(zstream_.total_out);
-			decompressed_buffer_.append(out);
+			remote_position_ += compressed_chunk.size();          
+            decompressed_buffer_.append(decompressGzip(compressed_chunk));
 		}
 	}
 	else
@@ -368,13 +345,13 @@ bool VersatileFile::atEnd() const
 		return gzeof(gz_stream_);
 	}
 	else if (mode_==URL_GZ)
-	{
-		//qDebug() << __FILE__ << __LINE__ << remote_gz_finished_ << decompressed_buffer_pos_ << decompressed_buffer_.size();
+	{        
 		return remote_gz_finished_ && (decompressed_buffer_pos_ >= decompressed_buffer_.size());
 	}
 
 	//mode_==URL
-	bool no_more_remote_data = (file_size_ != -1 && remote_position_ >= file_size_); //TODO Alexandr: check if file_size_ can be -1!
+    if (file_size_ == -1) THROW(ProgrammingException, QString(__FUNCTION__) + " called, on non existing file '" + file_name_ + "!");
+    bool no_more_remote_data = (file_size_ != -1 && remote_position_ >= file_size_);
 	bool buffer_consumed = (buffer_read_pos_ >= buffer_.size());
 	return (no_more_remote_data && buffer_consumed) || (cursor_position_ >= file_size_);
 }
@@ -412,12 +389,6 @@ void VersatileFile::close()
 
 	is_open_ = false;
 
-    if (zstream_initialized_)
-    {
-        inflateEnd(&zstream_);
-        zstream_initialized_ = false;
-    }
-
     buffer_.clear();
     decompressed_buffer_.clear();
     decompressed_buffer_pos_ = 0;
@@ -434,9 +405,9 @@ qint64 VersatileFile::pos() const
 	{
 		return local_source_.data()->pos();
 	}
-	else if (mode_==LOCAL_GZ)
+    else if ((mode_==LOCAL_GZ) || (mode_==URL_GZ))
 	{
-		THROW(NotImplementedException, "VersatileFile::pos is not implemented for GZ files!");
+        THROW(NotImplementedException, "VersatileFile::pos is not implemented for GZ files!");
 	}
 
 	return cursor_position_;
@@ -450,10 +421,16 @@ bool VersatileFile::seek(qint64 pos)
 	{
 		return local_source_.data()->seek(pos);
 	}
-	else if (mode_==LOCAL_GZ)
+    else if ((mode_==LOCAL_GZ) || (mode_==URL_GZ))
 	{
-		THROW(NotImplementedException, "VersatileFile::seek is not implemented for GZ files!");
-	}
+        if (pos==0)
+        {
+            close();
+            return open();
+        }
+
+        THROW(NotImplementedException, "VersatileFile::seek is not fully implemented for GZ files, only resetting to the beginning of the file is supported!");
+    }
 
     if (pos < 0 || (file_size_ != -1 && pos > file_size_)) return false;
 
@@ -472,7 +449,7 @@ qint64 VersatileFile::size()
 	}
 	else if (mode_==LOCAL_GZ)
 	{
-		THROW(NotImplementedException, "VersatileFile::size is not implemented for GZ files!");
+        return QFileInfo(file_name_).size();
 	}
 
     return file_size_;
@@ -520,3 +497,77 @@ void VersatileFile::checkRemoteFile()
     }
     reply->deleteLater();
 }
+
+QByteArray VersatileFile::decompressGzip(const QByteArray &compressed)
+{
+    if (compressed.isEmpty()) return QByteArray();
+
+    std::vector<uint8_t> buffer;
+    buffer.resize(1024 * 1024); // initial output buffer
+    size_t out_offset = 0;
+
+    const uint8_t* next_in = reinterpret_cast<const uint8_t*>(compressed.constData());
+    size_t avail_in = compressed.size();
+
+    z_stream strm{};
+    if (inflateInit2(&strm, 16 + MAX_WBITS) != Z_OK)
+    {
+        THROW(ProgrammingException, QString(__FUNCTION__) + " failed to init zlib for '" + file_name_ + "!");
+    }
+
+    int ret = Z_OK;
+
+    while (avail_in > 0)
+    {
+        strm.next_in  = const_cast<Bytef*>(next_in);
+        strm.avail_in = static_cast<uInt>(avail_in);
+
+        do
+        {
+            // grow buffer if needed
+            if (buffer.size() - out_offset < 4096) buffer.resize(buffer.size() * 2);
+
+            strm.next_out  = buffer.data() + out_offset;
+            strm.avail_out = buffer.size() - out_offset;
+
+            ret = inflate(&strm, Z_NO_FLUSH);
+
+            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
+            {
+                inflateEnd(&strm);
+                THROW(ProgrammingException, QString(__FUNCTION__) + " for the file '" + file_name_ + " inflate failed with code: " + QString::number(ret));
+            }
+
+            size_t produced = (buffer.size() - out_offset) - strm.avail_out;
+            out_offset += produced;
+
+        }
+        while (strm.avail_out == 0);
+
+        size_t consumed = avail_in - strm.avail_in;
+        next_in += consumed;
+        avail_in -= consumed;
+
+        if (ret == Z_STREAM_END)
+        {
+            //reset stream to process the next gzip member
+            if (avail_in > 0)
+            {
+                inflateReset(&strm);
+            }
+            else
+            {
+                break; //fully done
+            }
+        }
+    }
+
+    inflateEnd(&strm);
+
+    QByteArray result;
+    result.resize(out_offset);
+    memcpy(result.data(), buffer.data(), out_offset);
+    return result;
+}
+
+
