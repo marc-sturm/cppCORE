@@ -44,7 +44,8 @@ ServerReply HttpRequestHandler::head(QString url, const HttpHeaders& add_headers
     ServerReply output;
 
     //request
-    QNetworkRequest request;
+	QNetworkRequest request;
+	request.setDecompressedSafetyCheckThreshold(-1);
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
@@ -83,7 +84,8 @@ ServerReply HttpRequestHandler::head(QString url, const HttpHeaders& add_headers
 ServerReply HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 {
     //request
-    QNetworkRequest request;
+	QNetworkRequest request;
+	request.setDecompressedSafetyCheckThreshold(-1);
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
@@ -145,6 +147,7 @@ ServerReply HttpRequestHandler::put(QString url, const QByteArray& data, const H
 {
 	//request
 	QNetworkRequest request;
+	request.setDecompressedSafetyCheckThreshold(-1);
 	request.setUrl(url);
 	for(auto it=headers_.begin(); it!=headers_.end(); ++it)
 	{
@@ -184,7 +187,8 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
 {
     //request
     QNetworkRequest request;
-    request.setUrl(url);
+	request.setDecompressedSafetyCheckThreshold(-1);
+	request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
         request.setRawHeader(it.key(), it.value());
@@ -195,7 +199,7 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
     }
 
     //query
-    QNetworkReply* reply = nmgr_.post(request, data);
+	QNetworkReply* reply = nmgr_.post(request, data);
 
     //make the loop process the reply immediately
     QEventLoop loop;
@@ -209,7 +213,7 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
         output.headers.insert(reply->rawHeaderList()[i], reply->rawHeader(reply->rawHeaderList()[i]));
     }
     output.status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    output.body = reply->readAll();
+	output.body = reply->readAll();
     if (reply->error()!=QNetworkReply::NoError)
     {
 		THROW_HTTP(HttpException, "HTTP Error: " + networkErrorAsString(reply->error()) + "\nDevice error: " + reply->errorString() + "\nReply: " + output.body, output.status_code, output.headers, output.body);
@@ -221,7 +225,8 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
 ServerReply HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const HttpHeaders& add_headers)
 {
     //request
-    QNetworkRequest request;
+	QNetworkRequest request;
+	request.setDecompressedSafetyCheckThreshold(-1);
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {

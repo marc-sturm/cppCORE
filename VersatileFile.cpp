@@ -190,6 +190,7 @@ QByteArray VersatileFile::readAll()
 
     // regular remote file (URL mode)
     QNetworkRequest request((QUrl(file_name_)));
+	request.setDecompressedSafetyCheckThreshold(-1);
     QNetworkReply* reply = net_mgr_.get(request);
 
     QEventLoop loop;
@@ -465,6 +466,7 @@ QString VersatileFile::fileName() const
 QByteArray VersatileFile::httpRangeRequest(qint64 start, qint64 end)
 {
     QNetworkRequest request((QUrl(file_name_)));
+	request.setDecompressedSafetyCheckThreshold(-1);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setRawHeader("Range", "bytes=" + QByteArray::number(start) + "-" + QByteArray::number(end));
 
@@ -485,6 +487,7 @@ QByteArray VersatileFile::httpRangeRequest(qint64 start, qint64 end)
 void VersatileFile::checkRemoteFile()
 {
     QNetworkRequest request((QUrl(file_name_)));
+	request.setDecompressedSafetyCheckThreshold(-1);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
 
     QNetworkReply* reply = net_mgr_.head(request);
