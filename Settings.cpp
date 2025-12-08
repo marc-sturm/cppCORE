@@ -63,6 +63,13 @@ const QSettings& Settings::settingsGeneral()
 	return *settings;
 }
 
+bool Settings::containsNonEmpty(const QSettings& settings, const QString& key)
+{
+	if (!settings.contains(key)) return false;
+
+	return settings.value(key).toString().trimmed()!="";
+}
+
 int Settings::integer(QString key)
 {
 	return valueWithFallback(key).toInt();
@@ -236,9 +243,6 @@ bool Settings::contains(QString key)
         if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
     #endif
 
-
-
-
 	return var.toString().trimmed()!="";
 }
 
@@ -282,21 +286,37 @@ QString Settings::settingsOverride()
 
 QVariant Settings::valueWithFallback(QString key)
 {
+	//pass 1 - only accept non-empty values (e.g. if the key is present without a value in user-specific, but with a value in global settings)
+	if (!override_settings_file.isEmpty() && containsNonEmpty(*(override_settings.data()), key))
+	{
+		return override_settings->value(key);
+	}
+	if (settingsApplicationUserExists() && containsNonEmpty(settingsApplicationUser(), key))
+	{
+		return settingsApplicationUser().value(key);
+	}
+	if (settingsApplication().contains(key) && containsNonEmpty(settingsApplication(), key))
+	{
+		return settingsApplication().value(key);
+	}
+	if (settingsGeneral().contains(key) && containsNonEmpty(settingsGeneral(), key))
+	{
+		return settingsGeneral().value(key);
+	}
+
+	//pass 2 - also accept empty entries
 	if (!override_settings_file.isEmpty())
 	{
 		return override_settings->value(key);
 	}
-
 	if (settingsApplicationUserExists() && settingsApplicationUser().contains(key))
 	{
 		return settingsApplicationUser().value(key);
 	}
-
 	if (settingsApplication().contains(key))
 	{
 		return settingsApplication().value(key);
 	}
-
 	if (settingsGeneral().contains(key))
 	{
 		return settingsGeneral().value(key);

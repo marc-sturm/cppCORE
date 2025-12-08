@@ -72,7 +72,8 @@ class CPPCORESHARED_EXPORT Settings
 	static const QSettings& settingsApplication();
 	///returns the general settings file "settings.ini" in the application folder (read only)
 	static const QSettings& settingsGeneral();
-
+	///returns if a settings file contains a non-empty value.
+	static bool containsNonEmpty(const QSettings& settings, const QString& name);
 
 	static QString override_settings_file;
 	static QSharedPointer<QSettings> override_settings;
