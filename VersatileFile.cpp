@@ -164,7 +164,22 @@ QByteArray VersatileFile::read(qint64 maxlen)
     // remote file is a compressed file
     if (mode_==URL_GZ)
     {
-        return decompressGzip(result);
+        QByteArray output;
+
+        for (int offset = 0; offset < result.size(); offset += max_compressed_chunk_size_)
+        {
+            QByteArray out;
+            if (!decompressor_.feed(result.mid(offset, max_compressed_chunk_size_), out)) THROW(ProgrammingException, "inflate failed for chunked data");
+
+            if (out.size() >= uncompressed_size_limit_)
+            {
+                THROW(NotImplementedException, "VersatileFile::read is not implemented for GZ files larger than " + QString::number(uncompressed_size_limit_) + "!");
+            }
+            output.append(out);
+            decompressed_buffer_pos_ = out.size();
+        }
+
+        return output;
     }
 
     return result;
@@ -211,8 +226,21 @@ QByteArray VersatileFile::readAll()
     if (mode_==URL_GZ)
     {
         remote_gz_finished_ = true;
-        QByteArray output = decompressGzip(data);
-        decompressed_buffer_pos_ = output.size();
+        QByteArray output;
+
+        for (int offset = 0; offset < data.size(); offset += max_compressed_chunk_size_)
+        {
+            QByteArray out;
+            if (!decompressor_.feed(data.mid(offset, max_compressed_chunk_size_), out)) THROW(ProgrammingException, "inflate failed for chunked data");
+
+            if (out.size() >= uncompressed_size_limit_)
+            {
+                THROW(NotImplementedException, "VersatileFile::readAll is not implemented for GZ files larger than " + QString::number(uncompressed_size_limit_) + "!");
+            }
+            output.append(out);
+            decompressed_buffer_pos_ = out.size();
+        }
+
         return output;
     }
 
@@ -283,8 +311,13 @@ QByteArray VersatileFile::readLine(bool trim_line_endings)
 				continue;
 			}
 
-			remote_position_ += compressed_chunk.size();          
-            decompressed_buffer_.append(decompressGzip(compressed_chunk));
+            remote_position_ += compressed_chunk.size();
+            for (int offset = 0; offset < compressed_chunk.size(); offset += max_compressed_chunk_size_)
+            {
+                QByteArray out;
+                if (!decompressor_.feed(compressed_chunk.mid(offset, max_compressed_chunk_size_), out)) THROW(ProgrammingException, "inflate failed for chunked data");
+                decompressed_buffer_.append(out);
+            }
 		}
 	}
 	else
@@ -508,77 +541,3 @@ void VersatileFile::checkRemoteFile()
     }
     reply->deleteLater();
 }
-
-QByteArray VersatileFile::decompressGzip(const QByteArray &compressed)
-{
-    if (compressed.isEmpty()) return QByteArray();
-
-    std::vector<uint8_t> buffer;
-    buffer.resize(1024 * 1024); // initial output buffer
-    size_t out_offset = 0;
-
-    const uint8_t* next_in = reinterpret_cast<const uint8_t*>(compressed.constData());
-    size_t avail_in = compressed.size();
-
-    z_stream strm{};
-    if (inflateInit2(&strm, 16 + MAX_WBITS) != Z_OK)
-    {
-        THROW(ProgrammingException, QString(__FUNCTION__) + " failed to init zlib for '" + file_name_ + "!");
-    }
-
-    int ret = Z_OK;
-
-    while (avail_in > 0)
-    {
-        strm.next_in  = const_cast<Bytef*>(next_in);
-        strm.avail_in = static_cast<uInt>(avail_in);
-
-        do
-        {
-            // grow buffer if needed
-            if (buffer.size() - out_offset < 4096) buffer.resize(buffer.size() * 2);
-
-            strm.next_out  = buffer.data() + out_offset;
-            strm.avail_out = buffer.size() - out_offset;
-
-            ret = inflate(&strm, Z_NO_FLUSH);
-
-            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
-            {
-                inflateEnd(&strm);
-                THROW(ProgrammingException, QString(__FUNCTION__) + " for the file '" + file_name_ + " inflate failed with code: " + QString::number(ret));
-            }
-
-            size_t produced = (buffer.size() - out_offset) - strm.avail_out;
-            out_offset += produced;
-
-        }
-        while (strm.avail_out == 0);
-
-        size_t consumed = avail_in - strm.avail_in;
-        next_in += consumed;
-        avail_in -= consumed;
-
-        if (ret == Z_STREAM_END)
-        {
-            //reset stream to process the next gzip member
-            if (avail_in > 0)
-            {
-                inflateReset(&strm);
-            }
-            else
-            {
-                break; //fully done
-            }
-        }
-    }
-
-    inflateEnd(&strm);
-
-    QByteArray result;
-    result.resize(out_offset);
-    memcpy(result.data(), buffer.data(), out_offset);
-    return result;
-}
-
-

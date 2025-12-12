@@ -9,6 +9,7 @@
 #include <QByteArray>
 #include <QObject>
 #include <zlib.h> //TODO Marc try libdeflate instead of zlib
+#include "GzipStreamDecompressor.h"
 
 //File class that can handle plain text files, gzipped text files and URLs.
 //If you need QString output with proper handling of the encoding, use VersatileTextStream.
@@ -75,20 +76,25 @@ private:
 	char* gz_buffer_ = nullptr;
 	gzFile gz_stream_ = nullptr;
 
+    GzipStreamDecompressor decompressor_;
+
     //members for URL mode
     QByteArray buffer_;
     qint64 cursor_position_ = 0; // position in a VersatileFile, as if we are reading QFile
     qint64 remote_position_ = 0; // where we are in the remote file while we read and save its content into a buffer)
     qint64 buffer_read_pos_ = 0; // position within the read buffer
 	QSharedPointer<QFile> readline_pointer_;
+    static constexpr qint64 chunkSize() { return 200 * 1024 * 1024; } // 200Mb
+
+    //members for GZ_URL mode
+    qint64 max_compressed_chunk_size_ = qint64(50)*1024*1024; // 50MB chunks will be sent for decompression
+    qint64 uncompressed_size_limit_ = qint64(5)*1024*1024*1024; // 5GB limit to avoid bad allocation (when reading large portions of data at once)
 
     //members for all modes
     qint64 file_size_ = -1;
     bool file_exists_ = false;
 
     //members for remote decompression
-    static constexpr qint64 chunkSize() { return 200 * 1024 * 1024; } // 200Mb
-
     bool remote_gz_finished_ = false;
     QByteArray decompressed_buffer_;
     qint64 decompressed_buffer_pos_ = 0;
@@ -97,7 +103,6 @@ private:
     QByteArray httpRangeRequest(qint64 start, qint64 end);
     //checks if remote file exists and gets the file size from the header
     void checkRemoteFile();
-    QByteArray decompressGzip(const QByteArray &compressed);
 };
 
 

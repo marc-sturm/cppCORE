@@ -41,6 +41,7 @@ SOURCES += \
 HEADERS += ToolBase.h \
     CustomProxyService.h \
     Exceptions.h \
+    GzipStreamDecompressor.h \
     HttpRequestHandler.h \
     LoggingWorker.h \
     ProxyDataService.h \
