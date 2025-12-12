@@ -8,7 +8,7 @@
 /**
   @brief TSV file parser as stream.
 
-  Assumes that comments (double-quoted) and header (single-quoted, only one) are only at the beginning of the file.
+  Assumes that single-quoted header is before the first content line.
 */
 class CPPCORESHARED_EXPORT TSVFileStream
 {
@@ -52,6 +52,9 @@ public:
 		return line_;
 	}
 
+	//Resets to the state after the coinstructor (internal pointer on first line)
+	void reset();
+
 	///Checks and converts a comma-separated list of columns (names or 1-based indices) to 0-based numeric indices.
 	QVector<int> checkColumns(const QByteArrayList& col_names, bool numeric);
 
@@ -64,7 +67,6 @@ protected:
 	QByteArray next_line_;
 	QByteArrayList comments_;
 	QByteArrayList header_;
-	int columns_;
 	int line_;
 
     //declared away methods

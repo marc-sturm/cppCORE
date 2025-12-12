@@ -6,16 +6,25 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	, separator_(separator)
 	, comment_(comment)
 	, double_comment_(2, comment)
-	, line_(0)
 {
+	reset();
+}
+
+void TSVFileStream::reset()
+{
+	//init
+	line_ = 0;
+	comments_.clear();
+	header_.clear();
+
 	//set file
-	if (filename.isEmpty())
+	if (filename_.isEmpty())
 	{
-		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename, stdin));
+		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename_, stdin));
 	}
 	else
 	{
-		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename));
+		file_ = QSharedPointer<VersatileFile>(new VersatileFile(filename_));
 	}
 
 	//open
@@ -23,7 +32,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 
 	//read comments and headers
 	next_line_ = double_comment_;
-	while(next_line_.startsWith(comment))
+	while(next_line_.startsWith(comment_))
 	{
 		if (next_line_.startsWith(double_comment_))
 		{
@@ -32,9 +41,9 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 				comments_ << next_line_;
 			}
 		}
-		else if (next_line_.startsWith(comment))
+		else if (next_line_.startsWith(comment_))
 		{
-			header_ = next_line_.mid(1).split(separator);
+			header_ = next_line_.mid(1).split(separator_);
 		}
 
 		next_line_ = file_->readLine(true);
@@ -47,7 +56,7 @@ TSVFileStream::TSVFileStream(QString filename, char separator, char comment)
 	//determine number of columns if no header is present
 	if (header_.isEmpty())
 	{
-		for(int i=0; i<next_line_.split(separator).count(); ++i)
+		for(int i=0; i<next_line_.split(separator_).count(); ++i)
 		{
 			header_.append("");
 		}
