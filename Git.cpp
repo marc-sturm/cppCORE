@@ -144,7 +144,7 @@ QByteArray Git::stashPop(QString dir)
     QProcess process;
     process.setProcessChannelMode(QProcess::MergedChannels);
     process.setWorkingDirectory(dir);
-    process.start(git_exe, QStringList() << "stash pop");
+    process.start(git_exe, QStringList() << "stash" << "pop");
     if (!process.waitForFinished(-1)) throwException(process);
     return process.readAll();
 }
