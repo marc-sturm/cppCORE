@@ -36,7 +36,13 @@ public:
 	//Perform 'git push'
 	static QByteArray push(QString dir);
 
-	//Returns the branch nach the repository is on (if not master/main)
+    //Perform 'git stash'
+    static QByteArray stash(QString dir);
+
+    //Perform 'git stash pop'
+    static QByteArray stashPop(QString dir);
+
+    //Returns the branch the repository is on (if not master/main)
 	static QByteArray branch(QString dir);
 
 protected:

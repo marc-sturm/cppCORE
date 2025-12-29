@@ -125,6 +125,30 @@ QByteArray Git::push(QString dir)
 	return process.readAll();
 }
 
+QByteArray Git::stash(QString dir)
+{
+    QString git_exe = gitExe();
+
+    QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    process.setWorkingDirectory(dir);
+    process.start(git_exe, QStringList() << "stash");
+    if (!process.waitForFinished(-1)) throwException(process);
+    return process.readAll();
+}
+
+QByteArray Git::stashPop(QString dir)
+{
+    QString git_exe = gitExe();
+
+    QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    process.setWorkingDirectory(dir);
+    process.start(git_exe, QStringList() << "stash pop");
+    if (!process.waitForFinished(-1)) throwException(process);
+    return process.readAll();
+}
+
 QByteArray Git::branch(QString dir)
 {
 	QString git_exe = gitExe();
