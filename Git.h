@@ -45,9 +45,15 @@ public:
     //Returns the branch the repository is on (if not master/main)
 	static QByteArray branch(QString dir);
 
+    //Sets the Git exe override
+    static void setGitOverride(QString exe);
+
 protected:
-	static QString gitExe();
-	//Throws an exception after a command has failed
+    //Override for git executable (in case settings are not available).
+    static QString git_exe_override;
+    //Returns the GIT exe from the Settings or override.
+    static QString gitExe();
+    //Throws an exception after a command has failed
 	static void throwException(QProcess& process);
 
 	Git() = delete;

@@ -3,6 +3,8 @@
 #include "Exceptions.h"
 #include <QFileInfo>
 
+QString Git::git_exe_override = "";
+
 bool Git::isRepo(QString dir)
 {
 	return QFile::exists(dir + "/.git");
@@ -175,9 +177,15 @@ QByteArray Git::branch(QString dir)
 	return "";
 }
 
+void Git::setGitOverride(QString exe)
+{
+    git_exe_override = exe;
+}
+
 QString Git::gitExe()
 {
-	QString exe = Settings::string("git_exe", true);
+    QString exe = git_exe_override;
+    if (exe=="") exe = Settings::string("git_exe", true);
 	if (exe=="") THROW(InformationMissingException, "Git executable not found in settings!");
 
 	return exe;
