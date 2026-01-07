@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QProcess>
 #include <VersatileTextStream.h>
+#include <QProcessEnvironment>
 
 void Helper::randomInit()
 {
@@ -461,4 +462,9 @@ int Helper::executeCommand(QString command, QStringList args, QByteArrayList* ou
 	if (!success || process.exitStatus()!=QProcess::NormalExit) return -1;
 
 	return process.exitCode();
+}
+
+bool Helper::runningInQtCreator()
+{
+	return QProcessEnvironment::systemEnvironment().contains("QTDIR");
 }

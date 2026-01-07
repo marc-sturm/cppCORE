@@ -140,6 +140,9 @@ public:
 	///Executes a command using the given arguments. Returns -1 if the execution failed and the exit code otherwise. If output is set, it is filled with the output from STDOUT and STDERR.
 	static int executeCommand(QString command, QStringList args, QByteArrayList* output = nullptr);
 
+	///Returns if the application is running in QtCreator
+	static bool runningInQtCreator();
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;
