@@ -5,7 +5,7 @@
 #include "VersatileFile.h"
 
 //Text stream wrapper around VersatileFile, i.e. it returns QString instead of QByteArray.
-//Note: It is assumed that special caracters is encoded using UTF8 encoding.
+//Note: It is assumed that special caracters is encoded using UTF8 encoding. If UTF16 or UTF32 are detected, an exception is thrown.
 class CPPCORESHARED_EXPORT VersatileTextStream
 {
 public:
