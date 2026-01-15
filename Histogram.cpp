@@ -105,7 +105,7 @@ int Histogram::binIndex(double val, bool ignore_bounds_errors) const
 
 	int index = floor ( (val-min_) / (max_-min_) * bins_.size());
 
-    return BasicStatistics::bound(SIZE_TO_INT(index), SIZE_TO_INT(0), SIZE_TO_INT(bins_.size()-1));
+    return BasicStatistics::bound(static_cast<qsizetype>(index), static_cast<qsizetype>(0), static_cast<qsizetype>(bins_.size()-1));
 }
 
 

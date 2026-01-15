@@ -46,7 +46,21 @@ public:
 		double result = str.trimmed().toDouble(&ok);
 		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to double" + (line.isEmpty() ? "" : "  - line: " + line));
 		return result;
-	}   
+	}
+
+	template <typename T>
+	static QSet<T> listToSet(const QList<T>& list)
+	{
+		return QSet<T>(list.begin(), list.end());
+	}
+
+	template <typename T>
+	static QList<T> setToList(const QSet<T>& set, bool needs_sorting=false)
+	{
+		QList<T> list = QList<T>(set.begin(), set.end());
+		if (needs_sorting) std::sort(list.begin(), list.end());
+		return list;
+	}
 
 	///Returns an opened file pointer, or throws an error if it cannot be opened.
 	static QSharedPointer<QFile> openFileForReading(QString file_name, bool stdin_if_empty=false);

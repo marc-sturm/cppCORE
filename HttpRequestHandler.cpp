@@ -44,9 +44,7 @@ ServerReply HttpRequestHandler::head(QString url, const HttpHeaders& add_headers
 
     //request
 	QNetworkRequest request;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	request.setDecompressedSafetyCheckThreshold(-1);
-#endif
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
@@ -86,9 +84,7 @@ ServerReply HttpRequestHandler::get(QString url, const HttpHeaders& add_headers)
 {
     //request
 	QNetworkRequest request;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	request.setDecompressedSafetyCheckThreshold(-1);
-#endif
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
@@ -150,9 +146,7 @@ ServerReply HttpRequestHandler::put(QString url, const QByteArray& data, const H
 {
 	//request
 	QNetworkRequest request;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	request.setDecompressedSafetyCheckThreshold(-1);
-#endif
 	request.setUrl(url);
 	for(auto it=headers_.begin(); it!=headers_.end(); ++it)
 	{
@@ -192,9 +186,7 @@ ServerReply HttpRequestHandler::post(QString url, const QByteArray& data, const 
 {
     //request
     QNetworkRequest request;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	request.setDecompressedSafetyCheckThreshold(-1);
-#endif
 	request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {
@@ -233,9 +225,7 @@ ServerReply HttpRequestHandler::post(QString url, QHttpMultiPart* parts, const H
 {
     //request
 	QNetworkRequest request;
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	request.setDecompressedSafetyCheckThreshold(-1);
-#endif
     request.setUrl(url);
     for(auto it=headers_.begin(); it!=headers_.end(); ++it)
     {

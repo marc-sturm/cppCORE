@@ -235,13 +235,8 @@ bool Settings::contains(QString key)
 	}
 
 	//check that the value is not empty
-    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (var.metaType()==QVariant(QStringList()).metaType()) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
-        if (var.metaType()==QVariant(QMap<QString, QVariant>()).metaType()) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
-    #else
-        if (var.type()==QVariant::StringList) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
-        if (var.type()==QVariant::Map) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
-    #endif
+	if (var.metaType()==QVariant(QStringList()).metaType()) return var.toStringList().join("").trimmed()!=""; //special handling for QStringList
+	if (var.metaType()==QVariant(QMap<QString, QVariant>()).metaType()) return var.toMap().keys().join("").trimmed()!=""; //special handling for QMap
 
 	return var.toString().trimmed()!="";
 }

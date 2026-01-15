@@ -112,12 +112,12 @@ void Log::logMessage(LogLevel level, const QString& message)
 		if (level==LOG_ERROR || level==LOG_WARNING)
 		{
 			QTextStream stream(stderr);
-            stream << level_str << ": " << message << QT_ENDL;
+            stream << level_str << ": " << message << Qt::endl;
 		}
 		else
 		{
 			QTextStream stream(stdout);
-            stream << level_str << ": " << message << QT_ENDL;
+            stream << level_str << ": " << message << Qt::endl;
 		}
 	}
 	//FILE
@@ -131,7 +131,7 @@ void Log::logMessage(LogLevel level, const QString& message)
 		catch(Exception& e)
 		{
 			QTextStream stream(stderr);
-            stream << levelString(LOG_ERROR) << ": Could not write to log file " << fileName() << ": " << e.message() << QT_ENDL;
+            stream << levelString(LOG_ERROR) << ": Could not write to log file " << fileName() << ": " << e.message() << Qt::endl;
 
 			throw e;
 		}
