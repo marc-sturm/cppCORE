@@ -157,6 +157,10 @@ public:
 	///Returns if the application is running in QtCreator
 	static bool runningInQtCreator();
 
+	///Convert Date/Time to ISO date (without timezone). Uses the given separator of date and time.
+	static QByteArray toString(const QDateTime& datetime, char sep='T');
+
+
 protected:
 	///Constructor declared away.
 	Helper() = delete;

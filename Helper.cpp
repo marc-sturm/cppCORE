@@ -464,3 +464,10 @@ bool Helper::runningInQtCreator()
 {
 	return QProcessEnvironment::systemEnvironment().contains("QTDIR");
 }
+
+QByteArray Helper::toString(const QDateTime& datetime, char sep)
+{
+	QByteArray output = datetime.toString(Qt::ISODate).left(19).toUtf8();
+	if (sep!='T') output.replace('T', sep);
+	return output;
+}
