@@ -25,7 +25,6 @@ SOURCES += \
     Helper.cpp \
     BasicStatistics.cpp \
     FileWatcher.cpp \
-    LinePlot.cpp \
     VersatileFile.cpp \
     VersatileTextStream.cpp \
     WorkerBase.cpp \
@@ -50,7 +49,6 @@ HEADERS += ToolBase.h \
     Helper.h \
     BasicStatistics.h \
     FileWatcher.h \
-    LinePlot.h \
     VersatileFile.h \
     VersatileTextStream.h \
     WorkerBase.h \
