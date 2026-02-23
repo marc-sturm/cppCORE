@@ -30,7 +30,6 @@ SOURCES += \
     WorkerBase.cpp \
     ToolBase.cpp \
     TSVFileStream.cpp \
-    ScatterPlot.cpp \
     Histogram.cpp \
     SimpleCrypt.cpp \
     TsvFile.cpp \
@@ -52,7 +51,6 @@ HEADERS += ToolBase.h \
     VersatileTextStream.h \
     WorkerBase.h \
     TSVFileStream.h \
-    ScatterPlot.h \
     Histogram.h \
     SimpleCrypt.h \
     TsvFile.h \
