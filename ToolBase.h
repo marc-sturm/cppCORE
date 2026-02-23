@@ -2,7 +2,7 @@
 #define TOOLBASE_H
 
 #include "cppCORE_global.h"
-#include <QCoreApplication>
+#include <QApplication>
 #include <QStringList>
 #include <QVector>
 #include <QVariant>
@@ -11,7 +11,7 @@
 
 ///Base class for command-line tools that handles parameter parsing and uncaught exceptions
 class CPPCORESHARED_EXPORT ToolBase
-		: public QCoreApplication
+		: public QApplication
 {
 	Q_OBJECT
 

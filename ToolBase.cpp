@@ -7,11 +7,11 @@
 #include "VersatileFile.h"
 
 ToolBase::ToolBase(int& argc, char *argv[])
-	: QCoreApplication(argc, argv)
+	: QApplication(argc, argv)
 	, exit_event_loop_(true)
 	, exit_error_state_(false)
 {
-	QCoreApplication::setApplicationVersion(version());
+	QApplication::setApplicationVersion(version());
 }
 
 void ToolBase::setExitEventLoopAfterMain(bool exit_event_loop)
@@ -167,7 +167,7 @@ QStringList ToolBase::getInfileList(QString name) const
 
 bool ToolBase::parseCommandLine()
 {
-	QStringList args = QCoreApplication::arguments();
+	QStringList args = QApplication::arguments();
 
     //no arguments => show help if a mandatory parameter is present
     if (args.count()==1)
@@ -370,14 +370,14 @@ bool ToolBase::parseCommandLine()
 void ToolBase::printVersion() const
 {
 	QTextStream stream(stdout);
-    stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << Qt::endl;
+	stream << QApplication::applicationName() << " " << QApplication::applicationVersion() << Qt::endl;
     stream << Qt::endl;
 }
 
 void ToolBase::printChangelog() const
 {
 	QTextStream stream(stdout);
-    stream << QCoreApplication::applicationName() << " " << QCoreApplication::applicationVersion() << Qt::endl;
+	stream << QApplication::applicationName() << " " << QApplication::applicationVersion() << Qt::endl;
     stream << Qt::endl;
 
 	foreach(const ChangeLogEntry& e, changelog_)
@@ -399,7 +399,7 @@ void ToolBase::printHelp() const
     int offset = qMax(20, max_name + 5);
 
 	//print general info
-    stream << QCoreApplication::applicationName() + " (" + QCoreApplication::applicationVersion() + ")" << Qt::endl;
+	stream << QApplication::applicationName() + " (" + QApplication::applicationVersion() + ")" << Qt::endl;
     stream << "" << Qt::endl;
     stream << description_ << Qt::endl;
 	QStringList ext = description_extended_;
@@ -476,7 +476,7 @@ void ToolBase::printHelp() const
 
 void ToolBase::storeTDXml() const
 {
-	QString filename = QCoreApplication::applicationFilePath() + ".tdx";
+	QString filename = QApplication::applicationFilePath() + ".tdx";
 
 	//write to stream
 	QSharedPointer<QFile> out_file = Helper::openFileForWriting(filename);
@@ -484,7 +484,7 @@ void ToolBase::storeTDXml() const
     stream.setEncoding(QStringConverter::Utf8);    
     stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << Qt::endl;
     stream << "<TDX version=\"1\">" << Qt::endl;
-    stream << "  <Tool name=\"" << QCoreApplication::applicationName() << "\" version=\"" << QCoreApplication::applicationVersion() << "\">" << Qt::endl;
+	stream << "  <Tool name=\"" << QApplication::applicationName() << "\" version=\"" << QApplication::applicationVersion() << "\">" << Qt::endl;
     stream << "    <Description>" << description_ << "</Description>" << Qt::endl;
 	QStringList ext = description_extended_;
 	if (!ext.isEmpty())
@@ -583,7 +583,7 @@ void ToolBase::addParameter(const ToolBase::ParameterData& data)
 {
     if (parameterIndex(data.name)!=-1)
 	{
-        THROW(ProgrammingException, QCoreApplication::applicationName() + " parameter '" + data.name + "' declared twice!");
+		THROW(ProgrammingException, QApplication::applicationName() + " parameter '" + data.name + "' declared twice!");
 	}
 
     parameters_.append(data);
@@ -594,12 +594,12 @@ int ToolBase::checkParameterExists(QString name, ParameterType type) const
     int index = parameterIndex(name);
     if (index==-1)
 	{
-		THROW(ProgrammingException, QCoreApplication::applicationName() + " parameter '" + name + "' not declared, but used!");
+		THROW(ProgrammingException, QApplication::applicationName() + " parameter '" + name + "' not declared, but used!");
 	}
 
     if (parameters_[index].type!=type)
 	{
-        THROW(ProgrammingException, QCoreApplication::applicationName() + " parameter '" + name + "' is expected to have type '" + typeToString(type) + "', but has type '" + typeToString(parameters_[index].type) + "'!");
+		THROW(ProgrammingException, QApplication::applicationName() + " parameter '" + name + "' is expected to have type '" + typeToString(type) + "', but has type '" + typeToString(parameters_[index].type) + "'!");
 	}
 
 	return index;
@@ -714,12 +714,12 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 {
 	try
 	{
-		return QCoreApplication::notify(receiver, event);
+		return QApplication::notify(receiver, event);
 	}
 	catch(CommandLineParsingException& e)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << "Command line parsing exception: " << e.message() << Qt::endl;
         stream << "Call this tool with the argument '--help' for help." << Qt::endl;
 		exit(1);
@@ -727,14 +727,14 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(ToolFailedException& e)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << e.message() << Qt::endl;
 		exit(1);
 	}
 	catch(ProgrammingException& e)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << "Programming exception: " << e.message() << Qt::endl;
         stream << "Location             : " << e.file() << ":" << e.line() << Qt::endl;
         stream << "This should not happen, please report the error to the developers!" << Qt::endl;
@@ -743,7 +743,7 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(Exception& e)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << "Exception: " << e.message() << Qt::endl;
         stream << "Location : " << e.file() << ":" << e.line() << Qt::endl;
 		exit(1);
@@ -751,14 +751,14 @@ bool ToolBase::notify(QObject* receiver, QEvent* event)
 	catch(std::exception& e)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << "Exception: " << e.what() << Qt::endl;
 		exit(1);
 	}
 	catch(...)
 	{
 		QTextStream stream(stderr);
-        stream << QCoreApplication::applicationName() << " " << version() << Qt::endl;
+		stream << QApplication::applicationName() << " " << version() << Qt::endl;
         stream << "Unknown exception!" << Qt::endl;
 		exit(1);
 	}
