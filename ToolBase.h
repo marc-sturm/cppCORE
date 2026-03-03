@@ -73,7 +73,7 @@ private slots:
 
 private:
 	///Parameter type enumeration
-	enum ParameterType
+    enum class ParameterType
 		{
 		NONE,
 		FLAG,

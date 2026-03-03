@@ -60,19 +60,19 @@ void ToolBase::changeLog(int y, int m, int d, QString text)
 
 void ToolBase::addFlag(QString name, QString desc)
 {
-    ParameterData data(name, FLAG, desc, true, false);
+    ParameterData data(name, ParameterType::FLAG, desc, true, false);
     addParameter(data);
 }
 
 void ToolBase::addInt(QString name, QString desc, bool optional, int default_value)
 {
-    ParameterData data(name, INT, desc, optional, default_value);
+    ParameterData data(name, ParameterType::INT, desc, optional, default_value);
     addParameter(data);
 }
 
 void ToolBase::addFloat(QString name, QString desc, bool optional, double default_value)
 {
-    ParameterData data(name, FLOAT, desc, optional, default_value);
+    ParameterData data(name, ParameterType::FLOAT, desc, optional, default_value);
     addParameter(data);
 }
 
@@ -83,83 +83,83 @@ void ToolBase::addEnum(QString name, QString desc, bool optional, QStringList va
 		THROW(ProgrammingException, "Optional enum parameter '" + name + "' has invalid default value '" + default_value + "'. Valid are: '" + values.join(",") + "'!");
 	}
 
-    ParameterData data(name, ENUM, desc, optional, default_value);
+    ParameterData data(name, ParameterType::ENUM, desc, optional, default_value);
 	data.options.insert("values", values);
     addParameter(data);
 }
 
 void ToolBase::addString(QString name, QString desc, bool optional, QString default_value)
 {
-    ParameterData data(name, STRING, desc, optional, default_value);
+    ParameterData data(name, ParameterType::STRING, desc, optional, default_value);
     addParameter(data);
 }
 
 void ToolBase::addInfile(QString name, QString desc, bool optional, bool check_readable)
 {
-    ParameterData data(name, INFILE, desc, optional, "");
+    ParameterData data(name, ParameterType::INFILE, desc, optional, "");
 	data.options.insert("check_readable", check_readable);
     addParameter(data);
 }
 
 void ToolBase::addOutfile(QString name, QString desc, bool optional, bool check_writable)
 {
-    ParameterData data(name, OUTFILE, desc, optional, "");
+    ParameterData data(name, ParameterType::OUTFILE, desc, optional, "");
 	data.options.insert("check_writable", check_writable);
     addParameter(data);
 }
 
 void ToolBase::addInfileList(QString name, QString desc, bool optional, bool check_readable)
 {
-    ParameterData data(name, INFILELIST, desc, optional, "");
+    ParameterData data(name, ParameterType::INFILELIST, desc, optional, "");
 	data.options.insert("check_readable", check_readable);
     addParameter(data);
 }
 
 bool ToolBase::getFlag(QString name) const
 {
-    int index = checkParameterExists(name, FLAG);
+    int index = checkParameterExists(name, ParameterType::FLAG);
     return parameters_[index].value.toBool();
 }
 
 int ToolBase::getInt(QString name) const
 {
-    int index = checkParameterExists(name, INT);
+    int index = checkParameterExists(name, ParameterType::INT);
     return parameters_[index].value.toInt();
 }
 
 double ToolBase::getFloat(QString name) const
 {
-    int index = checkParameterExists(name, FLOAT);
+    int index = checkParameterExists(name, ParameterType::FLOAT);
     return parameters_[index].value.toDouble();
 }
 
 QString ToolBase::getString(QString name) const
 {
-    int index = checkParameterExists(name, STRING);
+    int index = checkParameterExists(name, ParameterType::STRING);
     return parameters_[index].value.toString();
 }
 
 QString ToolBase::getEnum(QString name) const
 {
-    int index = checkParameterExists(name, ENUM);
+    int index = checkParameterExists(name, ParameterType::ENUM);
     return parameters_[index].value.toString();
 }
 
 QString ToolBase::getInfile(QString name) const
 {
-    int index = checkParameterExists(name, INFILE);
+    int index = checkParameterExists(name, ParameterType::INFILE);
     return parameters_[index].value.toString();
 }
 
 QString ToolBase::getOutfile(QString name) const
 {
-    int index = checkParameterExists(name, OUTFILE);
+    int index = checkParameterExists(name, ParameterType::OUTFILE);
     return parameters_[index].value.toString();
 }
 
 QStringList ToolBase::getInfileList(QString name) const
 {
-    int index = checkParameterExists(name, INFILELIST);
+    int index = checkParameterExists(name, ParameterType::INFILELIST);
 	QStringList output = parameters_[index].value.toStringList();
 	if (output.count()==1 && output[0]=="") output.clear();
 	return output;
@@ -236,7 +236,7 @@ bool ToolBase::parseCommandLine()
         ParameterData& data = parameters_[index];
 
 		//error: parameter without argument
-		if (data.type!=FLAG && (i+1>=args.count() || (args[i+1]!="-" && args[i+1][0]=='-')))
+        if (data.type!=ParameterType::FLAG && (i+1>=args.count() || (args[i+1]!="-" && args[i+1][0]=='-')))
 		{
 			THROW(CommandLineParsingException, "Parameter '" + par + "' given without argument.");
 		}
@@ -248,12 +248,12 @@ bool ToolBase::parseCommandLine()
 		}
 
 		//FLAG
-		if (data.type==FLAG)
+        if (data.type==ParameterType::FLAG)
 		{
 			data.value = true;
 		}
 		//INT
-		else if (data.type==INT)
+        else if (data.type==ParameterType::INT)
 		{
 			++i;
 			bool ok = false;
@@ -264,7 +264,7 @@ bool ToolBase::parseCommandLine()
 			}
 		}
 		//FLOAT
-		else if (data.type==FLOAT)
+        else if (data.type==ParameterType::FLOAT)
 		{
 			++i;
 			bool ok = false;
@@ -275,7 +275,7 @@ bool ToolBase::parseCommandLine()
 			}
 		}
 		//ENUM
-		else if (data.type==ENUM)
+        else if (data.type==ParameterType::ENUM)
 		{
 			++i;
 			QStringList values = data.options["values"].toStringList();
@@ -286,13 +286,13 @@ bool ToolBase::parseCommandLine()
 			data.value = args[i];
 		}
 		//STRING
-		else if (data.type==STRING)
+        else if (data.type==ParameterType::STRING)
 		{
 			++i;
 			data.value = args[i];
 		}
 		//INFILE
-		else if (data.type==INFILE)
+        else if (data.type==ParameterType::INFILE)
 		{
 			++i;
 
@@ -307,7 +307,7 @@ bool ToolBase::parseCommandLine()
 			data.value = args[i];
 		}
 		//OUTFILE
-		else if (data.type==OUTFILE)
+        else if (data.type==ParameterType::OUTFILE)
 		{
 			++i;
 
@@ -322,7 +322,7 @@ bool ToolBase::parseCommandLine()
 			data.value = args[i];
 		}
 		//INFILELIST
-		else if (data.type==INFILELIST)
+        else if (data.type==ParameterType::INFILELIST)
 		{
 			QStringList files;
 			int j=i+1;
@@ -431,7 +431,7 @@ void ToolBase::printHelp() const
         stream << line_start.leftJustified(offset, ' ') << data.desc << Qt::endl;
 
 		//special handling of ENUM
-		if (data.type==ENUM)
+        if (data.type==ParameterType::ENUM)
 		{
             stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << Qt::endl;
 		}
@@ -457,7 +457,7 @@ void ToolBase::printHelp() const
         stream << QString(offset, ' ') << "Default value: '" << data.default_value.toString() << "'" << Qt::endl;
 
 		//special handling of ENUM
-		if (data.type==ENUM)
+        if (data.type==ParameterType::ENUM)
 		{
             stream << QString(offset, ' ') << "Valid: '" << data.options["values"].toStringList().join(',') + "'" << Qt::endl;
 		}
@@ -507,31 +507,31 @@ void ToolBase::storeTDXml() const
         stream << "      <Description>" << data.desc << "</Description>" << Qt::endl;
 		switch (data.type)
 		{
-			case STRING:
-			case INT:
-			case FLOAT:
+            case ParameterType::STRING:
+            case ParameterType::INT:
+            case ParameterType::FLOAT:
 				if (data.optional)
 				{
                     stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << Qt::endl;
 				}
 				break;
-			case INFILE:
-			case INFILELIST:
-			case OUTFILE:
+            case ParameterType::INFILE:
+            case ParameterType::INFILELIST:
+            case ParameterType::OUTFILE:
 				if (data.optional)
 				{
                     stream << "      <Optional />" << Qt::endl;
 				}
 				break;
-			case ENUM:
+            case ParameterType::ENUM:
                 stream << "      <Optional defaultValue=\"" << data.default_value.toString() << "\" />" << Qt::endl;
 				foreach(const QString& value, data.options["values"].toStringList())
 				{
                     stream << "      <Value>" << value << "</Value>" << Qt::endl;
 				}
 				break;
-			case FLAG:
-			case NONE:
+            case ParameterType::FLAG:
+            case ParameterType::NONE:
 				break;
 		}
         stream << "    </" << tag_name << ">" << Qt::endl;
@@ -612,39 +612,39 @@ void ToolBase::sortChangeLog()
 
 QString ToolBase::typeToString(ToolBase::ParameterType type) const
 {
-	if (type==NONE)
+    if (type==ParameterType::NONE)
 	{
 		return "NONE";
 	}
-	else if (type==FLAG)
+    else if (type==ParameterType::FLAG)
 	{
 		return "FLAG";
 	}
-	else if (type==INT)
+    else if (type==ParameterType::INT)
 	{
 		return "INT";
 	}
-	else if (type==FLOAT)
+    else if (type==ParameterType::FLOAT)
 	{
 		return "FLOAT";
 	}
-	else if (type==ENUM)
+    else if (type==ParameterType::ENUM)
 	{
 		return "ENUM";
 	}
-	else if (type==STRING)
+    else if (type==ParameterType::STRING)
 	{
 		return "STRING";
 	}
-	else if (type==INFILE)
+    else if (type==ParameterType::INFILE)
 	{
 		return "INFILE";
 	}
-	else if (type==OUTFILE)
+    else if (type==ParameterType::OUTFILE)
 	{
 		return "OUTFILE";
 	}
-	else if (type==INFILELIST)
+    else if (type==ParameterType::INFILELIST)
 	{
 		return "INFILELIST";
 	}
@@ -654,35 +654,35 @@ QString ToolBase::typeToString(ToolBase::ParameterType type) const
 
 QString ToolBase::typeToArgString(ToolBase::ParameterType type) const
 {
-	if (type==FLAG)
+    if (type==ParameterType::FLAG)
 	{
 		return "";
 	}
-	else if (type==INT)
+    else if (type==ParameterType::INT)
 	{
 		return "<int>";
 	}
-	else if (type==FLOAT)
+    else if (type==ParameterType::FLOAT)
 	{
 		return "<float>";
 	}
-	else if (type==ENUM)
+    else if (type==ParameterType::ENUM)
 	{
 		return "<enum>";
 	}
-	else if (type==STRING)
+    else if (type==ParameterType::STRING)
 	{
 		return "<string>";
 	}
-	else if (type==INFILE)
+    else if (type==ParameterType::INFILE)
 	{
 		return "<file>";
 	}
-	else if (type==OUTFILE)
+    else if (type==ParameterType::OUTFILE)
 	{
 		return "<file>";
 	}
-	else if (type==INFILELIST)
+    else if (type==ParameterType::INFILELIST)
 	{
 		return "<filelist>";
 	}
@@ -692,7 +692,7 @@ QString ToolBase::typeToArgString(ToolBase::ParameterType type) const
 
 ToolBase::ParameterData::ParameterData()
     : name()
-    , type(NONE)
+    , type(ParameterType::NONE)
 	, desc("Invalid uninitialized parameter")
 	, optional(false)
 	, default_value("Schwenker")
