@@ -38,8 +38,11 @@ public:
 	QStringList extractColumn(int c);
 	//Removes a column.
 	void removeColumn(int c);
+    //returns wheather a file is loaded
+    bool isValid() const;
 
 private:
+    QString filename_;
 	QStringList comments_;
 	QStringList headers_;
 	QList<QStringList> rows_;

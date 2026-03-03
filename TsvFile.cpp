@@ -173,6 +173,12 @@ void TsvFile::load(QString filename, bool use_string_hash)
 	}
 
 	hash_.clear();
+    filename_ = filename;
+}
+
+bool TsvFile::isValid() const
+{
+    return filename_ != "";
 }
 
 void TsvFile::store(QString filename) const
