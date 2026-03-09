@@ -29,22 +29,47 @@ public:
 	///check if the argument is a int/float (also returns false in case of extra whitespaces)
 	static bool isNumeric(QByteArray str);
 
-	///Converts a QString/QByteArray to an integer. Throws an error if the conversion fails.
+	///Converts a QString/QByteArray/QByteArrayView to an integer. Throws an error if the conversion fails.
 	template <typename T>
 	static int toInt(const T& str, const QString& name = "string", const QString& line = "")
 	{
 		bool ok = false;
 		int result = str.trimmed().toInt(&ok);
-		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to integer" + (line.isEmpty() ? "" : "  - line: " + line));
+		if (!ok)
+		{
+			QString value;
+			if constexpr (std::is_same_v<T, QByteArrayView>)
+			{
+				value = QString::fromUtf8(str);
+			}
+			else
+			{
+				value = str;
+			}
+			THROW(ArgumentException, "Could not convert " + name + " '" + value + "' to integer" + (line.isEmpty() ? "" : "  - line: " + line));
+		}
 		return result;
+
 	}
-	///Converts a QString/QByteArray to a double. Throws an error if the conversion fails.
+	///Converts a QString/QByteArray/QByteArrayView to a double. Throws an error if the conversion fails.
 	template <typename T>
 	static double toDouble(const T& str, const QString& name = "string", const QString& line = "")
 	{
 		bool ok = false;
 		double result = str.trimmed().toDouble(&ok);
-		if (!ok) THROW(ArgumentException, "Could not convert " + name + " '" + str + "' to double" + (line.isEmpty() ? "" : "  - line: " + line));
+		if (!ok)
+		{
+			QString value;
+			if constexpr (std::is_same_v<T, QByteArrayView>)
+			{
+				value = QString::fromUtf8(str);
+			}
+			else
+			{
+				value = str;
+			}
+			THROW(ArgumentException, "Could not convert " + name + " '" + value + "' to double" + (line.isEmpty() ? "" : "  - line: " + line));
+		}
 		return result;
 	}
 
