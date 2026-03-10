@@ -30,7 +30,6 @@ SOURCES += \
     WorkerBase.cpp \
     ToolBase.cpp \
     TSVFileStream.cpp \
-    Histogram.cpp \
     SimpleCrypt.cpp \
     TsvFile.cpp \
     Git.cpp
@@ -51,7 +50,6 @@ HEADERS += ToolBase.h \
     VersatileTextStream.h \
     WorkerBase.h \
     TSVFileStream.h \
-    Histogram.h \
     SimpleCrypt.h \
     TsvFile.h \
     Git.h
