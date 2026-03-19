@@ -15,11 +15,15 @@ CRYPT_KEY= \\\"$$cat("CRYPT_KEY.txt", lines)\\\"
 DEFINES += "CRYPT_KEY=$$CRYPT_KEY"
 
 SOURCES += \
+    BarPlot.cpp \
     CustomProxyService.cpp \
     Exceptions.cpp \
+    Histogram.cpp \
     HttpRequestHandler.cpp \
+    LinePlot.cpp \
     LoggingWorker.cpp \
     ProxyDataService.cpp \
+    ScatterPlot.cpp \
     Settings.cpp \
     Log.cpp \
     Helper.cpp \
@@ -35,12 +39,16 @@ SOURCES += \
     Git.cpp
 
 HEADERS += ToolBase.h \
+    BarPlot.h \
     CustomProxyService.h \
     Exceptions.h \
     GzipStreamDecompressor.h \
+    Histogram.h \
     HttpRequestHandler.h \
+    LinePlot.h \
     LoggingWorker.h \
     ProxyDataService.h \
+    ScatterPlot.h \
     Settings.h \
     Log.h \
     Helper.h \
