@@ -11,7 +11,7 @@ void PlotUtils::saveAsPng(QString filename, int w, int h)
 {
 	// image rendering
 	QChartView chartView(chart_);
-	chartView.resize(600, 400);
+	chartView.resize(w, h);
 
 	// antialiasing for smoother lines and text
 	chartView.setRenderHint(QPainter::Antialiasing, true);

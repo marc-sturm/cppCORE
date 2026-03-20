@@ -6,6 +6,7 @@
 
 #include "Exceptions.h"
 #include "BasicStatistics.h"
+#include "PlotUtils.h"
 #include <QStringList>
 #include <QApplication>
 
@@ -290,22 +291,25 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	chart->setAxisX(axisCat, series);
 
 
-	// render
-	QChartView chartView(chart);
-	chartView.resize(1000, 400); // 10x4 inches @ 100 dpi
+	PlotUtils* plot_utils = new PlotUtils(chart);
+	plot_utils->saveAsPng(filename, 1000, 400);
 
-	chartView.setRenderHint(QPainter::Antialiasing, true);
-	chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	// // render
+	// QChartView chartView(chart);
+	// chartView.resize(1000, 400); // 10x4 inches @ 100 dpi
 
-	QApplication::processEvents();
-	QPixmap pixmap = chartView.grab();
+	// chartView.setRenderHint(QPainter::Antialiasing, true);
+	// chartView.setRenderHint(QPainter::TextAntialiasing, true);
+	// chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-	if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	{
-		THROW(ProgrammingException, "Could not save histogram to file: " + filename);
-	}
-	delete chart;
+	// QApplication::processEvents();
+	// QPixmap pixmap = chartView.grab();
+
+	// if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
+	// {
+	// 	THROW(ProgrammingException, "Could not save histogram to file: " + filename);
+	// }
+	// delete chart;
 }
 
 void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel)
@@ -425,23 +429,24 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		}
 	}
 
+	PlotUtils* plot_utils = new PlotUtils(chart);
+	plot_utils->saveAsPng(filename, 1000, 400);
+	// // render
+	// QChartView chartView(chart);
+	// chartView.resize(1000, 400);
 
-	// render
-	QChartView chartView(chart);
-	chartView.resize(1000, 400);
+	// chartView.setRenderHint(QPainter::Antialiasing, true);
+	// chartView.setRenderHint(QPainter::TextAntialiasing, true);
+	// chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-	chartView.setRenderHint(QPainter::Antialiasing, true);
-	chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	// QApplication::processEvents();
+	// QPixmap pixmap = chartView.grab();
 
-	QApplication::processEvents();
-	QPixmap pixmap = chartView.grab();
-
-	if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	{
-		THROW(ProgrammingException, "Could not save bar plot to file: " + filename);
-	}
-	delete chart;
+	// if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
+	// {
+	// 	THROW(ProgrammingException, "Could not save bar plot to file: " + filename);
+	// }
+	// delete chart;
 }
 
 void Histogram::setYLabel(QString ylabel)
