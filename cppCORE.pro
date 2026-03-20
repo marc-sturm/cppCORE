@@ -22,6 +22,7 @@ SOURCES += \
     HttpRequestHandler.cpp \
     LinePlot.cpp \
     LoggingWorker.cpp \
+    PlotUtils.cpp \
     ProxyDataService.cpp \
     ScatterPlot.cpp \
     Settings.cpp \
@@ -47,6 +48,7 @@ HEADERS += ToolBase.h \
     HttpRequestHandler.h \
     LinePlot.h \
     LoggingWorker.h \
+    PlotUtils.h \
     ProxyDataService.h \
     ScatterPlot.h \
     Settings.h \
