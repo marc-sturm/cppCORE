@@ -218,98 +218,73 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 
 	// if(!ylabel_.isEmpty()) chart->setTitle(ylabel_);
 
-	// ---- X axis ----
-	QAbstractAxis *axisX;
+	// X axis
+	QAbstractAxis *axis_x;
 
 	if(x_log_scale)
 	{
-		QLogValueAxis *logAxis = new QLogValueAxis();
-		logAxis->setBase(10);
-		logAxis->setMinorTickCount(-1);
+		QLogValueAxis *log_axis = new QLogValueAxis();
+		log_axis->setBase(10);
+		log_axis->setMinorTickCount(-1);
 
 		if(x_min == 0.0) x_min += min_offset;
-		logAxis->setRange(x_min, max());
-
-		axisX = logAxis;
+		log_axis->setRange(x_min, max());
+		axis_x = log_axis;
 	}
 	else
 	{
-		QValueAxis *valueAxis = new QValueAxis();
-		valueAxis->setRange(x_min, max());
-
-		axisX = valueAxis;
+		QValueAxis *value_axis = new QValueAxis();
+		value_axis->setRange(x_min, max());
+		axis_x = value_axis;
 	}
 
 	// if(!xlabel_.isEmpty()) axisX->setTitleText(xlabel_);
 
-	chart->addAxis(axisX, Qt::AlignBottom);
-	series->attachAxis(axisX);
+	chart->addAxis(axis_x, Qt::AlignBottom);
+	series->attachAxis(axis_x);
 
-
-	// ---- Y axis ----
-	QAbstractAxis *axisY;
-
+	QAbstractAxis *axis_y;
 	if(y_log_scale)
 	{
-		QLogValueAxis *logAxis = new QLogValueAxis();
-		logAxis->setBase(10);
+		QLogValueAxis *log_axis = new QLogValueAxis();
+		log_axis->setBase(10);
 
 		if(y_min == 0.0) y_min += min_offset;
-		logAxis->setRange(y_min, maxValue() + 0.2 * maxValue());
+		log_axis->setRange(y_min, maxValue() + 0.2 * maxValue());
 
-		axisY = logAxis;
+		axis_y = log_axis;
 	}
 	else
 	{
-		QValueAxis *valueAxis = new QValueAxis();
-		valueAxis->setRange(y_min, maxValue() + 0.2 * maxValue());
-		axisY = valueAxis;
+		QValueAxis *value_axis = new QValueAxis();
+		value_axis->setRange(y_min, maxValue() + 0.2 * maxValue());
+		axis_y = value_axis;
 	}
 
+	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
 
-	if (!ylabel_.isEmpty())
-		axisY->setTitleText(ylabel_);
-
-	chart->addAxis(axisY, Qt::AlignLeft);
-	series->attachAxis(axisY);
+	chart->addAxis(axis_y, Qt::AlignLeft);
+	series->attachAxis(axis_y);
 
 
-	// ---- X labels (bins) ----
+	// X labels (bins)
 	QStringList categories;
 	for(double val : x)
 	{
 		categories << QString::number(static_cast<int>(std::round(val)));
 	}
 
-	QBarCategoryAxis *axisCat = new QBarCategoryAxis();
-	axisCat->append(categories);
-	if (!xlabel_.isEmpty()) axisCat->setTitleText(xlabel_);
+	QBarCategoryAxis *axis_cat = new QBarCategoryAxis();
+	axis_cat->append(categories);
+	if (!xlabel_.isEmpty()) axis_cat->setTitleText(xlabel_);
 
 	// QFont font = axisCat->labelsFont();
 	// font.setPointSize(12);   // change font size
 	// axisCat->setLabelsFont(font);
-	chart->setAxisX(axisCat, series);
-
+	series->attachAxis(axis_cat);
 
 	PlotUtils* plot_utils = new PlotUtils(chart);
 	plot_utils->saveAsPng(filename, 1000, 400);
-
-	// // render
-	// QChartView chartView(chart);
-	// chartView.resize(1000, 400); // 10x4 inches @ 100 dpi
-
-	// chartView.setRenderHint(QPainter::Antialiasing, true);
-	// chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	// chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-	// QApplication::processEvents();
-	// QPixmap pixmap = chartView.grab();
-
-	// if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	// {
-	// 	THROW(ProgrammingException, "Could not save histogram to file: " + filename);
-	// }
-	// delete chart;
 }
 
 void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel)
@@ -325,14 +300,14 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	//check that all histograms have the same bins and labels
 	double min = 0;
 	double max = 0;
-	double minValue = 0;
-	double maxValue = 0;
+	double min_value = 0;
+	double max_value = 0;
 	foreach(Histogram h, histograms)
 	{
 		if(min > h.min()) min = h.min();
 		if(max < h.max()) max = h.max();
-		if(minValue > h.minValue())	minValue = h.minValue();
-		if(maxValue < h.maxValue())	maxValue = h.maxValue();
+		if(min_value > h.minValue()) min_value = h.minValue();
+		if(max_value < h.maxValue()) max_value = h.maxValue();
 	}
 
 	QChart* chart = new QChart();
@@ -346,22 +321,20 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		{
 			int hue = (i * 360 / n);  // evenly spaced hues
 			QColor color = QColor::fromHsv(hue, 200, 230);
-
 			histograms[i].setColor(color.name());
 		}
 	}
 
-	QValueAxis *axisX = new QValueAxis();
-	axisX->setRange(0, 1);
-	if (!xlabel.isEmpty()) axisX->setTitleText(xlabel);
+	QValueAxis *axis_x = new QValueAxis();
+	axis_x->setRange(0, 1);
+	if (!xlabel.isEmpty()) axis_x->setTitleText(xlabel);
 
-	QValueAxis *axisY = new QValueAxis();
-	axisY->setRange(minValue, maxValue * 1.1);
-	if (!ylabel.isEmpty()) axisY->setTitleText(ylabel);
+	QValueAxis *axis_y = new QValueAxis();
+	axis_y->setRange(min_value, max_value * 1.1);
+	if (!ylabel.isEmpty()) axis_y->setTitleText(ylabel);
 
-	chart->addAxis(axisX, Qt::AlignBottom);
-	chart->addAxis(axisY, Qt::AlignLeft);
-
+	chart->addAxis(axis_x, Qt::AlignBottom);
+	chart->addAxis(axis_y, Qt::AlignLeft);
 
 	foreach (Histogram h, histograms)
 	{
@@ -393,8 +366,8 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		area->setBorderColor(bar_color.darker());
 
 		chart->addSeries(area);
-		area->attachAxis(axisX);
-		area->attachAxis(axisY);
+		area->attachAxis(axis_x);
+		area->attachAxis(axis_y);
 	}
 
 	// a hack to hide zero-height bars, which are drawn on the top of the x axis
@@ -409,12 +382,12 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	QAreaSeries *area_x = new QAreaSeries(upper_x, lower_x);
 	area_x->setName("x_axis");
 
-	QColor x_color(axisX->gridLineColor());
+	QColor x_color(axis_x->gridLineColor());
 	area_x->setColor(x_color);
 	area_x->setBorderColor(x_color);
 	chart->addSeries(area_x);
-	area_x->attachAxis(axisX);
-	area_x->attachAxis(axisY);
+	area_x->attachAxis(axis_x);
+	area_x->attachAxis(axis_y);
 
 	for (QAbstractSeries* s : chart->series())
 	{
@@ -431,22 +404,6 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 
 	PlotUtils* plot_utils = new PlotUtils(chart);
 	plot_utils->saveAsPng(filename, 1000, 400);
-	// // render
-	// QChartView chartView(chart);
-	// chartView.resize(1000, 400);
-
-	// chartView.setRenderHint(QPainter::Antialiasing, true);
-	// chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	// chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-	// QApplication::processEvents();
-	// QPixmap pixmap = chartView.grab();
-
-	// if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	// {
-	// 	THROW(ProgrammingException, "Could not save bar plot to file: " + filename);
-	// }
-	// delete chart;
 }
 
 void Histogram::setYLabel(QString ylabel)
