@@ -28,6 +28,7 @@ Histogram::Histogram(double min, double max, double bin_size)
 	}
 
 	bins_.resize(ceil((max_-min_)/bin_size_));
+	qputenv("QT_QPA_PLATFORM", "offscreen");
 }
 
 void Histogram::inc(double val, bool ignore_bounds_errors)
@@ -189,12 +190,12 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	QBarSet *set = new QBarSet("histogram");
 
 	// the code needs an instance of GUI app to work, we make sure it will work even without one
-	qputenv("QT_QPA_PLATFORM", "offscreen");
-	QCoreApplication* app = QCoreApplication::instance();
-	static int argc = 1;
-	static char arg0[] = "test";
-	static char* argv[] = { arg0, nullptr };
-	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
+	// qputenv("QT_QPA_PLATFORM", "offscreen");
+	// QCoreApplication* app = QCoreApplication::instance();
+	// static int argc = 1;
+	// static char arg0[] = "test";
+	// static char* argv[] = { arg0, nullptr };
+	// if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 
 	double y_min = minValue();
 	double x_min = min();
@@ -290,12 +291,12 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel)
 {
 	// the code needs an instance of GUI app to work, we make sure it will work even without one
-	qputenv("QT_QPA_PLATFORM", "offscreen");
-	QCoreApplication* app = QCoreApplication::instance();
-	static int argc = 1;
-	static char arg0[] = "test";
-	static char* argv[] = { arg0, nullptr };
-	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
+	// qputenv("QT_QPA_PLATFORM", "offscreen");
+	// QCoreApplication* app = QCoreApplication::instance();
+	// static int argc = 1;
+	// static char arg0[] = "test";
+	// static char* argv[] = { arg0, nullptr };
+	// if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 
 	//check that all histograms have the same bins and labels
 	double min = 0;

@@ -2,6 +2,7 @@
 #include "Exceptions.h"
 #include "Log.h"
 #include "BasicStatistics.h"
+#include "PlotUtils.h"
 #include <QStringList>
 #include <limits>
 #include <QApplication>
@@ -11,6 +12,7 @@ ScatterPlot::ScatterPlot()
 	, xrange_set_(false)
 	, yscale_log_(false)
 {
+	qputenv("QT_QPA_PLATFORM", "offscreen");
 }
 
 void ScatterPlot::setValues(const QList<std::pair<double,double>>& values, const QList<QString>& colors)
@@ -63,12 +65,12 @@ void ScatterPlot::addVLine(double x)
 void ScatterPlot::store(QString filename)
 {
 	// the code needs an instance of GUI app to work, we make sure it will work even without one
-	qputenv("QT_QPA_PLATFORM", "offscreen");
-	QCoreApplication* app = QCoreApplication::instance();
-	static int argc = 1;
-	static char arg0[] = "test";
-	static char* argv[] = { arg0, nullptr };
-	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
+	// qputenv("QT_QPA_PLATFORM", "offscreen");
+	// QCoreApplication* app = QCoreApplication::instance();
+	// static int argc = 1;
+	// static char arg0[] = "test";
+	// static char* argv[] = { arg0, nullptr };
+	// if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 
 	if (!yrange_set_ && !points_.isEmpty())
 	{
@@ -155,15 +157,15 @@ void ScatterPlot::store(QString filename)
 
 	if (yscale_log_)
 	{
-		auto* logAxis = new QLogValueAxis();
-		logAxis->setTitleText(ylabel_);
-		axis_y = logAxis;
+		auto* log_axis = new QLogValueAxis();
+		log_axis->setTitleText(ylabel_);
+		axis_y = log_axis;
 	}
 	else
 	{
-		auto* valAxis = new QValueAxis();
-		valAxis->setTitleText(ylabel_);
-		axis_y = valAxis;
+		auto* val_axis = new QValueAxis();
+		val_axis->setTitleText(ylabel_);
+		axis_y = val_axis;
 	}
 
 	chart->addAxis(axis_x, Qt::AlignBottom);
@@ -184,26 +186,15 @@ void ScatterPlot::store(QString filename)
 	if (BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
 	{
 		if (yscale_log_)
+		{
 			static_cast<QLogValueAxis*>(axis_y)->setRange(ymin_, ymax_);
+		}
 		else
+		{
 			static_cast<QValueAxis*>(axis_y)->setRange(ymin_, ymax_);
+		}
 	}
 
-	// image rendering
-	QChartView chartView(chart);
-	chartView.resize(600, 400);
-
-	// antialiasing for smoother lines and text
-	chartView.setRenderHint(QPainter::Antialiasing, true);
-	chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-	QApplication::processEvents();
-	QPixmap pixmap = chartView.grab();
-
-	if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	{
-		THROW(ProgrammingException, "Could not save bar plot to file: " + filename);
-	}
-	delete chart;
+	PlotUtils* plot_utils = new PlotUtils(chart);
+	plot_utils->saveAsPng(filename, 600, 400);
 }

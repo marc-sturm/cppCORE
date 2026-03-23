@@ -2,6 +2,7 @@
 #include "Exceptions.h"
 #include "Log.h"
 #include "BasicStatistics.h"
+#include "PlotUtils.h"
 #include <QStringList>
 #include <limits>
 #include <QApplication>
@@ -9,6 +10,7 @@
 LinePlot::LinePlot()
 	: yrange_set_(false)
 {
+	qputenv("QT_QPA_PLATFORM", "offscreen");
 }
 
 void LinePlot::addLine(const QVector<double>& values, QString label)
@@ -78,27 +80,27 @@ void LinePlot::store(QString filename)
 	}
 
 	// the code needs an instance of GUI app to work, we make sure it will work even without one
-	qputenv("QT_QPA_PLATFORM", "offscreen");
-	QCoreApplication* app = QCoreApplication::instance();
-	static int argc = 1;
-	static char arg0[] = "test";
-	static char* argv[] = { arg0, nullptr };
-	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
+	// qputenv("QT_QPA_PLATFORM", "offscreen");
+	// QCoreApplication* app = QCoreApplication::instance();
+	// static int argc = 1;
+	// static char arg0[] = "test";
+	// static char* argv[] = { arg0, nullptr };
+	// if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 
 	QChart* chart = new QChart();
 
 	// create axes
-	QValueAxis* axisX = new QValueAxis();
-	if (!xlabel_.isEmpty()) axisX->setTitleText(xlabel_);
-	chart->addAxis(axisX, Qt::AlignBottom);
+	QValueAxis* axis_x = new QValueAxis();
+	if (!xlabel_.isEmpty()) axis_x->setTitleText(xlabel_);
+	chart->addAxis(axis_x, Qt::AlignBottom);
 
-	QValueAxis* axisY = new QValueAxis();
-	if (!ylabel_.isEmpty()) axisY->setTitleText(ylabel_);
+	QValueAxis* axis_y = new QValueAxis();
+	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
 	if (BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
 	{
-		axisY->setRange(ymin_, ymax_);
+		axis_y->setRange(ymin_, ymax_);
 	}
-	chart->addAxis(axisY, Qt::AlignLeft);
+	chart->addAxis(axis_y, Qt::AlignLeft);
 
 	// series of data points
 	for (const PlotLine& line : lines_)
@@ -114,8 +116,8 @@ void LinePlot::store(QString filename)
 		}
 
 		chart->addSeries(series);
-		series->attachAxis(axisX);
-		series->attachAxis(axisY);
+		series->attachAxis(axis_x);
+		series->attachAxis(axis_y);
 
 		// improves line smoothness (optional) to look very close to matplotlib
 		QPen pen = series->pen();
@@ -144,23 +146,8 @@ void LinePlot::store(QString filename)
 		chart->legend()->setFont(legendFont);
 	}
 
-	// image rendering
-	QChartView chartView(chart);
-	chartView.resize(600, 400);
-
-	// antialiasing for smoother lines and text
-	chartView.setRenderHint(QPainter::Antialiasing, true);
-	chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-	QApplication::processEvents();
-	QPixmap pixmap = chartView.grab();
-
-	if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	{
-		THROW(ProgrammingException, "Could not save plot to file: " + filename);
-	}
-	delete chart;
+	PlotUtils* plot_utils = new PlotUtils(chart);
+	plot_utils->saveAsPng(filename, 600, 400);
 }
 
 

@@ -7,11 +7,13 @@
 #include <limits>
 #include <QStandardPaths>
 #include "Settings.h"
+#include "PlotUtils.h"
 
 #include <QApplication>
 
 BarPlot::BarPlot()
 {
+	qputenv("QT_QPA_PLATFORM", "offscreen");
 }
 
 void BarPlot::setValues(const QList<int>& values, const QList<QString>& labels, const QList<QString>& colors)
@@ -67,12 +69,12 @@ void BarPlot::store(QString filename)
 	if (bars_.isEmpty()) return;
 
 	// the code needs an instance of GUI app to work, we make sure it will work even without one
-	qputenv("QT_QPA_PLATFORM", "offscreen");
-	QCoreApplication* app = QCoreApplication::instance();
-	static int argc = 1;
-	static char arg0[] = "test";
-	static char* argv[] = { arg0, nullptr };
-	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
+	// qputenv("QT_QPA_PLATFORM", "offscreen");
+	// QCoreApplication* app = QCoreApplication::instance();
+	// static int argc = 1;
+	// static char arg0[] = "test";
+	// static char* argv[] = { arg0, nullptr };
+	// if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 
 	QChart* chart = new QChart();
 	QBarSeries* series = new QBarSeries();
@@ -103,7 +105,7 @@ void BarPlot::store(QString filename)
 	chart->addSeries(series);
 
 	// X axis categories
-	QBarCategoryAxis* axisX = new QBarCategoryAxis();
+	QBarCategoryAxis* axis_x = new QBarCategoryAxis();
 	QStringList categories;
 	if (!labels_.isEmpty() && labels_.size() == bars_.size())
 	{
@@ -123,48 +125,33 @@ void BarPlot::store(QString filename)
 
 	if (is_legend_visible_)
 	{
-		axisX->append(QStringList(""));
+		axis_x->append(QStringList(""));
 	}
 	else
 	{
-		axisX->append(categories);
-		if (!xlabel_.isEmpty()) axisX->setTitleText(xlabel_);
-		axisX->setLabelsAngle(-90);
+		axis_x->append(categories);
+		if (!xlabel_.isEmpty()) axis_x->setTitleText(xlabel_);
+		axis_x->setLabelsAngle(-90);
 	}
 
-	chart->addAxis(axisX, Qt::AlignBottom);
-	series->attachAxis(axisX);
+	chart->addAxis(axis_x, Qt::AlignBottom);
+	series->attachAxis(axis_x);
 
 	// Y axis
-	QValueAxis* axisY = new QValueAxis();
-	if (!ylabel_.isEmpty()) axisY->setTitleText(ylabel_);
+	QValueAxis* axis_y = new QValueAxis();
+	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
 
 	if (BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
 	{
-		axisY->setRange(ymin_, ymax_);
+		axis_y->setRange(ymin_, ymax_);
 	}
 
-	chart->addAxis(axisY, Qt::AlignLeft);
-	series->attachAxis(axisY);
+	chart->addAxis(axis_y, Qt::AlignLeft);
+	series->attachAxis(axis_y);
 
-	axisX->setGridLineVisible(false);
-	axisY->setGridLineVisible(false);
+	axis_x->setGridLineVisible(false);
+	axis_y->setGridLineVisible(false);
 
-	// render
-	QChartView chartView(chart);
-	chartView.resize(1000, 400);
-
-	// antialiasing for smoother lines and text
-	chartView.setRenderHint(QPainter::Antialiasing, true);
-	chartView.setRenderHint(QPainter::TextAntialiasing, true);
-	chartView.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-	QApplication::processEvents();
-	QPixmap pixmap = chartView.grab();
-
-	if (!pixmap.save(filename.replace("\\", "/"), "PNG"))
-	{
-		THROW(ProgrammingException, "Could not save bar plot to file: " + filename);
-	}
-	delete chart;
+	PlotUtils* plot_utils = new PlotUtils(chart);
+	plot_utils->saveAsPng(filename, 1000, 400);
 }
