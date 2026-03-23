@@ -11,6 +11,11 @@ LinePlot::LinePlot()
 	: yrange_set_(false)
 {
 	qputenv("QT_QPA_PLATFORM", "offscreen");
+	QCoreApplication* app = QCoreApplication::instance();
+	static int argc = 1;
+	static char arg0[] = "test";
+	static char* argv[] = { arg0, nullptr };
+	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 }
 
 void LinePlot::addLine(const QVector<double>& values, QString label)

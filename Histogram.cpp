@@ -29,6 +29,11 @@ Histogram::Histogram(double min, double max, double bin_size)
 
 	bins_.resize(ceil((max_-min_)/bin_size_));
 	qputenv("QT_QPA_PLATFORM", "offscreen");
+	QCoreApplication* app = QCoreApplication::instance();
+	static int argc = 1;
+	static char arg0[] = "test";
+	static char* argv[] = { arg0, nullptr };
+	if (!qobject_cast<QApplication*>(app)) new QApplication(argc, argv);
 }
 
 void Histogram::inc(double val, bool ignore_bounds_errors)
