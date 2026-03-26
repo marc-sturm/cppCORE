@@ -336,19 +336,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		QVector<double> x = h.xCoords();
 		QVector<double> y = h.yCoords();
 
-		// baseline
-		// lower->append(x.first(), 0);
-		// upper->append(x.first(), 0);
-
-		// for (int i = 0; i < y.size(); ++i)
-		// {
-		// 	upper->append(x[i], y[i]);
-		// 	upper->append(x[i+1], y[i]);
-		// 	lower->append(x[i+1], 0);
-		// }
-
-		// upper->append(x.last(), 0);
-
+		if (x.size() != y.size() + 1) continue;
 
 		upper->append(x[0], 0);
 		for (int i = 0; i < y.size(); ++i)
@@ -377,36 +365,36 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	}
 
 	// a hack to hide zero-height bars, which are drawn on the top of the x axis
-	QLineSeries *upper_x = new QLineSeries();
-	QLineSeries *lower_x = new QLineSeries();
+	// QLineSeries *upper_x = new QLineSeries();
+	// QLineSeries *lower_x = new QLineSeries();
 
-	lower_x->append(0, 0);
-	upper_x->append(1, 0);
-	lower_x->append(1, 0);
-	upper_x->append(1, 0);
+	// lower_x->append(0, 0);
+	// upper_x->append(1, 0);
+	// lower_x->append(1, 0);
+	// upper_x->append(1, 0);
 
-	QAreaSeries *area_x = new QAreaSeries(upper_x, lower_x);
-	area_x->setName("x_axis");
+	// QAreaSeries *area_x = new QAreaSeries(upper_x, lower_x);
+	// area_x->setName("x_axis");
 
-	QColor x_color(axis_x->gridLineColor());
-	area_x->setColor(x_color);
-	area_x->setBorderColor(x_color);
-	chart->addSeries(area_x);
-	area_x->attachAxis(axis_x);
-	area_x->attachAxis(axis_y);
+	// QColor x_color(axis_x->gridLineColor());
+	// area_x->setColor(x_color);
+	// area_x->setBorderColor(x_color);
+	// chart->addSeries(area_x);
+	// area_x->attachAxis(axis_x);
+	// area_x->attachAxis(axis_y);
 
-	for (QAbstractSeries* s : chart->series())
-	{
-		QAreaSeries* area = qobject_cast<QAreaSeries*>(s);
-		if (!area) continue;
+	// for (QAbstractSeries* s : chart->series())
+	// {
+	// 	QAreaSeries* area = qobject_cast<QAreaSeries*>(s);
+	// 	if (!area) continue;
 
-		if (area->name() == "x_axis")
-		{
-			auto markers = chart->legend()->markers(area);
-			for (auto m : markers)
-				m->setVisible(false);
-		}
-	}
+	// 	if (area->name() == "x_axis")
+	// 	{
+	// 		auto markers = chart->legend()->markers(area);
+	// 		for (auto m : markers)
+	// 			m->setVisible(false);
+	// 	}
+	// }
 
 	plot_utils->saveAsPng(filename, 1000, 400);
 }
