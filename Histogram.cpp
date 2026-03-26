@@ -318,7 +318,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	}
 
 	QValueAxis *axis_x = new QValueAxis();
-	axis_x->setRange(0, 1);
+	axis_x->setRange(min, max);
 	if (!xlabel.isEmpty()) axis_x->setTitleText(xlabel);
 
 	QValueAxis *axis_y = new QValueAxis();
@@ -340,14 +340,26 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		// lower->append(x.first(), 0);
 		// upper->append(x.first(), 0);
 
+		// for (int i = 0; i < y.size(); ++i)
+		// {
+		// 	upper->append(x[i], y[i]);
+		// 	upper->append(x[i+1], y[i]);
+		// 	lower->append(x[i+1], 0);
+		// }
+
+		// upper->append(x.last(), 0);
+
+
+		upper->append(x[0], 0);
 		for (int i = 0; i < y.size(); ++i)
 		{
 			upper->append(x[i], y[i]);
 			upper->append(x[i+1], y[i]);
-			lower->append(x[i+1], 0);
 		}
+		upper->append(x.last(), 0);
 
-		// upper->append(x.last(), 0);
+		lower->append(x[0], 0);
+		lower->append(x.last(), 0);
 
 		QAreaSeries *area = new QAreaSeries(upper, lower);
 		area->setName(h.label_);
@@ -357,6 +369,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		area->setColor(bar_color);
 		// area->setBorderColor(bar_color.darker());
 		area->setBorderColor(Qt::blue);
+
 
 		chart->addSeries(area);
 		area->attachAxis(axis_x);
