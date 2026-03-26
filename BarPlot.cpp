@@ -74,35 +74,10 @@ void BarPlot::store(QString filename)
 
 	PlotUtils* plot_utils = new PlotUtils();
 	QChart* chart = plot_utils->createEmptyChart();
-	QBarSeries* series = new QBarSeries();
 
-	for (int i = 0; i < bars_.size(); ++i)
-	{
-		QBarSet* set = new QBarSet(labels_[i]);
-		QString color = (colors_.size() > 0) ? colors_[i] : "blue";
-
-		set->setColor(QColor::fromString(color));
-
-		if (is_legend_visible_)
-		{
-			*set << bars_[i];
-		}
-		else
-		{
-			for (int j = 0; j < bars_.size(); ++j)
-			{
-				if (j == i) *set << bars_[i];
-				else *set << 0.0;
-			}
-		}
-
-		series->append(set);
-	}
-
-	chart->addSeries(series);
-
-	// X axis categories
 	QBarCategoryAxis* axis_x = new QBarCategoryAxis();
+	QValueAxis* axis_y = new QValueAxis();
+
 	QStringList categories;
 	if (!labels_.isEmpty() && labels_.size() == bars_.size())
 	{
@@ -110,44 +85,71 @@ void BarPlot::store(QString filename)
 	}
 	else
 	{
-		for (int i = 0; i < bars_.size(); ++i)
-		{
-			categories << QString::number(i);
-		}
+		for (int i = 0; i < bars_.size(); ++i) categories << QString::number(i);
 	}
 
-	// legend
-	chart->legend()->setVisible(is_legend_visible_);
-	chart->legend()->setAlignment(Qt::AlignRight);
+	axis_x->append(categories);
+	axis_x->setLabelsAngle(-90);  // rotated labels
 
-	if (is_legend_visible_)
-	{
-		axis_x->append(QStringList(""));
-	}
-	else
-	{
-		axis_x->append(categories);
-		if (!xlabel_.isEmpty()) axis_x->setTitleText(xlabel_);
-		axis_x->setLabelsAngle(-90);
-	}
+	if (!xlabel_.isEmpty()) axis_x->setTitleText(xlabel_);
 
-	chart->addAxis(axis_x, Qt::AlignBottom);
-	series->attachAxis(axis_x);
-
-	// Y axis
-	QValueAxis* axis_y = new QValueAxis();
 	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
 
+	// y range
 	if (BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
 	{
 		axis_y->setRange(ymin_, ymax_);
 	}
+	else
+	{
+		double ymax = *std::max_element(bars_.begin(), bars_.end());
+		axis_y->setRange(0, ymax * 1.1);
+	}
 
+	chart->addAxis(axis_x, Qt::AlignBottom);
 	chart->addAxis(axis_y, Qt::AlignLeft);
-	series->attachAxis(axis_y);
+	chart->legend()->hide();
 
-	axis_x->setGridLineVisible(false);
-	axis_y->setGridLineVisible(false);
+	// create bars using QAreaSeries
+	for (int i = 0; i < bars_.size(); ++i)
+	{
+		double value = bars_[i];
+
+		QLineSeries* upper = new QLineSeries();
+		QLineSeries* lower = new QLineSeries();
+
+		// shift bars so they align with categories
+		double left  = i - 0.4;
+		double right = i + 0.4;
+
+		upper->append(left, 0);
+		upper->append(left, value);
+		upper->append(right, value);
+		upper->append(right, 0);
+
+		lower->append(left, 0);
+		lower->append(right, 0);
+
+		QAreaSeries* area = new QAreaSeries(upper, lower);
+
+		// legend label
+		if (labels_.size() == bars_.size()) area->setName(labels_[i]);
+
+		// color
+		QString color_str = (colors_.size() > i) ? colors_[i] : "blue";
+		QColor color(color_str);
+
+		area->setColor(color);
+		area->setBorderColor(color.darker());
+
+		chart->addSeries(area);
+		area->attachAxis(axis_x);
+		area->attachAxis(axis_y);
+	}
+
+	// grid lines
+	axis_x->setGridLineVisible(true);
+	axis_y->setGridLineVisible(true);
 
 	plot_utils->saveAsPng(filename, 1000, 400);
 }

@@ -10,6 +10,8 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QLegend>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QAreaSeries>
 
 // Creates a bar plot PNG image
 class CPPCORESHARED_EXPORT BarPlot
