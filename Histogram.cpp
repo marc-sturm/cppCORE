@@ -61,9 +61,19 @@ double Histogram::binSize() const
 	return bin_size_;
 }
 
+void Histogram::setBins(QVector<double> bin_values)
+{
+	bins_ = bin_values;
+}
+
 int Histogram::binCount() const
 {
 	return bins_.size();
+}
+
+void Histogram::setBinSum(long long all_bin_sum)
+{
+	bin_sum_ = all_bin_sum;
 }
 
 long long Histogram::binSum()
@@ -348,7 +358,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 			upper->append(next_item, y[i]);
 			lower->append(next_item, 0);
 		}
-		upper->append(x.last(), 0);
+		// upper->append(x.last(), 0);
 
 		QAreaSeries *area = new QAreaSeries(upper, lower);
 		area->setName(h.label_);

@@ -35,9 +35,13 @@ public:
 	double max() const;
 	/// Returns the bin size
 	double binSize() const;
+	/// Sets bins (y coordinates)
+	void setBins(QVector<double> bin_values);
 
 	/// Returns the number of bins
 	int binCount() const;
+	/// Sets the sum of all bins (i.e. the number of data points added)
+	void setBinSum(long long all_bin_sum);
 	/// Returns the sum of all bins (i.e. the number of data points added)
 	long long binSum();
 
