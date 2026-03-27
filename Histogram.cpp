@@ -344,9 +344,9 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		for (int i = 0; i < y.size(); ++i)
 		{
 			upper->append(x[i], y[i]);
-			int next_i = (i+1)>=y.size()? i: i+1;
-			upper->append(x[next_i], y[i]);
-			lower->append(x[next_i], 0);
+			double next_item = (i+1)>=y.size() ? x[i]+h.binSize() : x[i+1];
+			upper->append(next_item, y[i]);
+			lower->append(next_item, 0);
 		}
 		upper->append(x.last(), 0);
 
