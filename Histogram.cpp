@@ -329,7 +329,6 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	chart->addAxis(axis_x, Qt::AlignBottom);
 	chart->addAxis(axis_y, Qt::AlignLeft);
 
-	QStringList comb_hist;
 	foreach (Histogram h, histograms)
 	{
 		QLineSeries *upper = new QLineSeries();
@@ -338,34 +337,18 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		QVector<double> x = h.xCoords();
 		QVector<double> y = h.yCoords();
 
-
-
 		// baseline
 		lower->append(x.first(), 0);
 		upper->append(x.first(), 0);
 
-		comb_hist << "lower x = " +  QString::number(x.first()) + ", y = 0";
-		comb_hist << "upper x = " +  QString::number(x.first()) + ", y = 0";
-		comb_hist << "--------------";
-
 		for (int i = 0; i < y.size(); ++i)
 		{
 			upper->append(x[i], y[i]);
-			upper->append(x[i+1], y[i]);
-			lower->append(x[i+1], 0);
-
-
-			comb_hist << "upper x = " + QString::number(x[i]) + ", y = " + QString::number(y[i], 'f', 5);
-			comb_hist << "upper x = " + QString::number(x[i+1]) + ", y = " + QString::number(y[i], 'f', 5);
-			comb_hist << "lower x = " + QString::number(x[i+1]) + ", y = 0";
-			comb_hist << "***************************";
+			int next_i = (i+1)>=y.size()? i: i+1;
+			upper->append(x[next_i], y[i]);
+			lower->append(x[next_i], 0);
 		}
-
 		upper->append(x.last(), 0);
-		comb_hist << "upper x = " +QString::number(x.last(), 'f', 5) + ", y = 0";
-
-
-
 
 		QAreaSeries *area = new QAreaSeries(upper, lower);
 		area->setName(h.label_);
@@ -379,8 +362,6 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		area->attachAxis(axis_x);
 		area->attachAxis(axis_y);
 	}
-
-	Helper::storeTextFile("comb-hist.txt", comb_hist);
 
 	// a hack to hide zero-height bars, which are drawn on the top of the x axis
 	QLineSeries *upper_x = new QLineSeries();
