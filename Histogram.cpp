@@ -10,6 +10,7 @@
 #include "BasicStatistics.h"
 #include "PlotUtils.h"
 #include "Log.h"
+#include "Helper.h"
 
 Histogram::Histogram(double min, double max, double bin_size)
 	: min_(min)
@@ -336,18 +337,34 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		QVector<double> x = h.xCoords();
 		QVector<double> y = h.yCoords();
 
+		QStringList comb_hist;
+
 		// baseline
 		lower->append(x.first(), 0);
 		upper->append(x.first(), 0);
+
+		comb_hist << "lower x = " +  QString::number(x.first()) + ", y = 0";
+		comb_hist << "upper x = " +  QString::number(x.first()) + ", y = 0";
+		comb_hist << "--------------";
 
 		for (int i = 0; i < y.size(); ++i)
 		{
 			upper->append(x[i], y[i]);
 			upper->append(x[i+1], y[i]);
 			lower->append(x[i+1], 0);
+
+
+			comb_hist << "upper x = " + QString::number(x[i]) + ", y = " + QString::number(y[i]);
+			comb_hist << "upper x = " + QString::number(x[i+1]) + ", y = " + QString::number(y[i]);
+			comb_hist << "lower x = " + QString::number(x[i+1]) + ", y = 0";
+			comb_hist << "***************************";
 		}
 
 		upper->append(x.last(), 0);
+		comb_hist << "upper x = " + QString::number(x.last()) + ", y = 0";
+
+
+		Helper::storeTextFile("comb-hist.txt", comb_hist);
 
 		QAreaSeries *area = new QAreaSeries(upper, lower);
 		area->setName(h.label_);
