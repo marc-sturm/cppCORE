@@ -389,9 +389,9 @@ QSharedPointer<QFile> Helper::openFileForWriting(QString file_name, bool stdout_
 	QSharedPointer<QFile> file(new QFile(file_name));
 	if (stdout_if_file_empty && file_name=="")
 	{
-		file->open(stdout, QFile::WriteOnly | QIODevice::Text);
+		file->open(stdout, QFile::WriteOnly);
 	}
-	else if (!file->open(QFile::WriteOnly | QIODevice::Text |(append? QFile::Append : QFile::Truncate)))
+	else if (!file->open(QFile::WriteOnly | (append? QFile::Append : QFile::Truncate)))
 	{
 		THROW(FileAccessException, "Could not open file for writing: '" + file_name + "'!");
 	}
