@@ -2,7 +2,6 @@
 #define VERSATILEFILE_H
 
 #include "cppCORE_global.h"
-#include <QNetworkProxy>
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QSharedPointer>
@@ -19,19 +18,22 @@ class CPPCORESHARED_EXPORT VersatileFile
     Q_OBJECT
 
 public:
-	///Constructor for local file, local gzipped file or URL
+	//Constructor for local/remote plain/gzipped files.
 	VersatileFile(QString file_name, bool stdin_if_empty = false);
-	///Destructor. Calls close() to frees all resources.
+	//Destructor. Calls close() to frees all resources.
 	~VersatileFile();
 
-	///Open file. Returns false if file could not be opened. Open mode is only used in LOCAL mode.
-	///Note: Use QIODevice::Text in addition to the read/write mode for text files!
-	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);    
+	//Open file. Returns false if file could not be opened. Open mode is only used in LOCAL mode.
+	//Note: Use QIODevice::Text in addition to the read/write mode for text files to replace '\r\n' by '\n' when reading.
+	bool open(QIODevice::OpenMode mode = QFile::ReadOnly, bool throw_on_error = true);
+	//Returns the proxy used for remote files
+	QNetworkProxy proxy() const;
 
-	///Returns the open mode (for local files).
+	//Returns the open mode (for local files).
 	QIODevice::OpenMode openMode() const;
-	///Returns the mode.
+	//File mode.
 	enum Mode { LOCAL, LOCAL_GZ, URL, URL_GZ};
+	//Returns the file mode.
 	Mode mode() const
 	{
 		return mode_;
@@ -59,9 +61,11 @@ public:
 
 	QString fileName() const;
 
+	//checks if a file is GZ or BGZ.
+	bool isGzipped();
+
 private:
     QNetworkAccessManager net_mgr_;
-    QNetworkProxy proxy_;
 	QString file_name_;
 	FILE* file_stream_pointer_;
 	Mode mode_ = LOCAL;
@@ -83,7 +87,6 @@ private:
     qint64 cursor_position_ = 0; // position in a VersatileFile, as if we are reading QFile
     qint64 remote_position_ = 0; // where we are in the remote file while we read and save its content into a buffer)
     qint64 buffer_read_pos_ = 0; // position within the read buffer
-	QSharedPointer<QFile> readline_pointer_;
     static constexpr qint64 chunkSize() { return 200 * 1024 * 1024; } // 200Mb
 
     //members for GZ_URL mode
@@ -101,8 +104,6 @@ private:
 
     //gets a chunk from the remote file
     QByteArray httpRangeRequest(qint64 start, qint64 end);
-    //checks if remote file exists and gets the file size from the header
-    void checkRemoteFile();
 };
 
 

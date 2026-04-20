@@ -6,22 +6,46 @@
 #include "CustomProxyService.h"
 #include <QEventLoop>
 #include <QNetworkReply>
+#include "Settings.h"
 
 VersatileFile::VersatileFile(QString file_name, bool stdin_if_empty)
-	: proxy_(QNetworkProxy::NoProxy)
-	, file_name_(file_name)
+	: file_name_(file_name)
 	, file_stream_pointer_(nullptr)
 	, is_open_(false)
 	, cursor_position_(0)
 {
-	//determine non-default mode
-	if (Helper::isHttpUrl(file_name_))
+	bool is_url = Helper::isHttpUrl(file_name_);
+
+	//set a proxy
+	if (is_url)
 	{
-		mode_ = QUrl(file_name_).path().toLower().endsWith(".gz") ? URL_GZ : URL;
+		QList<QNetworkProxy> proxies = QNetworkProxyFactory::systemProxyForQuery(QNetworkProxyQuery(QUrl(file_name_)));
+		if (!proxies.isEmpty())
+		{
+			QNetworkProxy proxy = proxies[0];
+			QString proxy_user = Settings::string("proxy_user", true).trimmed();
+			QString proxy_password = Settings::string("proxy_password", true).trimmed();
+			if (!proxy_user.isEmpty() && !proxy_password.isEmpty())
+			{
+				proxy.setUser(proxy_user);
+				proxy.setPassword(proxy_password);
+			}
+			net_mgr_.setProxy(proxy);
+		}
+		if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
+		{
+			net_mgr_.setProxy(CustomProxyService::getProxy());
+		}
+	}
+
+	//determine mode
+	if (is_url)
+	{
+		mode_ = isGzipped() ? URL_GZ : URL;
 	}
 	else
 	{
-		mode_ = file_name_.toLower().endsWith(".gz") ? LOCAL_GZ : LOCAL;
+		mode_ = isGzipped() ? LOCAL_GZ : LOCAL;
 	}
 
 	//init members depending on mode
@@ -37,15 +61,23 @@ VersatileFile::VersatileFile(QString file_name, bool stdin_if_empty)
 	{
         //nothing to do here - see open method
 	}
-	else
-    {
-        //set a proxy, if custom proxy settings have been provided
-        if (CustomProxyService::getProxy() != QNetworkProxy::NoProxy)
-        {
-            proxy_ = CustomProxyService::getProxy();
-            net_mgr_.setProxy(proxy_);
-        }
-        checkRemoteFile();
+	else //remove file > check if it exists and determine size
+	{
+		QNetworkRequest request(QUrl{file_name_});
+		request.setDecompressedSafetyCheckThreshold(-1);
+		request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+
+		QNetworkReply* reply = net_mgr_.head(request);
+		QEventLoop loop;
+		QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+		loop.exec();
+
+		file_exists_ = (reply->error() == QNetworkReply::NoError);
+		if (file_exists_ && file_size_ == -1)
+		{
+			file_size_ = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+		}
+		reply->deleteLater();
 	}
 }
 
@@ -93,6 +125,11 @@ bool VersatileFile::open(QIODevice::OpenMode mode, bool throw_on_error)
 	is_open_ = opened;
 
 	return opened;
+}
+
+QNetworkProxy VersatileFile::proxy() const
+{
+	return net_mgr_.proxy();
 }
 
 QIODevice::OpenMode VersatileFile::openMode() const
@@ -206,6 +243,7 @@ QByteArray VersatileFile::readAll()
     // regular remote file (URL mode)
     QNetworkRequest request((QUrl(file_name_)));
 	request.setDecompressedSafetyCheckThreshold(-1);
+	request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     QNetworkReply* reply = net_mgr_.get(request);
 
     QEventLoop loop;
@@ -517,21 +555,31 @@ QByteArray VersatileFile::httpRangeRequest(qint64 start, qint64 end)
     return data;
 }
 
-void VersatileFile::checkRemoteFile()
+bool VersatileFile::isGzipped()
 {
-    QNetworkRequest request((QUrl(file_name_)));
-	request.setDecompressedSafetyCheckThreshold(-1);	
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+	//handle BAM files as plain text (they are actually GZ) to make BamReader::info() work
+	if (file_name_.toLower().trimmed().endsWith(".bam")) return false;
 
-    QNetworkReply* reply = net_mgr_.head(request);
-    QEventLoop loop;
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+	//get first two bytes
+	QByteArray first_two_bytes;
+	if (Helper::isHttpUrl(file_name_))
+	{
+		first_two_bytes = httpRangeRequest(0, 1);
+	}
+	else
+	{
+		QFile file(file_name_);
+		if (!file.exists() || QFileInfo(file_name_).isDir()) return false;
+		if (!file.open(QIODevice::ReadOnly)) THROW(FileAccessException, "Could not open file '" + file_name_+"'!");
 
-    file_exists_ = (reply->error() == QNetworkReply::NoError);
-    if (file_exists_ && file_size_ == -1)
-    {
-        file_size_ = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
-    }
-    reply->deleteLater();
+		first_two_bytes = file.peek(2);
+	}
+
+	//less then 2 bytes > not GZ
+	if (first_two_bytes.size() < 2) return false;
+
+	//check magic bytes for GZ
+	const unsigned char* data = reinterpret_cast<const unsigned char*>(first_two_bytes.constData());
+	return data[0] == 0x1f && data[1] == 0x8b;
 }
+
