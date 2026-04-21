@@ -120,11 +120,11 @@ int TSVFileStream::colIndex(QByteArray name, bool error_when_missing)
 		{
 			if (hits.count()==0)
 			{
-				THROW(CommandLineParsingException, "Could not find column name '" + name + "' in column headers of '"+filename_+"!");
+				THROW(CommandLineParsingException, "Could not find column name '" + name + "' in column headers of '"+filename_+"'!");
 			}
 			if (hits.count()>1)
 			{
-				THROW(CommandLineParsingException, "Found column name '" + name + "' more than once in column headers of '"+filename_+"!");
+				THROW(CommandLineParsingException, "Found column name '" + name + "' more than once in column headers of '"+filename_+"'!");
 			}
 		}
 		else
