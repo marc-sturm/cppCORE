@@ -81,7 +81,7 @@ void LinePlot::store(QString filename)
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 
 	// create axes
 	QValueAxis* axis_x = new QValueAxis();
@@ -142,6 +142,7 @@ void LinePlot::store(QString filename)
 		chart->legend()->setFont(legendFont);
 	}
 
+	plot_utils->applyFontSettings();
 	plot_utils->saveAsPng(filename, 600, 400);
 }
 

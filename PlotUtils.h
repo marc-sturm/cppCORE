@@ -16,7 +16,10 @@ class CPPCORESHARED_EXPORT PlotUtils
 {
 public:
 	PlotUtils();
-	QChart* createEmptyChart();
+	QChart* getChart();
+	void applyFontSettings();
+	QFont getLabelFont();
+	void overpaintAxisX(QValueAxis* axis_x, QValueAxis* axis_y, double max);
 	void saveAsPng(QString filename, int width, int height);
 
 private:

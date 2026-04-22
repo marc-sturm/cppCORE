@@ -14,7 +14,6 @@
 #include <QtCharts/QLegend>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QAreaSeries>
-#include <QtCharts/QLegendMarker>
 
 ///Histogram representation
 class CPPCORESHARED_EXPORT Histogram

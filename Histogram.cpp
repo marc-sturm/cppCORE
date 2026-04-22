@@ -205,7 +205,7 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 	chart->legend()->hide(); // hide legend, since we are using one color
 
 	// Fixing zero values for logarithmic scaling (for X and Y separately)
@@ -326,6 +326,7 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	area_x->attachAxis(axis_x);
 	area_x->attachAxis(axis_y);
 
+	plot_utils->applyFontSettings();
 	plot_utils->saveAsPng(filename, 1000, 400);
 }
 
@@ -351,7 +352,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 	chart->legend()->setVisible(true);
 	chart->legend()->setAlignment(Qt::AlignTop);
 
@@ -379,7 +380,7 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	if (!ylabel.isEmpty()) axis_y->setTitleText(ylabel);
 
 	chart->addAxis(axis_x, Qt::AlignBottom);
-	chart->addAxis(axis_y, Qt::AlignLeft);
+	chart->addAxis(axis_y, Qt::AlignLeft);	
 
 	foreach (Histogram h, histograms)
 	{
@@ -414,37 +415,8 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		area->attachAxis(axis_y);
 	}
 
-	// a hack to hide zero-height bars, which are drawn on the top of the x axis
-	QLineSeries *upper_x = new QLineSeries();
-	QLineSeries *lower_x = new QLineSeries();
-	lower_x->append(0, 0);
-	upper_x->append(max, 0);
-	lower_x->append(max, 0);
-	upper_x->append(max, 0);
-
-	QAreaSeries *area_x = new QAreaSeries(upper_x, lower_x);
-	area_x->setName("x_axis");
-
-	QColor x_color(axis_x->gridLineColor());
-	area_x->setColor(x_color);
-	area_x->setBorderColor(x_color);
-	chart->addSeries(area_x);
-	area_x->attachAxis(axis_x);
-	area_x->attachAxis(axis_y);
-
-	for (QAbstractSeries* s : chart->series())
-	{
-		QAreaSeries* area = qobject_cast<QAreaSeries*>(s);
-		if (!area) continue;
-
-		if (area->name() == "x_axis")
-		{
-			auto markers = chart->legend()->markers(area);
-			for (auto m : markers)
-				m->setVisible(false);
-		}
-	}
-
+	plot_utils->applyFontSettings();
+	plot_utils->overpaintAxisX(axis_x, axis_y, max);
 	plot_utils->saveAsPng(filename, 1000, 400);
 }
 

@@ -102,7 +102,7 @@ void ScatterPlot::store(QString filename)
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 	chart->legend()->setVisible(color_legend_.count() > 0);
 
 	// group by color (Qt needs one series per color for legend support)
@@ -195,5 +195,6 @@ void ScatterPlot::store(QString filename)
 		}
 	}
 
+	plot_utils->applyFontSettings();
 	plot_utils->saveAsPng(filename, 600, 400);
 }
