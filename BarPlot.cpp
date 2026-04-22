@@ -1,20 +1,24 @@
 #include "BarPlot.h"
 
 #include <limits>
+#include <QFontDatabase>
+#include <QChartView>
+#include <QBarCategoryAxis>
+#include <QValueAxis>
+#include <QLegend>
+#include <QLineSeries>
+#include <QAreaSeries>
 #include <QStringList>
-#include <QApplication>
 #include <QGraphicsLayout>
 
 #include "Exceptions.h"
 #include "Helper.h"
 #include "Log.h"
 #include "BasicStatistics.h"
-#include "Settings.h"
 #include "PlotUtils.h"
 
-
 BarPlot::BarPlot()
-{	
+{
 }
 
 void BarPlot::setValues(const QList<int>& values, const QList<QString>& labels, const QList<QString>& colors)
@@ -27,7 +31,6 @@ void BarPlot::setValues(const QList<int>& values, const QList<QString>& labels, 
 	}
 }
 
-
 void BarPlot::setValues(const QList<double>& values, const QList<QString>& labels, const QList<QString>& colors)
 {
 	for(int i=0;i<values.count();++i)
@@ -38,33 +41,6 @@ void BarPlot::setValues(const QList<double>& values, const QList<QString>& label
 	}
 }
 
-void BarPlot::setXLabel(const QString &x_label)
-{
-	xlabel_ = x_label;
-}
-
-void BarPlot::setYLabel(const QString &y_label)
-{
-	ylabel_ = y_label;
-}
-
-void BarPlot::setXRange(double min, double max)
-{
-	xmin_ = min;
-	xmax_ = max;
-}
-
-void BarPlot::setYRange(double min, double max)
-{
-	ymin_ = min;
-	ymax_ = max;
-}
-
-void BarPlot::setLegendVisible(const bool &visible)
-{
-	is_legend_visible_ = visible;
-}
-
 void BarPlot::store(QString filename)
 {
 	if (bars_.isEmpty())
@@ -73,8 +49,11 @@ void BarPlot::store(QString filename)
 		return;
 	}
 
+	int width = 1000;
+	int height = 400;
+
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 
 	QValueAxis* axis_x = new QValueAxis();
 	// axis_x->setRange(0, bars_.size());
@@ -116,16 +95,14 @@ void BarPlot::store(QString filename)
 	chart->addAxis(axis_y, Qt::AlignLeft);
 	chart->legend()->hide();
 
-
-	QFont labelFont;
-	// int fontSize = std::min(6, 12 - static_cast<int>(bars_.size()) / 20);
-	labelFont.setPointSize(7);
+	plot_utils->applyFontSettings();
+	QFont label_font = plot_utils->getLabelFont();
 
 	// create bars using QAreaSeries
 	for (int i = 0; i < bars_.size(); ++i)
 	{
 		QGraphicsTextItem* label = new QGraphicsTextItem(categories[i]);
-		label->setFont(labelFont);
+		label->setFont(label_font);
 
 		double value = bars_[i];
 
@@ -134,11 +111,7 @@ void BarPlot::store(QString filename)
 
 		// shift bars so they align with categories
 		double left  = i - 0.5;
-		double right = i + 0.5;
-
-		// double barWidth = 0.5;   // try 0.3–0.6 depending on density
-		// double left  = i - barWidth/2;
-		// double right = i + barWidth/2;
+		double right = i + 0.5;		
 
 		upper->append(left, 0);
 		upper->append(left, value);
@@ -165,15 +138,15 @@ void BarPlot::store(QString filename)
 		area->attachAxis(axis_y);
 
 		// need to set the chart size to get the real coordinates for labels
-		chart->resize(1000, 400);
+		chart->resize(width, height);
 		chart->layout()->activate();
 
 		QPointF valuePoint(i+0.5, 0);
 		QPointF pixelPoint = chart->mapToPosition(valuePoint, area);
 
 		QRectF rect = label->boundingRect();
-
-		label->setPos(pixelPoint.x() - (rect.width() / 2), 350);
+		// placing a category label below the x axis
+		label->setPos(pixelPoint.x() - (rect.width() / 2), chart->plotArea().bottom()+rect.height()+10);
 
 		label->setRotation(-90);
 		label->setParentItem(chart);
@@ -183,5 +156,6 @@ void BarPlot::store(QString filename)
 	axis_x->setGridLineVisible(false);
 	axis_y->setGridLineVisible(true);
 
-	plot_utils->saveAsPng(filename, 1000, 400);
+	plot_utils->overpaintAxisX(axis_x, axis_y, bars_.size() - 0.5);
+	plot_utils->saveAsPng(filename, width, height);
 }

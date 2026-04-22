@@ -141,6 +141,15 @@ private:
 	///Reimplemented nofify method to handle exceptions
 	bool notify(QObject* receiver, QEvent* event);
 
+	///All the tools are GUI applications now (QApplication). When we run them in a headless mode
+	///(on the server or inside the test environment) they attempt to output the image to a display,
+	///which is obviously not available, and will crush. The following statement tells the QApplcaiton
+	///not to use a display.
+	static int& setOffscreen(int& argc)
+	{
+		qputenv("QT_QPA_PLATFORM", "offscreen");
+		return argc;
+	}
 };
 
 #endif //TOOLBASE_H

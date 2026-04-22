@@ -4,10 +4,6 @@
 #include "cppCORE_global.h"
 #include <QString>
 #include <QVector>
-#include <QtCharts/QChartView>
-#include <QtCharts/QLineSeries>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QLegend>
 
 // Creates a line plot PNG image
 class CPPCORESHARED_EXPORT LinePlot
@@ -18,9 +14,22 @@ public:
 	void addLine(const QVector<double>& values, QString label = "");
 	void setXValues(const QVector<double>& xvalues);
 
-	void setXLabel(QString xlabel);
-	void setYLabel(QString ylabel);
-	void setYRange(double ymin, double ymax);
+	void setXLabel(QString xlabel)
+	{
+		xlabel_ = xlabel;
+	}
+
+	void setYLabel(QString ylabel)
+	{
+		ylabel_ = ylabel;
+	}
+
+	void setYRange(double ymin, double ymax)
+	{
+		ymin_ = ymin;
+		ymax_ = ymax;
+		yrange_set_ = true;
+	}
 
 	void store(QString filename);
 

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fonts/Arimo-Regular.ttf</file>
+        <file>fonts/Arimo-Medium.ttf</file>
+        <file>fonts/Arimo-Bold.ttf</file>
+    </qresource>
+</RCC>

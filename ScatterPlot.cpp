@@ -1,8 +1,13 @@
 #include "ScatterPlot.h"
 
-#include <QStringList>
 #include <limits>
-#include <QApplication>
+#include <QChart>
+#include <QScatterSeries>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QLogValueAxis>
+#include <QChartView>
+#include <QStringList>
 
 #include "Exceptions.h"
 #include "Log.h"
@@ -13,54 +18,7 @@ ScatterPlot::ScatterPlot()
 	: yrange_set_(false)
 	, xrange_set_(false)
 	, yscale_log_(false)
-{	
-}
-
-void ScatterPlot::setValues(const QList<std::pair<double,double>>& values, const QList<QString>& colors)
 {
-	points_.clear();
-	points_.append(values);
-	colors_.clear();
-	colors_.append(colors);
-}
-
-void ScatterPlot::setXLabel(QString xlabel)
-{
-	xlabel_ = xlabel;
-}
-
-void ScatterPlot::setYLabel(QString ylabel)
-{
-	ylabel_ = ylabel;
-}
-
-void ScatterPlot::setXRange(double xmin, double xmax)
-{
-	xmin_ = xmin;
-	xmax_ = xmax;
-	xrange_set_ = true;
-}
-
-void ScatterPlot::setYRange(double ymin, double ymax)
-{
-	ymin_ = ymin;
-	ymax_ = ymax;
-	yrange_set_ = true;
-}
-
-void ScatterPlot::setYLogScale(bool yscale_log)
-{
-	yscale_log_ = yscale_log;
-}
-
-void ScatterPlot::addColorLegend(QString color, QString desc)
-{
-	color_legend_.insert(color, desc);
-}
-
-void ScatterPlot::addVLine(double x)
-{
-	vlines_.append(x);
 }
 
 void ScatterPlot::store(QString filename)
@@ -102,7 +60,7 @@ void ScatterPlot::store(QString filename)
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 	chart->legend()->setVisible(color_legend_.count() > 0);
 
 	// group by color (Qt needs one series per color for legend support)
@@ -195,5 +153,6 @@ void ScatterPlot::store(QString filename)
 		}
 	}
 
+	plot_utils->applyFontSettings();
 	plot_utils->saveAsPng(filename, 600, 400);
 }

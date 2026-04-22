@@ -64,3 +64,6 @@ HEADERS += ToolBase.h \
     TsvFile.h \
     Git.h
 	
+
+RESOURCES += \
+    cppCORE.qrc

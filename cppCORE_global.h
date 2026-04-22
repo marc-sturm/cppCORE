@@ -9,5 +9,4 @@
 #  define CPPCORESHARED_EXPORT Q_DECL_IMPORT
 #endif
 
-
 #endif // CPPCORE_GLOBAL_H

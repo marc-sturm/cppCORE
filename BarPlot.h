@@ -3,15 +3,7 @@
 
 #include "cppCORE_global.h"
 #include <QString>
-#include <QHash>
-#include <QtCharts/QChartView>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarCategoryAxis>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QLegend>
-#include <QtCharts/QLineSeries>
-#include <QtCharts/QAreaSeries>
+#include <QList>
 
 // Creates a bar plot PNG image
 class CPPCORESHARED_EXPORT BarPlot
@@ -21,18 +13,31 @@ public:
 
 	void setValues(const QList<int>& values, const QList<QString>& labels, const QList<QString>& colors = QList<QString>());
 	void setValues(const QList<double>& values, const QList<QString>& labels, const QList<QString>& colors = QList<QString>());
-	void setXLabel(const QString& x_label);
-	void setYLabel(const QString& y_label);
-	void setXRange(double min, double max);
-	void setYRange(double min, double max);
-	void setLegendVisible(const bool& visible);
+	void setXLabel(const QString& x_label)
+	{
+		xlabel_ = x_label;
+	}
+	void setYLabel(const QString& y_label)
+	{
+		ylabel_ = y_label;
+	}
+	void setXRange(double min, double max)
+	{
+		xmin_ = min;
+		xmax_ = max;
+	}
+	void setYRange(double min, double max)
+	{
+		ymin_ = min;
+		ymax_ = max;
+	}
+
 	void store(QString filename);
 
 protected:
 	QList<double> bars_;
 	QList<QString> labels_;
-	QList<QString> colors_;
-	bool is_legend_visible_;
+	QList<QString> colors_;	
 	QString xlabel_;
 	QString ylabel_;
 	double ymin_;

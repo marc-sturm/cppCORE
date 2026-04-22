@@ -7,7 +7,7 @@
 #include "VersatileFile.h"
 
 ToolBase::ToolBase(int& argc, char *argv[])
-	: QApplication(argc, argv)
+	: QApplication(setOffscreen(argc), argv) //QApplication(argc, argv)
 	, exit_event_loop_(true)
 	, exit_error_state_(false)
 {

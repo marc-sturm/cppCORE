@@ -4,17 +4,7 @@
 #include "cppCORE_global.h"
 #include <QVector>
 #include <QTextStream>
-
-#include <QtCharts/QChartView>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarCategoryAxis>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QLogValueAxis>
-#include <QtCharts/QLegend>
-#include <QtCharts/QLineSeries>
-#include <QtCharts/QAreaSeries>
-#include <QtCharts/QLegendMarker>
+#include "BasicStatistics.h"
 
 ///Histogram representation
 class CPPCORESHARED_EXPORT Histogram
@@ -24,26 +14,62 @@ public:
 	Histogram(double min, double max, double bin_size);
 
 	/// Increases the bin corresponding to value @p val by one
-	void inc(double val, bool ignore_bounds_errors=false);
+	void inc(double val, bool ignore_bounds_errors=false)
+	{
+		bins_[binIndex(val, ignore_bounds_errors)]+=1;
+		bin_sum_ += 1;
+	}
 
 	/// Increases the bin corresponding to the values in @p data by one
-	void inc(const QVector<double>& data, bool ignore_bounds_errors=false);
+	void inc(const QVector<double>& data, bool ignore_bounds_errors=false)
+	{
+		for (int i=0; i<data.size(); ++i)
+		{
+			inc(data[i], ignore_bounds_errors);
+		}
+	}
 
 	/// Returns the lower bound position (x-axis)
-	double min() const;
+	double min() const
+	{
+		return min_;
+	}
+
 	/// Returns the upper bound position (x-axis)
-	double max() const;
+	double max() const
+	{
+		return max_;
+	}
+
 	/// Returns the bin size
-	double binSize() const;
+	double binSize() const
+	{
+		return bins_.size();
+	}
+
 	/// Sets bins (y coordinates)
-	void setBins(QVector<double> bin_values);
+	void setBins(QVector<double> bin_values)
+	{
+		bins_ = bin_values;
+	}
 
 	/// Returns the number of bins
-	int binCount() const;
+	int binCount() const
+	{
+		return bins_.size();
+	}
+
 	/// Sets the sum of all bins (i.e. the number of data points added)
-	void setBinSum(long long all_bin_sum);
+	void setBinSum(long long all_bin_sum)
+	{
+		bin_sum_ = all_bin_sum;
+	}
+
 	/// Returns the sum of all bins (i.e. the number of data points added)
-	long long binSum();
+	long long binSum()
+	{
+		return bin_sum_;
+	}
 
 	/// Returns the bin a given position belongs to.
 	int binIndex(double val, bool ignore_bounds_errors=false) const;
@@ -65,7 +91,10 @@ public:
 	void print(QTextStream &stream, QString indentation="", int position_precision=2, int data_precision=2, bool ascending=true) const;
 
 	/// Returns an array of X-coordinates (position).
-	QVector<double> xCoords();
+	QVector<double> xCoords()
+	{
+		return BasicStatistics::range(binCount(), startOfBin(0) + 0.5 * binSize(), binSize());
+	}
 	/// Returns an array of Y-coordinates (values).
 	QVector<double> yCoords(bool as_percentage=false);
 
@@ -74,15 +103,30 @@ public:
 	/// stores a combined histogram of different histograms
 	static void storeCombinedHistogram(QString filename, QList<Histogram> histograms, QString xlabel, QString ylabel);
 
-	void setYLabel(QString ylabel);
+	void setYLabel(QString ylabel)
+	{
+		ylabel_ = ylabel;
+	}
 
-	void setXLabel(QString xlabel);
+	void setXLabel(QString xlabel)
+	{
+		xlabel_ = xlabel;
+	}
 
-	void setLabel(QString label);
+	void setLabel(QString label)
+	{
+		label_ = label;
+	}
 
-	void setColor(QString color);
+	void setColor(QString color)
+	{
+		color_ = color;
+	}
 
-	void setAlpha(double alpha);
+	void setAlpha(double alpha)
+	{
+		alpha_ = alpha;
+	}
 
 protected:
 	/// lower bound position

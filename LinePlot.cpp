@@ -1,8 +1,10 @@
 #include "LinePlot.h"
 
 #include <limits>
-#include <QStringList>
-#include <QApplication>
+#include <QChartView>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QLegend>
 
 #include "Exceptions.h"
 #include "Log.h"
@@ -32,23 +34,6 @@ void LinePlot::setXValues(const QVector<double>& xvalues)
 	}
 
 	xvalues_ = xvalues;
-}
-
-void LinePlot::setXLabel(QString xlabel)
-{
-	xlabel_ = xlabel;
-}
-
-void LinePlot::setYLabel(QString ylabel)
-{
-	ylabel_ = ylabel;
-}
-
-void LinePlot::setYRange(double ymin, double ymax)
-{
-	ymin_ = ymin;
-	ymax_ = ymax;
-	yrange_set_ = true;
 }
 
 void LinePlot::store(QString filename)
@@ -81,7 +66,7 @@ void LinePlot::store(QString filename)
 	}
 
 	PlotUtils* plot_utils = new PlotUtils();
-	QChart* chart = plot_utils->createEmptyChart();
+	QChart* chart = plot_utils->getChart();
 
 	// create axes
 	QValueAxis* axis_x = new QValueAxis();
@@ -142,6 +127,7 @@ void LinePlot::store(QString filename)
 		chart->legend()->setFont(legendFont);
 	}
 
+	plot_utils->applyFontSettings();
 	plot_utils->saveAsPng(filename, 600, 400);
 }
 
