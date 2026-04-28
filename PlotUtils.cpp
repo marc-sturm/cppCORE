@@ -4,6 +4,7 @@
 #include <QFontDatabase>
 #include <QLineSeries>
 #include <QAreaSeries>
+#include <QLegendMarker>
 #include "Log.h"
 
 PlotUtils::PlotUtils()
@@ -70,29 +71,28 @@ void PlotUtils::overpaintAxisX(QValueAxis* axis_x, QValueAxis* axis_y, double ma
 	chart_->addSeries(area_x);
 	area_x->attachAxis(axis_x);
 	area_x->attachAxis(axis_y);
+
+
+	for (QAbstractSeries* s : chart_->series())
+	{
+		QAreaSeries* area = qobject_cast<QAreaSeries*>(s);
+		if (!area) continue;
+
+		if (area->name() == "x_axis")
+		{
+			auto markers = chart_->legend()->markers(area);
+			for (auto m : markers) m->setVisible(false);
+		}
+	}
 }
 
 void PlotUtils::saveAsPng(QString filename, int width, int height)
 {
-	// setting the font from our resources to maintian consistent rendering across paltforms
-	// int id = QFontDatabase::addApplicationFont(":/resources/Arimo-Regular.ttf");
-	// QString family = QFontDatabase::applicationFontFamilies(id).at(0);
-
-	// QFont font(family, 12);
-
-	// chart_->setTitleFont(font);
-
-	// for (auto axis : chart_->axes()) {
-	// 	axis->setLabelsFont(font);
-	// 	axis->setTitleFont(font);
-	// }
-
-	// chart_->legend()->setFont(font);
-
-
 	// image rendering
 	QChartView chartView(chart_);
 	chartView.resize(width, height);
+	chartView.setMinimumSize(width, height);
+	chartView.setMaximumSize(width, height);
 
 	// antialiasing for smoother lines and text
 	chartView.setRenderHint(QPainter::Antialiasing, true);
