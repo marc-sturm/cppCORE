@@ -28,10 +28,12 @@ void PlotUtils::applyFontSettings()
 	QFontDatabase::addApplicationFont(":/fonts/Arimo-Medium.ttf");
 	QString font_family = QFontDatabase::applicationFontFamilies(font_id).at(0);
 
-	QFont regular_font(font_family, 12);
+	QFont regular_font = QFont(font_family);
+	regular_font.setPixelSize(14);
 	regular_font.setWeight(QFont::Normal);
 
-	QFont bold_font(font_family, 12);
+	QFont bold_font = QFont(font_family);
+	bold_font.setPixelSize(14);
 	bold_font.setWeight(QFont::Bold);
 
 	chart_->setTitleFont(bold_font);
@@ -47,7 +49,9 @@ QFont PlotUtils::getLabelFont()
 {
 	int font_id = QFontDatabase::addApplicationFont(":/fonts/Arimo-Regular.ttf");
 	QString font_family = QFontDatabase::applicationFontFamilies(font_id).at(0);
-	return QFont(font_family, 7);
+	QFont label_font = QFont(font_family);
+	label_font.setPixelSize(9);
+	return label_font;
 }
 
 void PlotUtils::overpaintAxisX(QValueAxis* axis_x, QValueAxis* axis_y, double max)
