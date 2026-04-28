@@ -11,7 +11,7 @@
 
 ///Base class for command-line tools that handles parameter parsing and uncaught exceptions
 class CPPCORESHARED_EXPORT ToolBase
-		: public QApplication
+		: public APP_BASE_CLASS
 {
 	Q_OBJECT
 

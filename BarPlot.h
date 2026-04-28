@@ -24,15 +24,13 @@ public:
 	void setXLabel(const QString& x_label);
 	void setYLabel(const QString& y_label);
 	void setXRange(double min, double max);
-	void setYRange(double min, double max);
-	void setLegendVisible(const bool& visible);
+	void setYRange(double min, double max);	
 	void store(QString filename);
 
 protected:
 	QList<double> bars_;
 	QList<QString> labels_;
-	QList<QString> colors_;
-	bool is_legend_visible_;
+	QList<QString> colors_;	
 	QString xlabel_;
 	QString ylabel_;
 	double ymin_;

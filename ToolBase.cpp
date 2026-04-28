@@ -7,11 +7,12 @@
 #include "VersatileFile.h"
 
 ToolBase::ToolBase(int& argc, char *argv[])
-	: QApplication(argc, argv)
+	: APP_BASE_CLASS(argc, argv)
 	, exit_event_loop_(true)
 	, exit_error_state_(false)
 {
-	QApplication::setApplicationVersion(version());
+	// QApplication::setApplicationVersion(version());
+	APP_BASE_CLASS::setApplicationVersion(version());
 }
 
 void ToolBase::setExitEventLoopAfterMain(bool exit_event_loop)

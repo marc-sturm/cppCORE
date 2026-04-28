@@ -60,11 +60,6 @@ void BarPlot::setYRange(double min, double max)
 	ymax_ = max;
 }
 
-void BarPlot::setLegendVisible(const bool &visible)
-{
-	is_legend_visible_ = visible;
-}
-
 void BarPlot::store(QString filename)
 {
 	if (bars_.isEmpty())
