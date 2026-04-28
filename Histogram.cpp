@@ -271,8 +271,6 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
 	chart->addAxis(axis_y, Qt::AlignLeft);
 
-
-
 	// Render the bars
 	QLineSeries *upper = new QLineSeries();
 	QLineSeries *lower = new QLineSeries();
