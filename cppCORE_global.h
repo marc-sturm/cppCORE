@@ -9,11 +9,11 @@
 #  define CPPCORESHARED_EXPORT Q_DECL_IMPORT
 #endif
 
-#ifdef USE_CORE_APP
-#define SET_QT_OFFSCREEN() qputenv("QT_QPA_PLATFORM", "offscreen")
-#else
-#define SET_QT_OFFSCREEN()
-#endif
+// #ifdef USE_CORE_APP
+// #define SET_QT_OFFSCREEN() qputenv("QT_QPA_PLATFORM", "offscreen")
+// #else
+// #define SET_QT_OFFSCREEN()
+// #endif
 
 #ifdef USE_CORE_APP
 #define APP_BASE_CLASS QCoreApplication
