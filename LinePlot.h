@@ -5,7 +5,7 @@
 #include <QString>
 #include <QVector>
 
-///Creates a line plot PNG image (needs Python in the path - and matplotlib extension).
+// Creates a line plot PNG image
 class CPPCORESHARED_EXPORT LinePlot
 {
 public:
@@ -14,14 +14,27 @@ public:
 	void addLine(const QVector<double>& values, QString label = "");
 	void setXValues(const QVector<double>& xvalues);
 
-	void setXLabel(QString xlabel);
-	void setYLabel(QString ylabel);
-	void setYRange(double ymin, double ymax);
+	void setXLabel(QString xlabel)
+	{
+		xlabel_ = xlabel;
+	}
+
+	void setYLabel(QString ylabel)
+	{
+		ylabel_ = ylabel;
+	}
+
+	void setYRange(double ymin, double ymax)
+	{
+		ymin_ = ymin;
+		ymax_ = ymax;
+		yrange_set_ = true;
+	}
 
 	void store(QString filename);
 
 protected:
-	//line representation
+	// line representation
 	struct PlotLine
 	{
 		PlotLine();
@@ -30,7 +43,7 @@ protected:
 		QString label;
 	};
 
-	//variables to store the plot data
+	// variables to store the plot data
 	QVector<PlotLine> lines_;
 	QVector<double> xvalues_;
 	QString xlabel_;

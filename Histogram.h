@@ -2,10 +2,9 @@
 #define HISTOGRAM_H
 
 #include "cppCORE_global.h"
-#include "BasicStatistics.h"
-
 #include <QVector>
 #include <QTextStream>
+#include "BasicStatistics.h"
 
 ///Histogram representation
 class CPPCORESHARED_EXPORT Histogram
@@ -35,15 +34,23 @@ public:
 	{
 		return min_;
 	}
+
 	/// Returns the upper bound position (x-axis)
 	double max() const
 	{
 		return max_;
 	}
+
 	/// Returns the bin size
 	double binSize() const
 	{
-		return bin_size_;
+		return bins_.size();
+	}
+
+	/// Sets bins (y coordinates)
+	void setBins(QVector<double> bin_values)
+	{
+		bins_ = bin_values;
 	}
 
 	/// Returns the number of bins
@@ -51,6 +58,13 @@ public:
 	{
 		return bins_.size();
 	}
+
+	/// Sets the sum of all bins (i.e. the number of data points added)
+	void setBinSum(long long all_bin_sum)
+	{
+		bin_sum_ = all_bin_sum;
+	}
+
 	/// Returns the sum of all bins (i.e. the number of data points added)
 	long long binSum()
 	{
@@ -70,11 +84,11 @@ public:
 	/// Returns the value of the bin with the index @p index
 	double binValue(int index, bool as_percentage=false) const;
 
-    /// Returns the start position of the bin with the index @p index
-    double startOfBin(int index) const;
+	/// Returns the start position of the bin with the index @p index
+	double startOfBin(int index) const;
 
-    /// Prints the histogram to a stream
-    void print(QTextStream &stream, QString indentation="", int position_precision=2, int data_precision=2, bool ascending=true) const;
+	/// Prints the histogram to a stream
+	void print(QTextStream &stream, QString indentation="", int position_precision=2, int data_precision=2, bool ascending=true) const;
 
 	/// Returns an array of X-coordinates (position).
 	QVector<double> xCoords()
@@ -133,4 +147,4 @@ protected:
 	QVector<double> bins_;
 };
 
-#endif
+#endif // HISTOGRAM_H

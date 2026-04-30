@@ -1,13 +1,21 @@
 #include "BarPlot.h"
+
+#include <limits>
+#include <QFontDatabase>
+#include <QChartView>
+#include <QBarCategoryAxis>
+#include <QValueAxis>
+#include <QLegend>
+#include <QLineSeries>
+#include <QAreaSeries>
+#include <QStringList>
+#include <QGraphicsLayout>
+
 #include "Exceptions.h"
 #include "Helper.h"
 #include "Log.h"
 #include "BasicStatistics.h"
-#include <QStringList>
-#include <limits>
-#include <QProcess>
-#include <QStandardPaths>
-#include "Settings.h"
+#include "PlotUtils.h"
 
 BarPlot::BarPlot()
 {
@@ -23,7 +31,6 @@ void BarPlot::setValues(const QList<int>& values, const QList<QString>& labels, 
 	}
 }
 
-
 void BarPlot::setValues(const QList<double>& values, const QList<QString>& labels, const QList<QString>& colors)
 {
 	for(int i=0;i<values.count();++i)
@@ -34,115 +41,121 @@ void BarPlot::setValues(const QList<double>& values, const QList<QString>& label
 	}
 }
 
-
-void BarPlot::addColorLegend(QString color, QString desc)
-{
-	color_legend_.insert(color, desc);
-}
-
 void BarPlot::store(QString filename)
 {
-	//create python script
-	QStringList script;
-	script.append("from numpy import nan");
-	script.append("import matplotlib as mpl");
-	script.append("mpl.use('Agg')");
-	script.append("import matplotlib.pyplot as plt");
-	script.append("import matplotlib.patches as mpatches");
-	script.append("plt.figure(figsize=(10, 4), dpi=100)");
-	if(ylabel_!="") script.append("plt.ylabel('" + ylabel_ + "')");
-	if(xlabel_!="") script.append("plt.xlabel('" + xlabel_ + "')");
-
-	if(BasicStatistics::isValidFloat(xmin_) && BasicStatistics::isValidFloat(xmax_))
+	if (bars_.isEmpty())
 	{
-		script.append("plt.xlim(" + QString::number(xmin_) + "," + QString::number(xmax_) + ")");
-	}
-	if(BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
-	{
-		script.append("plt.ylim(" + QString::number(ymin_) + "," + QString::number(ymax_) + ")");
+		Log::warn("BarPlot does not have any bars to plot");
+		return;
 	}
 
-	//data
-	QString xvaluestring = "";
-	QString yvaluestring = "";
-	xvaluestring += "[" + QString::number(0);
-	yvaluestring += "[" + QString::number(bars_[0]);
-	for(int i=1;i<bars_.count();++i)
+	int width = 1000;
+	int height = 400;
+
+	PlotUtils* plot_utils = new PlotUtils();
+	QChart* chart = plot_utils->getChart();
+
+	QValueAxis* axis_x = new QValueAxis();
+	// axis_x->setRange(0, bars_.size());
+	axis_x->setRange(-0.5, bars_.size() - 0.5);
+	axis_x->setTickCount(bars_.size()+1);
+	axis_x->setLabelFormat("%d");
+	axis_x->setLabelsVisible(false);
+
+	QValueAxis* axis_y = new QValueAxis();
+
+	QStringList categories;
+	if (!labels_.isEmpty() && labels_.size() == bars_.size())
 	{
-		xvaluestring += ","+QString::number(i);
-		yvaluestring += ","+QString::number(bars_[i]);
-	}
-	xvaluestring += "]";
-	yvaluestring += "]";
-
-	//labels
-	QString labelstring = "";
-	if(!labels_.empty())
-	{
-		labelstring += "['" + labels_[0]+"'";
-		for(int i=1;i<bars_.count();++i)
-		{
-			labelstring += ",'" + labels_[i]+"'";
-		}
-		labelstring += "]";
-	}
-
-	//colors
-	QString colorstring = "";
-	if(!colors_.empty())
-	{
-		colorstring += "['" + colors_.at(0)+"'";
-		for(int i=1;i<bars_.count();++i)
-		{
-			colorstring += ",'" + colors_.at(i)+"'";
-		}
-		colorstring += "]";
-	}
-
-	script.append("barlist=plt.bar(" + xvaluestring + "," + yvaluestring + ",align='center'" + (colorstring.isEmpty() ?  "" : ",color=" + colorstring ) + ", edgecolor='none')");
-	script.append("plt.xticks(" + xvaluestring + (labelstring.isEmpty() ? "" : "," + labelstring) + ", size='xx-small',rotation=90,horizontalalignment='center')");
-	script.append("plt.yticks(size=10)");
-	script.append("plt.tick_params(axis='x',which='both',length=0,bottom='off',top='off')");
-	script.append("plt.tick_params(axis='y',which='both',left='off',right='off')");
-
-	//legend
-	QString c = "";
-	QString d = "";
-	foreach(const QString& desc, color_legend_)
-	{
-		QString col = color_legend_.key(desc);
-		c += "mpatches.Patch(color='" + col + "'),";
-		d += "'" + desc + "',";
-	}
-	script.append("plt.legend((" + c + "),(" + d + "),fontsize=10, bbox_to_anchor=(1.025,1), loc=2, borderaxespad=0.,frameon=0)");
-
-	//file handling
-	script.append("plt.savefig('" + filename.replace("\\", "/") + "', bbox_inches=\'tight\', dpi=100)");
-
-	//check if python is installed
-	QString python_exe = Settings::path("python_exe", true);
-	if (python_exe=="") python_exe = QStandardPaths::findExecutable("python3");
-	if (python_exe!="")
-	{
-		QString scriptfile = Helper::tempFileName(".py");
-		Helper::storeTextFile(scriptfile, script);
-
-		//execute scipt
-		QProcess process;
-		process.setProcessChannelMode(QProcess::MergedChannels);
-		process.start(python_exe, QStringList() << scriptfile);
-		bool success = process.waitForFinished(-1);
-		QByteArray output = process.readAll();
-		if (!success || process.exitCode()>0)
-		{
-			THROW(ProgrammingException, "Could not execute python script:\n" + scriptfile + "\n Error message is: " + output);
-		}
-
-		//remove temporary file
-		QFile::remove(scriptfile);
+		categories = labels_;
 	}
 	else
 	{
-		Log::warn("Python executable not found in PATH - skipping plot generation!");
+		for (int i = 0; i < bars_.size(); ++i) categories << QString::number(i);
 	}
+
+	axis_x->setLabelsAngle(-90);  // rotated labels
+
+	if (!xlabel_.isEmpty()) axis_x->setTitleText(xlabel_);
+
+	if (!ylabel_.isEmpty()) axis_y->setTitleText(ylabel_);
+
+	// y range
+	if (BasicStatistics::isValidFloat(ymin_) && BasicStatistics::isValidFloat(ymax_))
+	{
+		axis_y->setRange(ymin_, ymax_);
+	}
+	else
+	{
+		double ymax = *std::max_element(bars_.begin(), bars_.end());
+		axis_y->setRange(0, ymax * 1.1);
+	}
+
+	chart->addAxis(axis_x, Qt::AlignBottom);
+	chart->addAxis(axis_y, Qt::AlignLeft);
+	chart->legend()->hide();
+
+	plot_utils->applyFontSettings();
+	QFont label_font = plot_utils->getLabelFont();
+
+	// create bars using QAreaSeries
+	for (int i = 0; i < bars_.size(); ++i)
+	{
+		QGraphicsTextItem* label = new QGraphicsTextItem(categories[i]);
+		label->setFont(label_font);
+
+		double value = bars_[i];
+
+		QLineSeries* upper = new QLineSeries();
+		QLineSeries* lower = new QLineSeries();
+
+		// shift bars so they align with categories
+		double left  = i - 0.5;
+		double right = i + 0.5;		
+
+		upper->append(left, 0);
+		upper->append(left, value);
+		upper->append(right, value);
+		upper->append(right, 0);
+
+		lower->append(left, 0);
+		lower->append(right, 0);
+
+		QAreaSeries* area = new QAreaSeries(upper, lower);
+
+		// legend label
+		if (labels_.size() == bars_.size()) area->setName(labels_[i]);
+
+		// color
+		QString color_str = (colors_.size() > i) ? colors_[i] : "blue";
+		QColor color(color_str);
+
+		area->setColor(color);
+		area->setBorderColor(color.darker());
+
+		chart->addSeries(area);
+		area->attachAxis(axis_x);
+		area->attachAxis(axis_y);
+
+		// need to set the chart size to get the real coordinates for labels
+		chart->resize(width, height);
+		chart->layout()->activate();
+
+		QPointF valuePoint(i+0.5, 0);
+		QPointF pixelPoint = chart->mapToPosition(valuePoint, area);
+
+		QRectF rect = label->boundingRect();
+		// placing a category label below the x axis
+		label->setPos(pixelPoint.x() - (rect.width() / 2), chart->plotArea().bottom()+rect.height()+10);
+
+		label->setRotation(-90);
+		label->setParentItem(chart);
+	}
+
+	// grid lines
+	axis_x->setGridLineVisible(false);
+	axis_y->setGridLineVisible(true);
+
+	plot_utils->overpaintAxisX(axis_x, axis_y, bars_.size() - 0.5);
+	plot_utils->saveAsPng(filename, width, height);
 }

@@ -3,8 +3,9 @@
 
 #include "cppCORE_global.h"
 #include <QString>
-#include <QHash>
+#include <QList>
 
+// Creates a bar plot PNG image
 class CPPCORESHARED_EXPORT BarPlot
 {
 public:
@@ -20,10 +21,6 @@ public:
 	{
 		ylabel_ = y_label;
 	}
-	void setDPI(int dpi)
-	{
-		dpi_ = dpi;
-	}
 	void setXRange(double min, double max)
 	{
 		xmin_ = min;
@@ -34,22 +31,19 @@ public:
 		ymin_ = min;
 		ymax_ = max;
 	}
-	void addColorLegend(QString color,QString desc);
+
 	void store(QString filename);
 
 protected:
-	//variables to store the plot data
 	QList<double> bars_;
 	QList<QString> labels_;
-	QList<QString> colors_;
-	QHash<QString,QString> color_legend_;
+	QList<QString> colors_;	
 	QString xlabel_;
 	QString ylabel_;
 	double ymin_;
 	double ymax_;
 	double xmin_;
 	double xmax_;
-	int dpi_;
 };
 
 #endif
