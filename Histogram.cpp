@@ -3,7 +3,9 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <QStringList>
 #include <QChartView>
+#include <QBarCategoryAxis>
 #include <QValueAxis>
 #include <QLogValueAxis>
 #include <QLegend>
@@ -11,6 +13,7 @@
 #include <QAreaSeries>
 
 #include "Exceptions.h"
+#include "BasicStatistics.h"
 #include "PlotUtils.h"
 #include "Log.h"
 #include "Helper.h"
@@ -35,6 +38,19 @@ Histogram::Histogram(double min, double max, double bin_size)
 	bins_.resize(ceil((max_-min_)/bin_size_));
 }
 
+void Histogram::inc(double val, bool ignore_bounds_errors)
+{
+	bins_[binIndex(val, ignore_bounds_errors)]+=1;
+	bin_sum_ += 1;
+}
+
+void Histogram::inc(const QVector<double> &data, bool ignore_bounds_errors)
+{
+	for (int i=0; i<data.size(); ++i)
+	{
+		inc(data[i], ignore_bounds_errors);
+	}
+}
 
 double Histogram::maxValue(bool as_percentage) const
 {
@@ -42,7 +58,6 @@ double Histogram::maxValue(bool as_percentage) const
 	{
 		THROW(StatisticsException,"No bins present!");
 	}
-
 	double max = *(std::max_element(bins_.begin(), bins_.end()));
 	if(as_percentage)
 	{
@@ -57,7 +72,6 @@ double Histogram::minValue(bool as_percentage) const
 	{
 		THROW(StatisticsException,"No bins present!");
 	}
-
 	double min = *(std::min_element(bins_.begin(), bins_.end()));
 	if(as_percentage)
 	{
@@ -109,10 +123,8 @@ int Histogram::binIndex(double val, bool ignore_bounds_errors) const
 	}
 
 	int index = floor ( (val-min_) / (max_-min_) * bins_.size());
-
 	return BasicStatistics::bound(static_cast<qsizetype>(index), static_cast<qsizetype>(0), static_cast<qsizetype>(bins_.size()-1));
 }
-
 
 void Histogram::print(QTextStream& stream, QString indentation, int position_precision, int data_precision, bool ascending) const
 {
@@ -124,6 +136,11 @@ void Histogram::print(QTextStream& stream, QString indentation, int position_pre
 		if (!ascending) std::swap(start, end);
 		stream << indentation << QString::number(start, 'f', position_precision) << "-" << QString::number(end, 'f', position_precision) << ": " << QString::number(binValue(index), 'f', data_precision) << "\n";
 	}
+}
+
+QVector<double> Histogram::xCoords()
+{
+	return BasicStatistics::range(binCount(), startOfBin(0) + 0.5 * binSize(), binSize());
 }
 
 QVector<double> Histogram::yCoords(bool as_percentage)
@@ -165,11 +182,11 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 		double shifted = x[i] - (binSize() / 2);
 		if (shifted <= 0.0) x[i] = min_offset + (binSize() / 2);
 	}
+
 	for(int i = 0; i < y.size(); ++i)
 	{
 		if(y_log_scale && y[i] <= 0.0) y[i] = min_offset;
 	}
-
 	double x_min = min();
 	double y_min = minValue();
 
@@ -180,7 +197,6 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 		QLogValueAxis *log_axis = new QLogValueAxis();
 		log_axis->setBase(10);
 		log_axis->setMinorTickCount(10);
-
 		if(x_min == 0.0) x_min += min_offset;
 
 		log_axis->setRange(x_min, max());
@@ -204,12 +220,9 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 		QLogValueAxis *log_axis = new QLogValueAxis();
 		log_axis->setBase(10);
 		log_axis->setMinorTickCount(10);
-
 		if(y_min == 0.0) y_min += min_offset;
-
 		log_axis->setRange(y_min, maxValue() + 0.2 * maxValue());
 		axis_y = log_axis;
-
 	}
 	else
 	{
@@ -224,7 +237,6 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	// Render the bars
 	QLineSeries *upper = new QLineSeries();
 	QLineSeries *lower = new QLineSeries();
-
 	double baseline = y_log_scale ? min_offset : 0.0;
 
 	// centering each bin
@@ -238,7 +250,6 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 		upper->append(next_item, y[i]);
 		lower->append(next_item, baseline);
 	}
-
 	QAreaSeries *area = new QAreaSeries(upper, lower);
 	area->setName(label_);
 
@@ -246,11 +257,9 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 	bar_color.setAlphaF(0.8);
 	area->setColor(bar_color);
 	area->setBorderColor(bar_color.darker());
-
 	chart->addSeries(area);
 	area->attachAxis(axis_x);
 	area->attachAxis(axis_y);
-
 
 	// Fixing the color of x axis
 	QLineSeries *upper_x = new QLineSeries();
@@ -260,7 +269,6 @@ void Histogram::store(QString filename, bool x_log_scale, bool y_log_scale, doub
 
 	lower_x->append(x_start, y_base);
 	upper_x->append(max(), y_base);
-
 	lower_x->append(max(), y_base);
 	upper_x->append(max(), y_base);
 
@@ -285,7 +293,6 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 		Log::warn("No histograms to build a combined histogram");
 		return;
 	}
-
 	//check that all histograms have the same bins and labels
 	double min = 0;
 	double max = 0;
@@ -325,16 +332,16 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 	axis_y->setRange(min_value, max_value);
 	axis_y->setTickCount(10);
 	axis_y->applyNiceNumbers();
+
 	if (!ylabel.isEmpty()) axis_y->setTitleText(ylabel);
 
 	chart->addAxis(axis_x, Qt::AlignBottom);
-	chart->addAxis(axis_y, Qt::AlignLeft);	
+	chart->addAxis(axis_y, Qt::AlignLeft);
 
 	foreach (Histogram h, histograms)
 	{
 		QLineSeries *upper = new QLineSeries();
 		QLineSeries *lower = new QLineSeries();
-
 		QVector<double> x = h.xCoords();
 		QVector<double> y = h.yCoords();
 
@@ -349,7 +356,6 @@ void Histogram::storeCombinedHistogram(QString filename, QList<Histogram> histog
 			upper->append(next_item, y[i]);
 			lower->append(next_item, 0);
 		}
-
 		QAreaSeries *area = new QAreaSeries(upper, lower);
 		area->setName(h.label_);
 
