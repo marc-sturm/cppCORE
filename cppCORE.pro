@@ -38,7 +38,6 @@ SOURCES += \
     SimpleCrypt.cpp \
     TsvFile.cpp \
     Git.cpp \
-    VersatileOutStream.cpp \
     ProxyCredentialsHandler.cpp
 
 HEADERS += ToolBase.h \
@@ -63,7 +62,6 @@ HEADERS += ToolBase.h \
     SimpleCrypt.h \
     TsvFile.h \
     Git.h \
-    VersatileOutStream.h \
     ProxyCredentialsHandler.h
 	
 
